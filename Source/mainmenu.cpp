@@ -1,6 +1,6 @@
-//HEADER_GOES_HERE
-
-#include "../types.h"
+#include "diablo.h"
+#include "../3rdParty/Storm/Source/storm.h"
+#include "../DiabloUI/diabloui.h"
 
 DEVILUTION_BEGIN_NAMESPACE
 
@@ -10,7 +10,7 @@ char gszHero[16];
 
 int menu_music_track_id = 5;
 
-void __cdecl mainmenu_refresh_music()
+void mainmenu_refresh_music()
 {
 	music_start(menu_music_track_id);
 	do {
@@ -20,9 +20,9 @@ void __cdecl mainmenu_refresh_music()
 	} while (!menu_music_track_id || menu_music_track_id == 1);
 }
 
-void __stdcall mainmenu_create_hero(char *name_1, char *name_2)
+void __stdcall mainmenu_create_hero(int arg1, int arg2, int arg3, int arg4, char *name_1, char *name_2)
 {
-	if (UiValidPlayerName(name_1))
+	if (UiValidPlayerName(name_2))
 		pfile_create_save_file(name_1, name_2);
 }
 
@@ -47,7 +47,7 @@ int __stdcall mainmenu_select_hero_dialog(
 		        &dlgresult,
 		        gszHero,
 		        &gnDifficulty))
-			TermMsg("Unable to display SelHeroSing");
+			app_fatal("Unable to display SelHeroSing");
 
 
 		if (dlgresult == LOAD_GAME)
@@ -63,7 +63,7 @@ int __stdcall mainmenu_select_hero_dialog(
 	               &dlgresult,
 	               &hero_is_created,
 	               gszHero)) {
-		TermMsg("Can't load multiplayer dialog");
+		app_fatal("Can't load multiplayer dialog");
 	}
 	if (dlgresult == EXIT_MENU) {
 		SErrSetLastError(1223);
@@ -83,7 +83,7 @@ int __stdcall mainmenu_select_hero_dialog(
 	return 1;
 }
 
-void __cdecl mainmenu_loop()
+void mainmenu_loop()
 {
 	BOOL done;
 	int menu;
@@ -94,7 +94,7 @@ void __cdecl mainmenu_loop()
 	do {
 		menu = 0;
 		if (!UiMainMenuDialog("Diablo v1.09", &menu, effects_play_sound, 30))
-			TermMsg("Unable to display mainmenu");
+			app_fatal("Unable to display mainmenu");
 
 		switch (menu) {
 		case MAINMENU_SINGLE_PLAYER:
@@ -121,16 +121,14 @@ void __cdecl mainmenu_loop()
 
 	music_stop();
 }
-// 634980: using guessed type int gbActive;
 
-BOOL __cdecl mainmenu_single_player()
+BOOL mainmenu_single_player()
 {
 	gbMaxPlayers = 1;
 	return mainmenu_init_menu(1);
 }
-// 679660: using guessed type char gbMaxPlayers;
 
-BOOL __fastcall mainmenu_init_menu(int type)
+BOOL mainmenu_init_menu(int type)
 {
 	BOOL success;
 
@@ -146,13 +144,13 @@ BOOL __fastcall mainmenu_init_menu(int type)
 	return success;
 }
 
-BOOL __cdecl mainmenu_multi_player()
+BOOL mainmenu_multi_player()
 {
 	gbMaxPlayers = MAX_PLRS;
 	return mainmenu_init_menu(3);
 }
 
-void __cdecl mainmenu_play_intro()
+void mainmenu_play_intro()
 {
 	music_stop();
 	play_movie("gendata\\diablo1.smk", 1);

@@ -8,10 +8,13 @@
 #include <winuser.h>
 #include <winsock.h>
 #include <ddraw.h>
+#include <limits>
 
 #else
 
-#include "miniwin.h"
+#include "miniwin/pushdecl.inc"
+#include <limits>
+namespace dvl {
 
 #endif
 
@@ -57,6 +60,31 @@ typedef struct _WSIZE
   WORD  cx;
   WORD  cy;
 } WSIZE, *PWSIZE;
+
+#ifdef __cplusplus
+static float infinity = std::numeric_limits<float>::infinity();
+
+struct CCritSect {
+	CRITICAL_SECTION m_critsect;
+
+	CCritSect()
+	{
+		InitializeCriticalSection(&m_critsect);
+	}
+	~CCritSect()
+	{
+		DeleteCriticalSection(&m_critsect);
+	}
+	void Enter()
+	{
+		EnterCriticalSection(&m_critsect);
+	}
+	void Leave()
+	{
+		LeaveCriticalSection(&m_critsect);
+	}
+};
+#endif
 
 
 
@@ -338,7 +366,7 @@ SNetLeaveGame(
 
 BOOL STORMAPI SNetPerformUpgrade(DWORD *upgradestatus);
 BOOL STORMAPI SNetReceiveMessage(int *senderplayerid, char **data, int *databytes);
-BOOL STORMAPI SNetReceiveTurns(int a1, int arraysize, char **arraydata, unsigned int *arraydatabytes, DWORD *arrayplayerstatus);
+BOOL STORMAPI SNetReceiveTurns(int a1, int arraysize, char **arraydata, DWORD *arraydatabytes, DWORD *arrayplayerstatus);
 
 // Values for arrayplayerstatus
 #define SNET_PS_OK             0
@@ -356,6 +384,7 @@ typedef struct _s_evt
   DWORD dwSize;
 } S_EVT, *PS_EVT;
 
+typedef void (STORMAPI *SEVTHANDLER)(struct _SNETEVENT *);
 
 // @TODO: "type" is unknown.
 //HANDLE STORMAPI SNetRegisterEventHandler(int type, void (STORMAPI *sEvent)(PS_EVT));
@@ -482,7 +511,7 @@ BOOL STORMAPI SFileCloseFile(HANDLE hFile);
 BOOL STORMAPI SFileDdaBeginEx(HANDLE hFile, DWORD flags, DWORD mask, unsigned __int32 lDistanceToMove, signed __int32 volume, signed int pan, int a7);
 BOOL STORMAPI SFileDdaDestroy();
 BOOL STORMAPI SFileDdaEnd(HANDLE hFile);
-BOOL STORMAPI SFileDdaGetPos(HANDLE hFile, int *current, int *end);
+BOOL STORMAPI SFileDdaGetPos(HANDLE hFile, DWORD *current, DWORD *end);
 
 BOOL STORMAPI SFileDdaInitialize(HANDLE directsound);
 BOOL STORMAPI SFileDdaSetVolume(HANDLE hFile, signed int bigvolume, signed int volume);
@@ -799,13 +828,13 @@ BOOL STORMAPI Ordinal393(char *pszString, int, int);
  *  Returns a pointer to the allocated memory. This pointer does NOT include
  *  the additional storm header.
  */
-void*
-STORMAPI
-SMemAlloc(
-    unsigned int amount,
-    char  *logfilename,
-    int   logline,
-    char  defaultValue);
+void *
+    STORMAPI
+    SMemAlloc(
+        unsigned int amount,
+        char *logfilename,
+        int logline,
+        int defaultValue);
 
 #define SMAlloc(amount) SMemAlloc((amount), __FILE__, __LINE__)
 
@@ -1224,7 +1253,7 @@ void  STORMAPI SRgn529i(int handle, int a2, int a3);
  *
  *  Returns TRUE if the user chose to continue execution, FALSE otherwise.
  */
-BOOL
+BOOL __cdecl
 SErrDisplayErrorFmt(
     DWORD dwErrMsg,
     const char *logfilename,
@@ -1278,7 +1307,7 @@ char *STORMAPI SStrChrR(const char *string, char c);
  *
  *  Returns the number of characters written.
  */
-unsigned int
+unsigned int __cdecl
 SStrVPrintf(
     char *dest,
     unsigned int size,
@@ -1298,12 +1327,12 @@ int STORMAPI SBigToBinaryBuffer(void *buffer, int length, int a3, int a4);
 void __stdcall SDrawMessageBox(char *,char *,int);
 void __cdecl SDrawDestroy(void);
 BOOLEAN __cdecl StormDestroy(void);
-BOOLEAN __stdcall SFileSetBasePath(char *);
+BOOL __stdcall SFileSetBasePath(char *);
 void __cdecl SDrawRealizePalette(void);
 BOOL __cdecl SVidPlayContinue(void);
 BOOL __stdcall SNetGetOwnerTurnsWaiting(DWORD *);
-void * __stdcall SNetUnregisterEventHandler(int,void (__stdcall*)(struct _SNETEVENT *));
-void * __stdcall SNetRegisterEventHandler(int,void (__stdcall*)(struct _SNETEVENT *));
+BOOL __stdcall SNetUnregisterEventHandler(int,SEVTHANDLER);
+BOOL __stdcall SNetRegisterEventHandler(int,SEVTHANDLER);
 BOOLEAN __stdcall SNetSetBasePlayer(int);
 int __stdcall SNetInitializeProvider(unsigned long,struct _SNETPROGRAMDATA *,struct _SNETPLAYERDATA *,struct _SNETUIDATA *,struct _SNETVERSIONDATA *);
 int __stdcall SNetGetProviderCaps(struct _SNETCAPS *);
@@ -1323,6 +1352,11 @@ BOOL __stdcall SFileEnableDirectAccess(BOOL enable);
 
 #if defined(__GNUC__) || defined(__cplusplus)
 }
+#endif
+
+#ifdef DEVILUTION_STUB
+}
+#include "miniwin/popdecl.inc"
 #endif
 
 #endif

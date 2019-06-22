@@ -1,12 +1,10 @@
-//HEADER_GOES_HERE
-
-#include "../types.h"
+#include "diablo.h"
 
 DEVILUTION_BEGIN_NAMESPACE
 
-unsigned char *tbuff;
+BYTE *tbuff;
 
-void __fastcall LoadGame(BOOL firstflag)
+void LoadGame(BOOL firstflag)
 {
 	int i, j;
 	DWORD dwLen;
@@ -21,7 +19,7 @@ void __fastcall LoadGame(BOOL firstflag)
 	tbuff = LoadBuff;
 
 	if (ILoad() != 'RETL')
-		TermMsg("Invalid save file");
+		app_fatal("Invalid save file");
 
 	setlevel = OLoad();
 	setlvlnum = WLoad();
@@ -84,10 +82,10 @@ void __fastcall LoadGame(BOOL firstflag)
 
 		numlights = WLoad();
 
-		for (i = 0; i < 32; i++)
+		for (i = 0; i < MAXLIGHTS; i++)
 			lightactive[i] = BLoad();
 		for (i = 0; i < numlights; i++)
-			LoadLighting((unsigned char)lightactive[i]);
+			LoadLighting(lightactive[i]);
 
 		visionid = WLoad();
 		numvision = WLoad();
@@ -107,7 +105,7 @@ void __fastcall LoadGame(BOOL firstflag)
 
 	for (j = 0; j < MAXDUNY; j++) {
 		for (i = 0; i < MAXDUNX; i++)
-			dTransVal[i][j] = BLoad();
+			dLight[i][j] = BLoad();
 	}
 	for (j = 0; j < MAXDUNY; j++) {
 		for (i = 0; i < MAXDUNX; i++)
@@ -137,11 +135,11 @@ void __fastcall LoadGame(BOOL firstflag)
 		}
 		for (j = 0; j < MAXDUNY; j++) {
 			for (i = 0; i < MAXDUNX; i++)
-				dTransVal[i][j] = BLoad();
+				dLight[i][j] = BLoad();
 		}
 		for (j = 0; j < MAXDUNY; j++) {
 			for (i = 0; i < MAXDUNX; i++)
-				dTransVal2[i][j] = BLoad();
+				dPreLight[i][j] = BLoad();
 		}
 		for (j = 0; j < DMAXY; j++) {
 			for (i = 0; i < DMAXX; i++)
@@ -175,14 +173,13 @@ void __fastcall LoadGame(BOOL firstflag)
 	SetCursor_(CURSOR_HAND);
 	gbProcessPlayers = TRUE;
 }
-// 5CF31D: using guessed type char setlevel;
 
-char __cdecl BLoad()
+char BLoad()
 {
 	return *tbuff++;
 }
 
-int __cdecl WLoad()
+int WLoad()
 {
 	int rv = *tbuff++ << 24;
 	rv |= *tbuff++ << 16;
@@ -192,7 +189,7 @@ int __cdecl WLoad()
 	return rv;
 }
 
-int __cdecl ILoad()
+int ILoad()
 {
 	int rv = *tbuff++ << 24;
 	rv |= *tbuff++ << 16;
@@ -202,7 +199,7 @@ int __cdecl ILoad()
 	return rv;
 }
 
-BOOL __cdecl OLoad()
+BOOL OLoad()
 {
 	if (*tbuff++ == TRUE)
 		return TRUE;
@@ -210,45 +207,45 @@ BOOL __cdecl OLoad()
 		return FALSE;
 }
 
-void __fastcall LoadPlayer(int i)
+void LoadPlayer(int i)
 {
 	memcpy(&plr[i], tbuff, sizeof(*plr) - (10 * sizeof(void *)));
 	tbuff += sizeof(*plr) - (10 * sizeof(void *)); // omit last 10 pointers
 }
 
-void __fastcall LoadMonster(int i)
+void LoadMonster(int i)
 {
 	memcpy(&monster[i], tbuff, sizeof(*monster) - (3 * sizeof(void *)));
 	tbuff += sizeof(*monster) - (3 * sizeof(void *)); // omit last 3 pointers
 	SyncMonsterAnim(i);
 }
 
-void __fastcall LoadMissile(int i)
+void LoadMissile(int i)
 {
 	memcpy(&missile[i], tbuff, sizeof(*missile));
 	tbuff += sizeof(*missile);
 }
 
-void __fastcall LoadObject(int i)
+void LoadObject(int i)
 {
 	memcpy(&object[i], tbuff, sizeof(*object));
 	tbuff += sizeof(*object);
 }
 
-void __fastcall LoadItem(int i)
+void LoadItem(int i)
 {
 	memcpy(&item[i], tbuff, sizeof(*item));
 	tbuff += sizeof(*item);
 	GetItemFrm(i);
 }
 
-void __fastcall LoadPremium(int i)
+void LoadPremium(int i)
 {
 	memcpy(&premiumitem[i], tbuff, sizeof(*premiumitem));
 	tbuff += sizeof(*premiumitem);
 }
 
-void __fastcall LoadQuest(int i)
+void LoadQuest(int i)
 {
 	memcpy(&quests[i], tbuff, sizeof(*quests));
 	tbuff += sizeof(*quests);
@@ -259,25 +256,25 @@ void __fastcall LoadQuest(int i)
 	DoomQuestState = WLoad();
 }
 
-void __fastcall LoadLighting(int i)
+void LoadLighting(int i)
 {
 	memcpy(&LightList[i], tbuff, sizeof(*LightList));
 	tbuff += sizeof(*LightList);
 }
 
-void __fastcall LoadVision(int i)
+void LoadVision(int i)
 {
 	memcpy(&VisionList[i], tbuff, sizeof(*VisionList));
 	tbuff += sizeof(*VisionList);
 }
 
-void __fastcall LoadPortal(int i)
+void LoadPortal(int i)
 {
 	memcpy(&portal[i], tbuff, sizeof(*portal));
 	tbuff += sizeof(*portal);
 }
 
-void __cdecl SaveGame()
+void SaveGame()
 {
 	int i, j;
 	char szName[MAX_PATH];
@@ -334,10 +331,10 @@ void __cdecl SaveGame()
 
 		WSave(numlights);
 
-		for (i = 0; i < 32; i++)
+		for (i = 0; i < MAXLIGHTS; i++)
 			BSave(lightactive[i]);
 		for (i = 0; i < numlights; i++)
-			SaveLighting((unsigned char)lightactive[i]);
+			SaveLighting(lightactive[i]);
 
 		WSave(visionid);
 		WSave(numvision);
@@ -357,11 +354,11 @@ void __cdecl SaveGame()
 
 	for (j = 0; j < MAXDUNY; j++) {
 		for (i = 0; i < MAXDUNX; i++)
-			BSave(dTransVal[i][j]);
+			BSave(dLight[i][j]);
 	}
 	for (j = 0; j < MAXDUNY; j++) {
 		for (i = 0; i < MAXDUNX; i++)
-			BSave(dFlags[i][j] & ~(DFLAG_MISSILE | DFLAG_VISIBLE | DFLAG_DEAD_PLAYER));
+			BSave(dFlags[i][j] & ~(BFLAG_MISSILE | BFLAG_VISIBLE | BFLAG_DEAD_PLAYER));
 	}
 	for (j = 0; j < MAXDUNY; j++) {
 		for (i = 0; i < MAXDUNX; i++)
@@ -387,11 +384,11 @@ void __cdecl SaveGame()
 		}
 		for (j = 0; j < MAXDUNY; j++) {
 			for (i = 0; i < MAXDUNX; i++)
-				BSave(dTransVal[i][j]);
+				BSave(dLight[i][j]);
 		}
 		for (j = 0; j < MAXDUNY; j++) {
 			for (i = 0; i < MAXDUNX; i++)
-				BSave(dTransVal2[i][j]);
+				BSave(dPreLight[i][j]);
 		}
 		for (j = 0; j < DMAXY; j++) {
 			for (i = 0; i < DMAXX; i++)
@@ -419,22 +416,13 @@ void __cdecl SaveGame()
 	pfile_rename_temp_to_perm();
 	pfile_write_hero();
 }
-// 5CF31D: using guessed type char setlevel;
 
-void __fastcall BSave(char v)
+void BSave(char v)
 {
 	*tbuff++ = v;
 }
 
-void __fastcall WSave(int v)
-{
-	*tbuff++ = v >> 24;
-	*tbuff++ = v >> 16;
-	*tbuff++ = v >> 8;
-	*tbuff++ = v;
-}
-
-void __fastcall ISave(int v)
+void WSave(int v)
 {
 	*tbuff++ = v >> 24;
 	*tbuff++ = v >> 16;
@@ -442,7 +430,15 @@ void __fastcall ISave(int v)
 	*tbuff++ = v;
 }
 
-void __fastcall OSave(BOOL v)
+void ISave(int v)
+{
+	*tbuff++ = v >> 24;
+	*tbuff++ = v >> 16;
+	*tbuff++ = v >> 8;
+	*tbuff++ = v;
+}
+
+void OSave(BOOL v)
 {
 	if (v != FALSE)
 		*tbuff++ = TRUE;
@@ -450,43 +446,43 @@ void __fastcall OSave(BOOL v)
 		*tbuff++ = FALSE;
 }
 
-void __fastcall SavePlayer(int i)
+void SavePlayer(int i)
 {
 	memcpy(tbuff, &plr[i], sizeof(*plr) - (10 * sizeof(void *)));
 	tbuff += sizeof(*plr) - (10 * sizeof(void *)); // omit last 10 pointers
 }
 
-void __fastcall SaveMonster(int i)
+void SaveMonster(int i)
 {
 	memcpy(tbuff, &monster[i], sizeof(*monster) - (3 * sizeof(void *)));
 	tbuff += sizeof(*monster) - (3 * sizeof(void *)); // omit last 3 pointers
 }
 
-void __fastcall SaveMissile(int i)
+void SaveMissile(int i)
 {
 	memcpy(tbuff, &missile[i], sizeof(*missile));
 	tbuff += sizeof(*missile);
 }
 
-void __fastcall SaveObject(int i)
+void SaveObject(int i)
 {
 	memcpy(tbuff, &object[i], sizeof(*object));
 	tbuff += sizeof(*object);
 }
 
-void __fastcall SaveItem(int i)
+void SaveItem(int i)
 {
 	memcpy(tbuff, &item[i], sizeof(*item));
 	tbuff += sizeof(*item);
 }
 
-void __fastcall SavePremium(int i)
+void SavePremium(int i)
 {
 	memcpy(tbuff, &premiumitem[i], sizeof(*premiumitem));
 	tbuff += sizeof(*premiumitem);
 }
 
-void __fastcall SaveQuest(int i)
+void SaveQuest(int i)
 {
 	memcpy(tbuff, &quests[i], sizeof(*quests));
 	tbuff += sizeof(*quests);
@@ -497,25 +493,25 @@ void __fastcall SaveQuest(int i)
 	WSave(DoomQuestState);
 }
 
-void __fastcall SaveLighting(int i)
+void SaveLighting(int i)
 {
 	memcpy(tbuff, &LightList[i], sizeof(*LightList));
 	tbuff += sizeof(*LightList);
 }
 
-void __fastcall SaveVision(int i)
+void SaveVision(int i)
 {
 	memcpy(tbuff, &VisionList[i], sizeof(*VisionList));
 	tbuff += sizeof(*VisionList);
 }
 
-void __fastcall SavePortal(int i)
+void SavePortal(int i)
 {
 	memcpy(tbuff, &portal[i], sizeof(*portal));
 	tbuff += sizeof(*portal);
 }
 
-void __cdecl SaveLevel()
+void SaveLevel()
 {
 	int i, j;
 	char szName[MAX_PATH];
@@ -562,7 +558,7 @@ void __cdecl SaveLevel()
 
 	for (j = 0; j < MAXDUNY; j++) {
 		for (i = 0; i < MAXDUNX; i++)
-			BSave(dFlags[i][j] & ~(DFLAG_MISSILE | DFLAG_VISIBLE | DFLAG_DEAD_PLAYER));
+			BSave(dFlags[i][j] & ~(BFLAG_MISSILE | BFLAG_VISIBLE | BFLAG_DEAD_PLAYER));
 	}
 	for (j = 0; j < MAXDUNY; j++) {
 		for (i = 0; i < MAXDUNX; i++)
@@ -580,11 +576,11 @@ void __cdecl SaveLevel()
 		}
 		for (j = 0; j < MAXDUNY; j++) {
 			for (i = 0; i < MAXDUNX; i++)
-				BSave(dTransVal[i][j]);
+				BSave(dLight[i][j]);
 		}
 		for (j = 0; j < MAXDUNY; j++) {
 			for (i = 0; i < MAXDUNX; i++)
-				BSave(dTransVal2[i][j]);
+				BSave(dPreLight[i][j]);
 		}
 		for (j = 0; j < DMAXY; j++) {
 			for (i = 0; i < DMAXX; i++)
@@ -606,9 +602,8 @@ void __cdecl SaveLevel()
 	else
 		plr[myplr]._pSLvlVisited[setlvlnum] = 1;
 }
-// 5CF31D: using guessed type char setlevel;
 
-void __cdecl LoadLevel()
+void LoadLevel()
 {
 	int i, j;
 	DWORD dwLen;
@@ -673,11 +668,11 @@ void __cdecl LoadLevel()
 		}
 		for (j = 0; j < MAXDUNY; j++) {
 			for (i = 0; i < MAXDUNX; i++)
-				dTransVal[i][j] = BLoad();
+				dLight[i][j] = BLoad();
 		}
 		for (j = 0; j < MAXDUNY; j++) {
 			for (i = 0; i < MAXDUNX; i++)
-				dTransVal2[i][j] = BLoad();
+				dPreLight[i][j] = BLoad();
 		}
 		for (j = 0; j < DMAXY; j++) {
 			for (i = 0; i < DMAXX; i++)
@@ -701,6 +696,5 @@ void __cdecl LoadLevel()
 
 	mem_free_dbg(LoadBuff);
 }
-// 642A18: using guessed type int dolighting;
 
 DEVILUTION_END_NAMESPACE

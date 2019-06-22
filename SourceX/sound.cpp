@@ -1,8 +1,7 @@
 #include "devilution.h"
-
-#include <SDL_mixer.h>
-
 #include "stubs.h"
+#include <SDL.h>
+#include <SDL_mixer.h>
 
 namespace dvl {
 
@@ -14,6 +13,10 @@ int sglSoundVolume;
 HMODULE hDsound_dll;
 HANDLE sgpMusicTrack;
 LPDIRECTSOUNDBUFFER sglpDSB;
+
+Mix_Music *music;
+SDL_RWops *musicRw;
+char *musicBuffer;
 
 /* data */
 
@@ -38,20 +41,20 @@ char unk_volume[4][2] = {
 
 void snd_update(BOOL bStopAll)
 {
-	DWORD error_code, i;
+	DWORD dwStatus, i;
 
 	for (i = 0; i < 8; i++) {
 		if (!DSBs[i])
 			continue;
 
 #ifdef __cplusplus
-		if (!bStopAll && !DSBs[i]->GetStatus(&error_code) && error_code == DVL_DSBSTATUS_PLAYING)
+		if (!bStopAll && DSBs[i]->GetStatus(&dwStatus) == DVL_DS_OK && dwStatus == DVL_DSBSTATUS_PLAYING)
 			continue;
 
 		DSBs[i]->Stop();
 		DSBs[i]->Release();
 #else
-		if (!bStopAll && !DSBs[i]->lpVtbl->GetStatus(DSBs[i], &error_code) && error_code == DSBSTATUS_PLAYING)
+		if (!bStopAll && DSBs[i]->lpVtbl->GetStatus(DSBs[i], &dwStatus) == DVL_DS_OK && dwStatus == DSBSTATUS_PLAYING)
 			continue;
 
 		DSBs[i]->lpVtbl->Stop(DSBs[i]);
@@ -74,7 +77,7 @@ void snd_stop_snd(TSnd *pSnd)
 
 BOOL snd_playing(TSnd *pSnd)
 {
-	DWORD error_code; // TODO should probably be HRESULT
+	DWORD dwStatus;
 
 	if (!pSnd)
 		return false;
@@ -83,13 +86,13 @@ BOOL snd_playing(TSnd *pSnd)
 		return false;
 
 #ifdef __cplusplus
-	if (pSnd->DSB->GetStatus(&error_code))
+	if (pSnd->DSB->GetStatus(&dwStatus) != DVL_DS_OK)
 #else
-	if (pSnd->DSB->lpVtbl->GetStatus(pSnd->DSB, &error_code))
+	if (pSnd->DSB->lpVtbl->GetStatus(pSnd->DSB, &dwStatus) != DVL_DS_OK)
 #endif
 		return false;
 
-	return error_code == DVL_DSBSTATUS_PLAYING;
+	return dwStatus == DVL_DSBSTATUS_PLAYING;
 }
 
 void snd_play_snd(TSnd *pSnd, int lVolume, int lPan)
@@ -109,7 +112,6 @@ void snd_play_snd(TSnd *pSnd, int lVolume, int lPan)
 
 	tc = GetTickCount();
 	if (tc - pSnd->start_tc < 80) {
-		pSnd->start_tc = GetTickCount();
 		return;
 	}
 
@@ -186,9 +188,9 @@ BOOL sound_file_reload(TSnd *sound_file, LPDIRECTSOUNDBUFFER DSB)
 	BOOL rv;
 
 #ifdef __cplusplus
-	if (DSB->Restore())
+	if (DSB->Restore() != DVL_DS_OK)
 #else
-	if (DSB->lpVtbl->Restore(DSB))
+	if (DSB->lpVtbl->Restore(DSB) != DVL_DS_OK)
 #endif
 		return false;
 
@@ -236,7 +238,7 @@ TSnd *sound_file_load(char *path)
 
 	wave_file = LoadWaveFile(file, &pSnd->fmt, &pSnd->chunk);
 	if (!wave_file)
-		TermMsg("Invalid sound format on file %s", pSnd->sound_path);
+		app_fatal("Invalid sound format on file %s", pSnd->sound_path);
 
 	sound_CreateSoundBuffer(pSnd);
 
@@ -411,6 +413,7 @@ HRESULT sound_DirectSoundCreate(LPGUID lpGuid, LPDIRECTSOUND *ppDS, LPUNKNOWN pU
 		}
 	}
 
+	DirectSoundCreate = NULL;
 	if (DirectSoundCreate == NULL) {
 	}
 	*ppDS = new DirectSound();
@@ -429,6 +432,7 @@ void sound_cleanup()
 	if (sglpDS) {
 #ifdef __cplusplus
 		sglpDS->Release();
+		delete sglpDS;
 #else
 		sglpDS->lpVtbl->Release(sglpDS);
 #endif
@@ -453,6 +457,10 @@ void music_stop()
 		Mix_HaltMusic();
 		SFileCloseFile(sgpMusicTrack);
 		sgpMusicTrack = NULL;
+		Mix_FreeMusic(music);
+		music = NULL;
+		musicRw = NULL;
+		mem_free_dbg(musicBuffer);
 		sgnMusicTrack = 6;
 	}
 }
@@ -475,14 +483,17 @@ void music_start(int nTrack)
 		if (!success) {
 			sgpMusicTrack = NULL;
 		} else {
-			int bytestoread = (int)SFileGetFileSize((HANDLE)sgpMusicTrack, 0);
-			char *buffer = (char *)DiabloAllocPtr(bytestoread);
-			SFileReadFile(sgpMusicTrack, buffer, bytestoread, NULL, 0);
+			int bytestoread = SFileGetFileSize(sgpMusicTrack, 0);
+			musicBuffer = (char *)DiabloAllocPtr(bytestoread);
+			SFileReadFile(sgpMusicTrack, musicBuffer, bytestoread, NULL, 0);
 
-			SDL_RWops *rw = SDL_RWFromConstMem(buffer, bytestoread);
-			Mix_Music *Song = Mix_LoadMUS_RW(rw, 1);
+			musicRw = SDL_RWFromConstMem(musicBuffer, bytestoread);
+			if (musicRw == NULL) {
+				SDL_Log(SDL_GetError());
+			}
+			music = Mix_LoadMUS_RW(musicRw, 1);
 			Mix_VolumeMusic(MIX_MAX_VOLUME - MIX_MAX_VOLUME * sglMusicVolume / VOLUME_MIN);
-			Mix_PlayMusic(Song, -1);
+			Mix_PlayMusic(music, -1);
 
 			sgnMusicTrack = nTrack;
 		}
@@ -521,4 +532,4 @@ int sound_get_or_set_sound_volume(int volume)
 	return sglSoundVolume;
 }
 
-}  // namespace dvl
+} // namespace dvl

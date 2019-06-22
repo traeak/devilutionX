@@ -1,10 +1,10 @@
+#include "devilution.h"
+#include "miniwin/ddraw.h"
+#include "stubs.h"
+#include "utf8.h"
 #include <string>
 
-#include "devilution.h"
 #include "DiabloUI/diabloui.h"
-#include "dx.h"
-#include "utf8.h"
-#include "stubs.h"
 
 namespace dvl {
 
@@ -19,18 +19,15 @@ Art ArtBackground;
 Art ArtCursor;
 Art ArtHero;
 
-void(*gfnSoundFunction)(char *file);
-void(*gfnListFocus)(int value);
-void(*gfnListSelect)(int value);
-void(*gfnListEsc)();
+void (*gfnSoundFunction)(char *file);
+void (*gfnListFocus)(int value);
+void (*gfnListSelect)(int value);
+void (*gfnListEsc)();
 UI_Item *gUiItems;
 int gUiItemCnt;
 bool UiItemsWraps;
 char *UiTextInput;
 int UiTextInputLen;
-
-int SCREEN_WIDTH = 640;
-int SCREEN_HEIGHT = 480;
 
 int fadeValue = 0;
 int SelectedItem = 0;
@@ -106,7 +103,12 @@ int DialogBoxParam(HINSTANCE hInstance, LPCSTR msgId, HWND hWndParent, DLGPROC l
 	char text[1024];
 	snprintf(text, 1024, errorMessages[(intptr_t)msgId], dwInitParam);
 
-	return SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, errorTitle[(intptr_t)msgId], text, window) < 0 ? -1 : 0;
+	if (SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, errorTitle[(intptr_t)msgId], text, window) <= -1) {
+		SDL_Log(SDL_GetError());
+		return -1;
+	}
+
+	return 0;
 }
 
 BOOL SetDlgItemText(HWND hDlg, int nIDDlgItem, LPCSTR lpString)
@@ -136,7 +138,7 @@ void UiDestroy()
 	font = NULL;
 }
 
-void UiInitList(int min, int max, void(*fnFocus)(int value), void(*fnSelect)(int value), void(*fnEsc)(), UI_Item *items, int itemCnt, bool itemsWraps)
+void UiInitList(int min, int max, void (*fnFocus)(int value), void (*fnSelect)(int value), void (*fnEsc)(), UI_Item *items, int itemCnt, bool itemsWraps)
 {
 	SelectedItem = min;
 	SelectedItemMin = min;
@@ -179,11 +181,11 @@ void UiFocus(int itemIndex, bool wrap = false)
 			itemIndex = SelectedItemMin;
 			return;
 		} else if (itemIndex > SelectedItemMax) {
-			itemIndex = SelectedItemMax ?: SelectedItemMin;
+			itemIndex = SelectedItemMax ? SelectedItemMax : SelectedItemMin;
 			return;
 		}
 	} else if (itemIndex < SelectedItemMin) {
-		itemIndex = SelectedItemMax ?: SelectedItemMin;
+		itemIndex = SelectedItemMax ? SelectedItemMax : SelectedItemMin;
 	} else if (itemIndex > SelectedItemMax) {
 		itemIndex = SelectedItemMin;
 	}
@@ -245,7 +247,11 @@ bool UiFocusNavigation(SDL_Event *event)
 			switch (event->key.keysym.sym) {
 			case SDLK_v:
 				if (SDL_GetModState() & KMOD_CTRL) {
-					selhero_CatToName(SDL_GetClipboardText(), UiTextInput, UiTextInputLen);
+					char *clipboard = SDL_GetClipboardText();
+					if (clipboard == NULL) {
+						SDL_Log(SDL_GetError());
+					}
+					selhero_CatToName(clipboard, UiTextInput, UiTextInputLen);
 				}
 				return true;
 			case SDLK_BACKSPACE:
@@ -367,8 +373,7 @@ void InitFont()
 	}
 	atexit(TTF_Quit);
 
-	// TODO locate font dynamically, and use fallback font if missing
-	font = TTF_OpenFont("LiberationSerif-Bold.ttf", 17);
+	font = TTF_OpenFont("CharisSILB.ttf", 17);
 	if (font == NULL) {
 		printf("TTF_OpenFont: %s\n", TTF_GetError());
 		return;
@@ -451,7 +456,7 @@ void UiProfileDraw()
 	UNIMPLEMENTED();
 }
 
-BOOL UiCategoryCallback(int a1, int a2, int a3, int a4, int a5, _DWORD *a6, _DWORD *a7)
+BOOL UiCategoryCallback(int a1, int a2, int a3, int a4, int a5, DWORD *a6, DWORD *a7)
 {
 	UNIMPLEMENTED();
 }
@@ -519,10 +524,10 @@ BOOL UiCreatePlayerDescription(_uiheroinfo *info, DWORD mode, char *desc)
 void DrawArt(int screenX, int screenY, Art *art, int nFrame, int drawW)
 {
 	BYTE *src = (BYTE *)art->data + (art->width * art->height * nFrame);
-	BYTE *dst = &gpBuffer[screenX + 64 + (screenY + 160) * 768];
-	drawW = drawW ?: art->width;
+	BYTE *dst = &gpBuffer[screenX + 64 + (screenY + SCREEN_Y) * BUFFER_WIDTH];
+	drawW = drawW ? drawW : art->width;
 
-	for (int i = 0; i < art->height && i + screenY < SCREEN_HEIGHT; i++, src += art->width, dst += ROW_PITCH) {
+	for (int i = 0; i < art->height && i + screenY < SCREEN_HEIGHT; i++, src += art->width, dst += BUFFER_WIDTH) {
 		for (int j = 0; j < art->width && j + screenX < SCREEN_WIDTH; j++) {
 			if (j < drawW && (!art->masked || src[j] != art->mask))
 				dst[j] = src[j];
@@ -639,7 +644,7 @@ void DrawArtStr(UI_Item *item)
 			sy += ArtFonts[size][color].height;
 			continue;
 		}
-		BYTE w = FontTables[size][*(BYTE *)&item->caption[i] + 2] ?: FontTables[size][0];
+		BYTE w = FontTables[size][*(BYTE *)&item->caption[i] + 2] ? FontTables[size][*(BYTE *)&item->caption[i] + 2] : FontTables[size][0];
 		DrawArt(sx, sy, &ArtFonts[size][color], *(BYTE *)&item->caption[i], w);
 		sx += w;
 	}
@@ -691,8 +696,10 @@ void UiFadeIn(int steps)
 void UiRenderItemDebug(UI_Item item)
 {
 	item.rect.x += 64; // pal_surface is shifted?
-	item.rect.y += 160;
-	SDL_FillRect(pal_surface, &item.rect, random(0, 255));
+	item.rect.y += SCREEN_Y;
+	if (SDL_FillRect(pal_surface, &item.rect, random(0, 255)) <= -1) {
+		SDL_Log(SDL_GetError());
+	}
 }
 
 void DrawSelector(UI_Item *item = 0)
@@ -806,15 +813,17 @@ void DrawMouse()
 {
 	SDL_GetMouseState(&MouseX, &MouseY);
 
-	float scaleX;
-	SDL_RenderGetScale(renderer, &scaleX, NULL);
-	MouseX /= scaleX;
-	MouseY /= scaleX;
+	if (renderer) {
+		float scaleX;
+		SDL_RenderGetScale(renderer, &scaleX, NULL);
+		MouseX /= scaleX;
+		MouseY /= scaleX;
 
-	SDL_Rect view;
-	SDL_RenderGetViewport(renderer, &view);
-	MouseX -= view.x;
-	MouseY -= view.y;
+		SDL_Rect view;
+		SDL_RenderGetViewport(renderer, &view);
+		MouseX -= view.x;
+		MouseY -= view.y;
+	}
 
 	DrawArt(MouseX, MouseY, &ArtCursor);
 }

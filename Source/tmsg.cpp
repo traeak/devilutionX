@@ -1,12 +1,10 @@
-//HEADER_GOES_HERE
-
-#include "../types.h"
+#include "diablo.h"
 
 DEVILUTION_BEGIN_NAMESPACE
 
 static TMsg *sgpTimedMsgHead;
 
-int __fastcall tmsg_get(BYTE *pbMsg, DWORD dwMaxLen)
+int tmsg_get(BYTE *pbMsg, DWORD dwMaxLen)
 {
 	int len;
 	TMsg *head;
@@ -25,7 +23,7 @@ int __fastcall tmsg_get(BYTE *pbMsg, DWORD dwMaxLen)
 	return len;
 }
 
-void __fastcall tmsg_add(BYTE *pbMsg, BYTE bLen)
+void tmsg_add(BYTE *pbMsg, BYTE bLen)
 {
 	TMsg **tail;
 
@@ -40,13 +38,18 @@ void __fastcall tmsg_add(BYTE *pbMsg, BYTE bLen)
 	*tail = msg;
 }
 
-void *__cdecl tmsg_cleanup()
+void tmsg_start()
 {
+	/// ASSERT: assert(! sgpTimedMsgHead);
+}
+
+void *tmsg_cleanup()
+{
+	TMsg *next;
+
 	while (sgpTimedMsgHead) {
-		TMsg *next = sgpTimedMsgHead->hdr.pNext;
-		TMsg *head = sgpTimedMsgHead;
-		sgpTimedMsgHead = NULL;
-		mem_free_dbg(head);
+		next = sgpTimedMsgHead->hdr.pNext;
+		MemFreeDbg(sgpTimedMsgHead);
 		sgpTimedMsgHead = next;
 	}
 	return sgpTimedMsgHead;

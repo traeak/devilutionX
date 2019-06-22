@@ -2,6 +2,87 @@
 #ifndef __DIABLO_H__
 #define __DIABLO_H__
 
+#include "../types.h"
+
+//#ifdef __cplusplus
+//extern "C" {
+//#endif
+#include "appfat.h"
+#include "automap.h"
+#include "capture.h"
+#include "codec.h"
+#include "control.h"
+#include "cursor.h"
+#include "dead.h"
+#include "debug.h"
+#include "doom.h"
+#include "drlg_l1.h"
+#include "drlg_l2.h"
+#include "drlg_l3.h"
+#include "drlg_l4.h"
+#include "dthread.h"
+#include "dx.h"
+#include "effects.h"
+#include "encrypt.h"
+#include "engine.h"
+#include "error.h"
+#include "fault.h"
+#include "gamemenu.h"
+#include "gendung.h"
+#include "gmenu.h"
+#include "help.h"
+#include "init.h"
+#include "interfac.h"
+#include "inv.h"
+#include "itemdat.h"
+#include "items.h"
+#include "lighting.h"
+#include "loadsave.h"
+#include "logging.h"
+#include "mainmenu.h"
+#include "minitext.h"
+#include "misdat.h"
+#include "missiles.h"
+#include "monstdat.h"
+#include "monster.h"
+#include "movie.h"
+#include "mpqapi.h"
+#include "msg.h"
+#include "msgcmd.h"
+#include "multi.h"
+#include "nthread.h"
+#include "objdat.h"
+#include "objects.h"
+#include "pack.h"
+#include "palette.h"
+#include "path.h"
+#include "pfile.h"
+#include "player.h"
+#include "plrmsg.h"
+#include "portal.h"
+#include "quests.h"
+#include "restrict.h"
+#include "scrollrt.h"
+#include "setmaps.h"
+#include "sha.h"
+#include "sound.h"
+#include "spelldat.h"
+#include "spells.h"
+#include "stores.h"
+#include "sync.h"
+#include "textdat.h" // check file name
+#include "themes.h"
+#include "tmsg.h"
+#include "town.h"
+#include "towners.h"
+#include "track.h"
+#include "trigs.h"
+#include "wave.h"
+#include "render.h" // linked last, likely .s/.asm
+//#ifdef __cplusplus
+//}
+//#endif
+
 extern HWND ghMainWnd;
 extern int glMid1Seed[NUMLEVELS];
 extern int glMid2Seed[NUMLEVELS];
@@ -33,40 +114,40 @@ extern int PauseMode;         // weak
 extern char sgbMouseDown;     // weak
 extern int color_cycle_timer; // weak
 
-void __cdecl FreeGameMem();
-BOOL __fastcall StartGame(BOOL bNewGame, BOOL bSinglePlayer);
-void __fastcall run_game_loop(unsigned int uMsg);
-void __fastcall start_game(unsigned int uMsg);
-void __cdecl free_game();
-BOOL __cdecl diablo_get_not_running();
+void FreeGameMem();
+BOOL StartGame(BOOL bNewGame, BOOL bSinglePlayer);
+void run_game_loop(unsigned int uMsg);
+void start_game(unsigned int uMsg);
+void free_game();
+BOOL diablo_get_not_running();
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow);
-void __fastcall diablo_parse_flags(char *args);
-void __cdecl diablo_init_screen();
-BOOL __fastcall diablo_find_window(LPCSTR lpClassName);
-void __fastcall diablo_reload_process(HMODULE hModule);
-BOOL __cdecl PressEscKey();
+void diablo_parse_flags(char *args);
+void diablo_init_screen();
+BOOL diablo_find_window(LPCSTR lpClassName);
+void diablo_reload_process(HINSTANCE hInstance);
+BOOL PressEscKey();
 LRESULT CALLBACK DisableInputWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK GM_Game(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-BOOL __fastcall LeftMouseDown(int wParam);
-BOOL __fastcall LeftMouseCmd(BOOL bShift);
-BOOLEAN __cdecl TryIconCurs();
-void __cdecl LeftMouseUp();
-void __cdecl RightMouseDown();
-void __fastcall j_gmenu_on_mouse_move(LPARAM lParam);
-BOOL __fastcall PressSysKey(int wParam);
-void __fastcall diablo_hotkey_msg(int dwMsg);
-void __fastcall ReleaseKey(int vkey);
-void __fastcall PressKey(int vkey);
-void __cdecl diablo_pause_game();
-void __fastcall PressChar(int vkey);
-void __cdecl LoadLvlGFX();
-void __cdecl LoadAllGFX();
-void __fastcall CreateLevel(int lvldir);
-void __fastcall LoadGameLevel(BOOL firstflag, int lvldir);
-void __fastcall game_loop(BOOL bStartup);
-void __cdecl game_logic();
-void __fastcall timeout_cursor(BOOL bTimeout);
-void __cdecl diablo_color_cyc_logic();
+BOOL LeftMouseDown(int wParam);
+BOOL LeftMouseCmd(BOOL bShift);
+BOOL TryIconCurs();
+void LeftMouseUp();
+void RightMouseDown();
+void j_gmenu_on_mouse_move(LPARAM lParam);
+BOOL PressSysKey(int wParam);
+void diablo_hotkey_msg(DWORD dwMsg);
+void ReleaseKey(int vkey);
+void PressKey(int vkey);
+void diablo_pause_game();
+void PressChar(int vkey);
+void LoadLvlGFX();
+void LoadAllGFX();
+void CreateLevel(int lvldir);
+void LoadGameLevel(BOOL firstflag, int lvldir);
+void game_loop(BOOL bStartup);
+void game_logic();
+void timeout_cursor(BOOL bTimeout);
+void diablo_color_cyc_logic();
 
 /* data */
 
@@ -96,5 +177,11 @@ extern int framestart;
 extern BOOL FriendlyMode;
 extern char *spszMsgTbl[4];    // weak
 extern char *spszMsgKeyTbl[4]; // weak
+
+#ifdef DEVILUTION_STUB
+#include "miniwin/popdecl.inc"
+#endif
+
+DEVILUTION_END_NAMESPACE
 
 #endif /* __DIABLO_H__ */

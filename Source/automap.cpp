@@ -1,6 +1,4 @@
-//HEADER_GOES_HERE
-
-#include "../types.h"
+#include "diablo.h"
 
 DEVILUTION_BEGIN_NAMESPACE
 
@@ -8,17 +6,17 @@ DEVILUTION_BEGIN_NAMESPACE
 WORD automaptype[512];
 static int MapX;
 static int MapY;
-BOOL automapflag;    // idb
+BOOL automapflag;
 char AmShiftTab[32]; // [31]?
 unsigned char automapview[DMAXX][DMAXY];
-int AutoMapScale;   // idb
-int AutoMapXOfs;    // weak
-int AutoMapYOfs;    // weak
-int AutoMapPosBits; // weak
-int AutoMapXPos;    // weak
-int AutoMapYPos;    // weak
-int AMPlayerX;      // weak
-int AMPlayerY;      // weak
+int AutoMapScale;
+int AutoMapXOfs;
+int AutoMapYOfs;
+int AutoMapPosBits;
+int AutoMapXPos;
+int AutoMapYPos;
+int AMPlayerX;
+int AMPlayerY;
 
 // color used to draw the player's arrow
 #define COLOR_PLAYER (PAL8_ORANGE + 1)
@@ -38,7 +36,7 @@ int AMPlayerY;      // weak
 #define MAPFLAG_SQUARE 0x40
 #define MAPFLAG_STAIRS 0x80
 
-void __cdecl InitAutomapOnce()
+void InitAutomapOnce()
 {
 	automapflag = FALSE;
 	AutoMapScale = 50;
@@ -49,12 +47,12 @@ void __cdecl InitAutomapOnce()
 	AMPlayerY = 2;
 }
 
-void __cdecl InitAutomap()
+void InitAutomap()
 {
-	unsigned char b1, b2;
-	unsigned int dwTiles;
+	BYTE b1, b2;
+	DWORD dwTiles;
 	int x, y;
-	unsigned char *pAFile, *pTmp;
+	BYTE *pAFile, *pTmp;
 	int i, j;
 	int d;
 
@@ -106,42 +104,42 @@ void __cdecl InitAutomap()
 
 	for (y = 0; y < MAXDUNY; y++) {
 		for (x = 0; x < MAXDUNX; x++)
-			dFlags[x][y] &= ~DFLAG_EXPLORED;
+			dFlags[x][y] &= ~BFLAG_EXPLORED;
 	}
 }
 
-void __cdecl StartAutomap()
+void StartAutomap()
 {
 	AutoMapXOfs = 0;
 	AutoMapYOfs = 0;
 	automapflag = TRUE;
 }
 
-void __cdecl AutomapUp()
+void AutomapUp()
 {
-	--AutoMapXOfs;
-	--AutoMapYOfs;
+	AutoMapXOfs--;
+	AutoMapYOfs--;
 }
 
-void __cdecl AutomapDown()
+void AutomapDown()
 {
-	++AutoMapXOfs;
-	++AutoMapYOfs;
+	AutoMapXOfs++;
+	AutoMapYOfs++;
 }
 
-void __cdecl AutomapLeft()
+void AutomapLeft()
 {
-	--AutoMapXOfs;
-	++AutoMapYOfs;
+	AutoMapXOfs--;
+	AutoMapYOfs++;
 }
 
-void __cdecl AutomapRight()
+void AutomapRight()
 {
-	++AutoMapXOfs;
-	--AutoMapYOfs;
+	AutoMapXOfs++;
+	AutoMapYOfs--;
 }
 
-void __cdecl AutomapZoomIn()
+void AutomapZoomIn()
 {
 	if (AutoMapScale < 200) {
 		AutoMapScale += 5;
@@ -153,7 +151,7 @@ void __cdecl AutomapZoomIn()
 	}
 }
 
-void __cdecl AutomapZoomOut()
+void AutomapZoomOut()
 {
 	if (AutoMapScale > 50) {
 		AutoMapScale -= 5;
@@ -165,7 +163,7 @@ void __cdecl AutomapZoomOut()
 	}
 }
 
-void __cdecl DrawAutomap()
+void DrawAutomap()
 {
 	int cells;
 	int sx, sy;
@@ -177,7 +175,7 @@ void __cdecl DrawAutomap()
 		return;
 	}
 
-	gpBufEnd = (unsigned char *)&gpBuffer[(352 + 160) * 768];
+	gpBufEnd = (unsigned char *)&gpBuffer[(VIEWPORT_HEIGHT + SCREEN_Y) * BUFFER_WIDTH];
 
 	MapX = (ViewX - 16) >> 1;
 	while (MapX + AutoMapXOfs < 0)
@@ -249,11 +247,8 @@ void __cdecl DrawAutomap()
 	DrawAutomapPlr();
 	DrawAutomapGame();
 }
-// 4B8968: using guessed type int sbookflag;
-// 69BD04: using guessed type int questlog;
-// 69CF0C: using guessed type int gpBufEnd;
 
-void __fastcall DrawAutomapType(int sx, int sy, WORD automap_type)
+void DrawAutomapType(int sx, int sy, WORD automap_type)
 {
 	BOOL do_vert;
 	BOOL do_horz;
@@ -438,7 +433,7 @@ void __fastcall DrawAutomapType(int sx, int sy, WORD automap_type)
 	}
 }
 
-void __cdecl DrawAutomapPlr()
+void DrawAutomapPlr()
 {
 	int px, py;
 	int x, y;
@@ -506,36 +501,50 @@ void __cdecl DrawAutomapPlr()
 		DrawLine(x, y, x - AutoMapYPos, y - AMPlayerX, COLOR_PLAYER);
 		DrawLine(x - AutoMapYPos, y - AMPlayerX, x - AMPlayerX, y - AMPlayerX, COLOR_PLAYER);
 		DrawLine(x - AutoMapYPos, y - AMPlayerX, x - AMPlayerY - AMPlayerX, y, COLOR_PLAYER);
+		break;
 	}
 }
 
-WORD __fastcall GetAutomapType(int x, int y, BOOL view)
+WORD GetAutomapType(int x, int y, BOOL view)
 {
-	if (view) {
-		if (x == -1 && y >= 0 && y < DMAXY && automapview[0][y])
-			return ~GetAutomapType(0, y, FALSE) & (MAPFLAG_SQUARE << 8);
-		if (y == -1) {
-			if (x < 0)
-				return 0;
-			if (x < DMAXX && automapview[x][0])
-				return ~GetAutomapType(x, 0, FALSE) & (MAPFLAG_SQUARE << 8);
+	WORD rv;
+
+	if (view && x == -1 && y >= 0 && y < DMAXY && automapview[0][y]) {
+		if (GetAutomapType(0, y, FALSE) & (MAPFLAG_SQUARE << 8)) {
+			return 0;
+		} else {
+			return MAPFLAG_SQUARE << 8;
 		}
 	}
 
-	if (x >= 0 && x < DMAXX && y >= 0 && y < DMAXY) {
-		if (automapview[x][y] || !view) {
-			WORD type = automaptype[(BYTE)dungeon[x][y]];
-			if (type == 7 && GetAutomapType(x - 1, y, FALSE) & (MAPFLAG_HORZARCH << 8)
-			    && GetAutomapType(x, y - 1, FALSE) & (MAPFLAG_VERTARCH << 8)) {
-				type = 1;
-			}
-			return type;
+	if (view && y == -1 && x >= 0 && x < DMAXY && automapview[x][0]) {
+		if (GetAutomapType(x, 0, FALSE) & (MAPFLAG_SQUARE << 8)) {
+			return 0;
+		} else {
+			return MAPFLAG_SQUARE << 8;
 		}
 	}
-	return 0;
+
+	if (x < 0 || x >= DMAXX) {
+		return 0;
+	}
+	if (y < 0 || y >= DMAXX) {
+		return 0;
+	}
+	if (!automapview[x][y] && view) {
+		return 0;
+	}
+
+	rv = automaptype[(BYTE)dungeon[x][y]];
+	if (rv == 7
+	    && GetAutomapType(x - 1, y, FALSE) & (MAPFLAG_HORZARCH << 8)
+	    && GetAutomapType(x, y - 1, FALSE) & (MAPFLAG_VERTARCH << 8)) {
+		rv = 1;
+	}
+	return rv;
 }
 
-void __cdecl DrawAutomapGame()
+void DrawAutomapGame()
 {
 	char desc[256];
 	int nextline = 20;
@@ -558,7 +567,7 @@ void __cdecl DrawAutomapGame()
 	}
 }
 
-void __fastcall SetAutomapView(int x, int y)
+void SetAutomapView(int x, int y)
 {
 	WORD maptype, solid;
 	int xx, yy;
@@ -583,7 +592,7 @@ void __fastcall SetAutomapView(int x, int y)
 		} else if (GetAutomapType(xx - 1, yy, FALSE) & 0x4000) {
 			automapview[xx - 1][yy] = 1;
 		}
-		return;
+		break;
 	case 3:
 		if (solid) {
 			if (GetAutomapType(xx + 1, yy, FALSE) == 0x4007)
@@ -591,7 +600,7 @@ void __fastcall SetAutomapView(int x, int y)
 		} else if (GetAutomapType(xx, yy - 1, FALSE) & 0x4000) {
 			automapview[xx][yy - 1] = 1;
 		}
-		return;
+		break;
 	case 4:
 		if (solid) {
 			if (GetAutomapType(xx, yy + 1, FALSE) == 0x4007)
@@ -606,7 +615,7 @@ void __fastcall SetAutomapView(int x, int y)
 			if (GetAutomapType(xx - 1, yy - 1, FALSE) & 0x4000)
 				automapview[xx - 1][yy - 1] = 1;
 		}
-		return;
+		break;
 	case 5:
 		if (solid) {
 			if (GetAutomapType(xx, yy - 1, FALSE) & 0x4000)
@@ -616,7 +625,7 @@ void __fastcall SetAutomapView(int x, int y)
 		} else if (GetAutomapType(xx - 1, yy, FALSE) & 0x4000) {
 			automapview[xx - 1][yy] = 1;
 		}
-		return;
+		break;
 	case 6:
 		if (solid) {
 			if (GetAutomapType(xx - 1, yy, FALSE) & 0x4000)
@@ -626,11 +635,11 @@ void __fastcall SetAutomapView(int x, int y)
 		} else if (GetAutomapType(xx, yy - 1, FALSE) & 0x4000) {
 			automapview[xx][yy - 1] = 1;
 		}
-		return;
+		break;
 	}
 }
 
-void __cdecl AutomapZoomReset()
+void AutomapZoomReset()
 {
 	AutoMapXOfs = 0;
 	AutoMapYOfs = 0;

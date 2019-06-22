@@ -1,6 +1,6 @@
-//HEADER_GOES_HERE
-
-#include "../types.h"
+#include "diablo.h"
+#include "../3rdParty/Storm/Source/storm.h"
+#include "../DiabloUI/diabloui.h"
 
 DEVILUTION_BEGIN_NAMESPACE
 
@@ -21,7 +21,7 @@ BOOL deltaload;
 BYTE gbBufferMsgs;
 int pkt_counter;
 
-void __fastcall msg_send_drop_pkt(int pnum, int reason)
+void msg_send_drop_pkt(int pnum, int reason)
 {
 	TFakeDropPlr cmd;
 
@@ -31,7 +31,7 @@ void __fastcall msg_send_drop_pkt(int pnum, int reason)
 	msg_send_packet(pnum, &cmd, sizeof(cmd));
 }
 
-void __fastcall msg_send_packet(int pnum, const void *packet, DWORD dwSize)
+void msg_send_packet(int pnum, const void *packet, DWORD dwSize)
 {
 	TMegaPkt *packeta;
 	TFakeCmdPlr cmd;
@@ -52,7 +52,7 @@ void __fastcall msg_send_packet(int pnum, const void *packet, DWORD dwSize)
 }
 // 65AB24: using guessed type int sgnCurrMegaPlayer;
 
-TMegaPkt *__cdecl msg_get_next_packet()
+TMegaPkt *msg_get_next_packet()
 {
 	TMegaPkt *result;
 
@@ -69,7 +69,7 @@ TMegaPkt *__cdecl msg_get_next_packet()
 	return result;
 }
 
-BOOL __cdecl msg_wait_resync()
+BOOL msg_wait_resync()
 {
 	BOOL success;
 
@@ -106,20 +106,16 @@ BOOL __cdecl msg_wait_resync()
 // 676194: using guessed type char gbBufferMsgs;
 // 67862D: using guessed type char gbGameDestroyed;
 
-void __cdecl msg_free_packets()
+void msg_free_packets()
 {
-	TMegaPkt *tmp;
-
 	while (sgpMegaPkt) {
 		sgpCurrPkt = sgpMegaPkt->pNext;
-		tmp = sgpMegaPkt;
-		sgpMegaPkt = NULL;
-		mem_free_dbg(tmp);
+		MemFreeDbg(sgpMegaPkt);
 		sgpMegaPkt = sgpCurrPkt;
 	}
 }
 
-int __cdecl msg_wait_for_turns()
+int msg_wait_for_turns()
 {
 	int recieved;
 	DWORD turns;
@@ -155,9 +151,8 @@ int __cdecl msg_wait_for_turns()
 // 67618D: using guessed type char sgbDeltaChunks;
 // 67862D: using guessed type char gbGameDestroyed;
 // 6796E4: using guessed type char gbDeltaSender;
-// 679738: using guessed type int gdwTurnsInTransit;
 
-void __cdecl msg_process_net_packets()
+void msg_process_net_packets()
 {
 	if (gbMaxPlayers != 1) {
 		gbBufferMsgs = 2;
@@ -169,7 +164,7 @@ void __cdecl msg_process_net_packets()
 // 676194: using guessed type char gbBufferMsgs;
 // 679660: using guessed type char gbMaxPlayers;
 
-void __cdecl msg_pre_packet()
+void msg_pre_packet()
 {
 	int i;
 	int spaceLeft, pktSize;
@@ -201,7 +196,7 @@ void __cdecl msg_pre_packet()
 	}
 }
 
-void __fastcall DeltaExportData(int pnum)
+void DeltaExportData(int pnum)
 {
 	BYTE *dst, *dstEnd;
 	int size, i;
@@ -227,7 +222,7 @@ void __fastcall DeltaExportData(int pnum)
 	dthread_send_delta(pnum, CMD_DLEVEL_END, &src, 1);
 }
 
-BYTE *__fastcall DeltaExportItem(BYTE *dst, TCmdPItem *src)
+BYTE *DeltaExportItem(BYTE *dst, TCmdPItem *src)
 {
 	int i;
 
@@ -245,13 +240,13 @@ BYTE *__fastcall DeltaExportItem(BYTE *dst, TCmdPItem *src)
 	return dst;
 }
 
-BYTE *__fastcall DeltaExportObject(BYTE *dst, DObjectStr *src)
+BYTE *DeltaExportObject(BYTE *dst, DObjectStr *src)
 {
 	memcpy(dst, src, sizeof(DObjectStr) * MAXOBJECTS);
 	return dst + sizeof(DObjectStr) * MAXOBJECTS;
 }
 
-BYTE *__fastcall DeltaExportMonster(BYTE *dst, DMonsterStr *src)
+BYTE *DeltaExportMonster(BYTE *dst, DMonsterStr *src)
 {
 	int i;
 
@@ -269,7 +264,7 @@ BYTE *__fastcall DeltaExportMonster(BYTE *dst, DMonsterStr *src)
 	return dst;
 }
 
-BYTE *__fastcall DeltaExportJunk(BYTE *dst)
+BYTE *DeltaExportJunk(BYTE *dst)
 {
 	int i;
 	MultiQuests *mq;
@@ -286,21 +281,22 @@ BYTE *__fastcall DeltaExportJunk(BYTE *dst)
 		}
 	}
 
+	mq = sgJunk.quests;
 	for (i = 0; i < MAXMULTIQUESTS; i++) {
 		if (questlist[i]._qflags & 1) {
-			mq = &sgJunk.quests[i];
 			mq->qlog = quests[i]._qlog;
 			mq->qstate = quests[i]._qactive;
 			mq->qvar1 = quests[i]._qvar1;
 			memcpy(dst, mq, sizeof(*mq));
 			dst += sizeof(*mq);
+			mq++;
 		}
 	}
 
 	return dst;
 }
 
-int __fastcall msg_comp_level(BYTE *buffer, BYTE *end)
+int msg_comp_level(BYTE *buffer, BYTE *end)
 {
 	int size, pkSize;
 
@@ -311,7 +307,7 @@ int __fastcall msg_comp_level(BYTE *buffer, BYTE *end)
 	return pkSize + 1;
 }
 
-void __cdecl delta_init()
+void delta_init()
 {
 	sgbDeltaChanged = FALSE;
 	memset(&sgJunk, 0xFF, sizeof(sgJunk));
@@ -321,7 +317,7 @@ void __cdecl delta_init()
 }
 // 676190: using guessed type int deltaload;
 
-void __fastcall delta_kill_monster(int mi, BYTE x, BYTE y, BYTE bLevel)
+void delta_kill_monster(int mi, BYTE x, BYTE y, BYTE bLevel)
 {
 	DMonsterStr *pD;
 
@@ -336,7 +332,7 @@ void __fastcall delta_kill_monster(int mi, BYTE x, BYTE y, BYTE bLevel)
 }
 // 679660: using guessed type char gbMaxPlayers;
 
-void __fastcall delta_monster_hp(int mi, int hp, BYTE bLevel)
+void delta_monster_hp(int mi, int hp, BYTE bLevel)
 {
 	DMonsterStr *pD;
 
@@ -349,24 +345,29 @@ void __fastcall delta_monster_hp(int mi, int hp, BYTE bLevel)
 }
 // 679660: using guessed type char gbMaxPlayers;
 
-void __fastcall delta_sync_monster(TCmdLocParam1 *packet, BYTE level)
+void delta_sync_monster(const TSyncMonster *pSync, BYTE bLevel)
 {
 	DMonsterStr *pD;
 
-	if (gbMaxPlayers != 1) {
-		sgbDeltaChanged = TRUE;
-		pD = &sgLevels[level].monster[(BYTE)packet->bCmd];
-		if (pD->_mhitpoints) {
-			pD->_mx = packet->x;
-			pD->_my = packet->y;
-			pD->_mactive = -1;
-			pD->_menemy = packet->wParam1;
-		}
+	if (gbMaxPlayers == 1) {
+		return;
+	}
+
+	/// ASSERT: assert(pSync != NULL);
+	/// ASSERT: assert(bLevel < NUMLEVELS);
+	sgbDeltaChanged = TRUE;
+
+	pD = &sgLevels[bLevel].monster[pSync->_mndx];
+	if (pD->_mhitpoints != 0) {
+		pD->_mx = pSync->_mx;
+		pD->_my = pSync->_my;
+		pD->_mactive = UCHAR_MAX;
+		pD->_menemy = pSync->_menemy;
 	}
 }
 // 679660: using guessed type char gbMaxPlayers;
 
-void __fastcall delta_sync_golem(TCmdGolem *pG, int pnum, BYTE bLevel)
+void delta_sync_golem(TCmdGolem *pG, int pnum, BYTE bLevel)
 {
 	DMonsterStr *pD;
 
@@ -375,7 +376,7 @@ void __fastcall delta_sync_golem(TCmdGolem *pG, int pnum, BYTE bLevel)
 		pD = &sgLevels[bLevel].monster[pnum];
 		pD->_mx = pG->_mx;
 		pD->_my = pG->_my;
-		pD->_mactive = -1;
+		pD->_mactive = UCHAR_MAX;
 		pD->_menemy = pG->_menemy;
 		pD->_mdir = pG->_mdir;
 		pD->_mhitpoints = pG->_mhitpoints;
@@ -383,7 +384,7 @@ void __fastcall delta_sync_golem(TCmdGolem *pG, int pnum, BYTE bLevel)
 }
 // 679660: using guessed type char gbMaxPlayers;
 
-void __fastcall delta_leave_sync(BYTE bLevel)
+void delta_leave_sync(BYTE bLevel)
 {
 	int i, ma;
 	DMonsterStr *pD;
@@ -413,17 +414,17 @@ void __fastcall delta_leave_sync(BYTE bLevel)
 // 43C17D: could not find valid save-restore pair for edi
 // 679660: using guessed type char gbMaxPlayers;
 
-BOOL __fastcall delta_portal_inited(int i)
+BOOL delta_portal_inited(int i)
 {
 	return sgJunk.portal[i].x == 0xFF;
 }
 
-BOOL __fastcall delta_quest_inited(int i)
+BOOL delta_quest_inited(int i)
 {
 	return sgJunk.quests[i].qstate != 0xFF;
 }
 
-void __fastcall DeltaAddItem(int ii)
+void DeltaAddItem(int ii)
 {
 	int i;
 	TCmdPItem *pD;
@@ -431,9 +432,8 @@ void __fastcall DeltaAddItem(int ii)
 	if (gbMaxPlayers == 1) {
 		return;
 	}
-
-	for (i = 0; i < MAXITEMS; i++) {
-		pD = &sgLevels[currlevel].item[i];
+	pD = sgLevels[currlevel].item;
+	for (i = 0; i < MAXITEMS; i++,pD++) {
 		if (pD->bCmd != 0xFF
 		    && pD->wIndx == item[ii].IDidx
 		    && pD->wCI == item[ii]._iCreateInfo
@@ -443,8 +443,8 @@ void __fastcall DeltaAddItem(int ii)
 		}
 	}
 
-	for (i = 0; i < MAXITEMS; i++) {
-		pD = &sgLevels[currlevel].item[i];
+	pD = sgLevels[currlevel].item;
+	for (i = 0; i < MAXITEMS; i++, pD++) {
 		if (pD->bCmd == 0xFF) {
 			pD->bCmd = CMD_STAND;
 			sgbDeltaChanged = TRUE;
@@ -463,9 +463,8 @@ void __fastcall DeltaAddItem(int ii)
 		}
 	}
 }
-// 679660: using guessed type char gbMaxPlayers;
 
-void __cdecl DeltaSaveLevel()
+void DeltaSaveLevel()
 {
 	int i;
 
@@ -480,7 +479,7 @@ void __cdecl DeltaSaveLevel()
 }
 // 679660: using guessed type char gbMaxPlayers;
 
-void __cdecl DeltaLoadLevel()
+void DeltaLoadLevel()
 {
 	int ii, ot;
 	int i, j, k, l;
@@ -523,7 +522,7 @@ void __cdecl DeltaLoadLevel()
 					decode_enemy(i, sgLevels[currlevel].monster[i]._menemy);
 					if (monster[i]._mx && monster[i]._mx != 1 || monster[i]._my)
 						dMonster[monster[i]._mx][monster[i]._my] = i + 1;
-					if (i < 4) {
+					if (i < MAX_PLRS) {
 						MAI_Golum(i);
 						monster[i]._mFlags |= (MFLAG_TARGETS_MONSTER | MFLAG_GOLEM);
 					} else {
@@ -631,7 +630,7 @@ void __cdecl DeltaLoadLevel()
 }
 // 679660: using guessed type char gbMaxPlayers;
 
-void __fastcall NetSendCmd(BOOL bHiPri, BYTE bCmd)
+void NetSendCmd(BOOL bHiPri, BYTE bCmd)
 {
 	TCmd cmd;
 
@@ -642,7 +641,7 @@ void __fastcall NetSendCmd(BOOL bHiPri, BYTE bCmd)
 		NetSendLoPri((BYTE *)&cmd, sizeof(cmd));
 }
 
-void __fastcall NetSendCmdGolem(BYTE mx, BYTE my, BYTE dir, BYTE menemy, int hp, BYTE cl)
+void NetSendCmdGolem(BYTE mx, BYTE my, BYTE dir, BYTE menemy, int hp, BYTE cl)
 {
 	TCmdGolem cmd;
 
@@ -656,9 +655,9 @@ void __fastcall NetSendCmdGolem(BYTE mx, BYTE my, BYTE dir, BYTE menemy, int hp,
 	NetSendLoPri((BYTE *)&cmd, sizeof(cmd));
 }
 
-void __fastcall NetSendCmdLoc(BOOL bHiPri, BYTE bCmd, BYTE x, BYTE y)
+void NetSendCmdLoc(BOOL bHiPri, BYTE bCmd, BYTE x, BYTE y)
 {
-	TCmdLoc cmd;
+	ALIGN_BY_1 TCmdLoc cmd;
 
 	cmd.bCmd = bCmd;
 	cmd.x = x;
@@ -669,7 +668,7 @@ void __fastcall NetSendCmdLoc(BOOL bHiPri, BYTE bCmd, BYTE x, BYTE y)
 		NetSendLoPri((BYTE *)&cmd, sizeof(cmd));
 }
 
-void __fastcall NetSendCmdLocParam1(BOOL bHiPri, BYTE bCmd, BYTE x, BYTE y, WORD wParam1)
+void NetSendCmdLocParam1(BOOL bHiPri, BYTE bCmd, BYTE x, BYTE y, WORD wParam1)
 {
 	TCmdLocParam1 cmd;
 
@@ -683,7 +682,7 @@ void __fastcall NetSendCmdLocParam1(BOOL bHiPri, BYTE bCmd, BYTE x, BYTE y, WORD
 		NetSendLoPri((BYTE *)&cmd, sizeof(cmd));
 }
 
-void __fastcall NetSendCmdLocParam2(BOOL bHiPri, BYTE bCmd, BYTE x, BYTE y, WORD wParam1, WORD wParam2)
+void NetSendCmdLocParam2(BOOL bHiPri, BYTE bCmd, BYTE x, BYTE y, WORD wParam1, WORD wParam2)
 {
 	TCmdLocParam2 cmd;
 
@@ -698,7 +697,7 @@ void __fastcall NetSendCmdLocParam2(BOOL bHiPri, BYTE bCmd, BYTE x, BYTE y, WORD
 		NetSendLoPri((BYTE *)&cmd, sizeof(cmd));
 }
 
-void __fastcall NetSendCmdLocParam3(BOOL bHiPri, BYTE bCmd, BYTE x, BYTE y, WORD wParam1, WORD wParam2, WORD wParam3)
+void NetSendCmdLocParam3(BOOL bHiPri, BYTE bCmd, BYTE x, BYTE y, WORD wParam1, WORD wParam2, WORD wParam3)
 {
 	TCmdLocParam3 cmd;
 
@@ -714,9 +713,9 @@ void __fastcall NetSendCmdLocParam3(BOOL bHiPri, BYTE bCmd, BYTE x, BYTE y, WORD
 		NetSendLoPri((BYTE *)&cmd, sizeof(cmd));
 }
 
-void __fastcall NetSendCmdParam1(BOOL bHiPri, BYTE bCmd, WORD wParam1)
+void NetSendCmdParam1(BOOL bHiPri, BYTE bCmd, WORD wParam1)
 {
-	TCmdParam1 cmd;
+	ALIGN_BY_1 TCmdParam1 cmd;
 
 	cmd.bCmd = bCmd;
 	cmd.wParam1 = wParam1;
@@ -726,7 +725,7 @@ void __fastcall NetSendCmdParam1(BOOL bHiPri, BYTE bCmd, WORD wParam1)
 		NetSendLoPri((BYTE *)&cmd, sizeof(cmd));
 }
 
-void __fastcall NetSendCmdParam2(BOOL bHiPri, BYTE bCmd, WORD wParam1, WORD wParam2)
+void NetSendCmdParam2(BOOL bHiPri, BYTE bCmd, WORD wParam1, WORD wParam2)
 {
 	TCmdParam2 cmd;
 
@@ -739,7 +738,7 @@ void __fastcall NetSendCmdParam2(BOOL bHiPri, BYTE bCmd, WORD wParam1, WORD wPar
 		NetSendLoPri((BYTE *)&cmd, sizeof(cmd));
 }
 
-void __fastcall NetSendCmdParam3(BOOL bHiPri, BYTE bCmd, WORD wParam1, WORD wParam2, WORD wParam3)
+void NetSendCmdParam3(BOOL bHiPri, BYTE bCmd, WORD wParam1, WORD wParam2, WORD wParam3)
 {
 	TCmdParam3 cmd;
 
@@ -753,7 +752,7 @@ void __fastcall NetSendCmdParam3(BOOL bHiPri, BYTE bCmd, WORD wParam1, WORD wPar
 		NetSendLoPri((BYTE *)&cmd, sizeof(cmd));
 }
 
-void __fastcall NetSendCmdQuest(BOOL bHiPri, BYTE q)
+void NetSendCmdQuest(BOOL bHiPri, BYTE q)
 {
 	TCmdQuest cmd;
 
@@ -768,7 +767,7 @@ void __fastcall NetSendCmdQuest(BOOL bHiPri, BYTE q)
 		NetSendLoPri((BYTE *)&cmd, sizeof(cmd));
 }
 
-void __fastcall NetSendCmdGItem(BOOL bHiPri, BYTE bCmd, BYTE mast, BYTE pnum, BYTE ii)
+void NetSendCmdGItem(BOOL bHiPri, BYTE bCmd, BYTE mast, BYTE pnum, BYTE ii)
 {
 	TCmdGItem cmd;
 
@@ -809,7 +808,7 @@ void __fastcall NetSendCmdGItem(BOOL bHiPri, BYTE bCmd, BYTE mast, BYTE pnum, BY
 		NetSendLoPri((BYTE *)&cmd, sizeof(cmd));
 }
 
-void __fastcall NetSendCmdGItem2(BOOL usonly, BYTE bCmd, BYTE mast, BYTE pnum, TCmdGItem *p)
+void NetSendCmdGItem2(BOOL usonly, BYTE bCmd, BYTE mast, BYTE pnum, TCmdGItem *p)
 {
 	int ticks;
 	TCmdGItem cmd;
@@ -835,7 +834,7 @@ void __fastcall NetSendCmdGItem2(BOOL usonly, BYTE bCmd, BYTE mast, BYTE pnum, T
 	multi_msg_add((BYTE *)&cmd.bCmd, sizeof(cmd));
 }
 
-BOOL __fastcall NetSendCmdReq2(BYTE bCmd, BYTE mast, BYTE pnum, TCmdGItem *p)
+BOOL NetSendCmdReq2(BYTE bCmd, BYTE mast, BYTE pnum, TCmdGItem *p)
 {
 	int ticks;
 	TCmdGItem cmd;
@@ -857,7 +856,7 @@ BOOL __fastcall NetSendCmdReq2(BYTE bCmd, BYTE mast, BYTE pnum, TCmdGItem *p)
 	return TRUE;
 }
 
-void __fastcall NetSendCmdExtra(TCmdGItem *p)
+void NetSendCmdExtra(TCmdGItem *p)
 {
 	TCmdGItem cmd;
 
@@ -867,7 +866,7 @@ void __fastcall NetSendCmdExtra(TCmdGItem *p)
 	NetSendHiPri((BYTE *)&cmd, sizeof(cmd));
 }
 
-void __fastcall NetSendCmdPItem(BOOL bHiPri, BYTE bCmd, BYTE x, BYTE y)
+void NetSendCmdPItem(BOOL bHiPri, BYTE bCmd, BYTE x, BYTE y)
 {
 	TCmdPItem cmd;
 
@@ -903,7 +902,7 @@ void __fastcall NetSendCmdPItem(BOOL bHiPri, BYTE bCmd, BYTE x, BYTE y)
 		NetSendLoPri((BYTE *)&cmd, sizeof(cmd));
 }
 
-void __fastcall NetSendCmdChItem(BOOL bHiPri, BYTE bLoc)
+void NetSendCmdChItem(BOOL bHiPri, BYTE bLoc)
 {
 	TCmdChItem cmd;
 
@@ -920,7 +919,7 @@ void __fastcall NetSendCmdChItem(BOOL bHiPri, BYTE bLoc)
 		NetSendLoPri((BYTE *)&cmd, sizeof(cmd));
 }
 
-void __fastcall NetSendCmdDelItem(BOOL bHiPri, BYTE bLoc)
+void NetSendCmdDelItem(BOOL bHiPri, BYTE bLoc)
 {
 	TCmdDelItem cmd;
 
@@ -932,7 +931,7 @@ void __fastcall NetSendCmdDelItem(BOOL bHiPri, BYTE bLoc)
 		NetSendLoPri((BYTE *)&cmd, sizeof(cmd));
 }
 
-void __fastcall NetSendCmdDItem(BOOL bHiPri, int ii)
+void NetSendCmdDItem(BOOL bHiPri, int ii)
 {
 	TCmdPItem cmd;
 
@@ -968,7 +967,7 @@ void __fastcall NetSendCmdDItem(BOOL bHiPri, int ii)
 		NetSendLoPri((BYTE *)&cmd, sizeof(cmd));
 }
 
-void __fastcall NetSendCmdDamage(BOOL bHiPri, BYTE bPlr, DWORD dwDam)
+void NetSendCmdDamage(BOOL bHiPri, BYTE bPlr, DWORD dwDam)
 {
 	TCmdDamage cmd;
 
@@ -981,24 +980,24 @@ void __fastcall NetSendCmdDamage(BOOL bHiPri, BYTE bPlr, DWORD dwDam)
 		NetSendLoPri((BYTE *)&cmd, sizeof(cmd));
 }
 
-void __fastcall NetSendCmdString(int pmask, const char *pszStr)
+void NetSendCmdString(int pmask, const char *pszStr)
 {
 	int dwStrLen;
 	TCmdString cmd;
 
-	cmd.bCmd = CMD_STRING;
 	dwStrLen = strlen(pszStr);
+	cmd.bCmd = CMD_STRING;
 	strcpy(cmd.str, pszStr);
 	multi_send_msg_packet(pmask, (BYTE *)&cmd.bCmd, dwStrLen + 2);
 }
 
-void __fastcall RemovePlrPortal(int pnum)
+void RemovePlrPortal(int pnum)
 {
 	memset(&sgJunk.portal[pnum], 0xFF, sizeof(sgJunk.portal[pnum]));
 	sgbDeltaChanged = TRUE;
 }
 
-int __fastcall ParseCmd(int pnum, TCmd *pCmd)
+int ParseCmd(int pnum, TCmd *pCmd)
 {
 	sbLastCmd = pCmd->bCmd;
 	if (sgwPackPlrOffsetTbl[pnum] != 0 && sbLastCmd != CMD_ACK_PLRINFO && sbLastCmd != CMD_SEND_PLRINFO)
@@ -1160,51 +1159,58 @@ int __fastcall ParseCmd(int pnum, TCmd *pCmd)
 		return 0;
 	}
 
-	return On_DLEVEL(pnum, (TCmdPlrInfoHdr *)pCmd);
+	return On_DLEVEL(pnum, pCmd);
 }
 // 66E4A9: using guessed type char sbLastCmd;
 // 67618D: using guessed type char sgbDeltaChunks;
 // 6796E4: using guessed type char gbDeltaSender;
 
-int __fastcall On_DLEVEL(int pnum, TCmdPlrInfoHdr *pCmd)
+int On_DLEVEL(int pnum, TCmd *pCmd)
 {
-	if ((unsigned char)gbDeltaSender == pnum) {
-		if (sgbRecvCmd != CMD_DLEVEL_END) {
-			if (sgbRecvCmd == pCmd->bCmd) {
-			LABEL_17:
-				memcpy(&sgRecvBuf[pCmd->wOffset], &pCmd[1], pCmd->wBytes);
-				sgdwRecvOffset += pCmd->wBytes;
-				return pCmd->wBytes + 5;
-			}
-			DeltaImportData(sgbRecvCmd, sgdwRecvOffset);
-			if (pCmd->bCmd == CMD_DLEVEL_END) {
-				sgbDeltaChunks = 20;
-				sgbRecvCmd = CMD_DLEVEL_END;
-				return pCmd->wBytes + 5;
-			}
-			sgdwRecvOffset = 0;
-		LABEL_16:
-			sgbRecvCmd = pCmd->bCmd;
-			goto LABEL_17;
+	TCmdPlrInfoHdr *p;
+
+	p = (TCmdPlrInfoHdr *)pCmd;
+
+	if(gbDeltaSender != pnum) {
+		if(p->bCmd == CMD_DLEVEL_END) {
+			gbDeltaSender = pnum;
+			sgbRecvCmd = CMD_DLEVEL_END;
+		} else if(p->bCmd == CMD_DLEVEL_0 && p->wOffset == 0) {
+			gbDeltaSender = pnum;
+			sgbRecvCmd = CMD_DLEVEL_END;
+		} else {
+			return p->wBytes + sizeof(*p);
 		}
-	} else {
-		if (pCmd->bCmd != CMD_DLEVEL_END && (pCmd->bCmd != CMD_DLEVEL_0 || pCmd->wOffset))
-			return pCmd->wBytes + 5;
-		gbDeltaSender = pnum;
-		sgbRecvCmd = CMD_DLEVEL_END;
 	}
-	if (pCmd->bCmd == CMD_DLEVEL_END) {
-		sgbDeltaChunks = 20;
-		return pCmd->wBytes + 5;
+	if(sgbRecvCmd == CMD_DLEVEL_END) {
+		if(p->bCmd == CMD_DLEVEL_END) {
+			sgbDeltaChunks = 20;
+			return p->wBytes + sizeof(*p);
+		} else if(p->bCmd == CMD_DLEVEL_0 && p->wOffset == 0) {
+			sgdwRecvOffset = 0;
+			sgbRecvCmd = p->bCmd;
+		} else {
+			return p->wBytes + sizeof(*p);
+		}
+	} else if(sgbRecvCmd != p->bCmd) {
+		DeltaImportData(sgbRecvCmd, sgdwRecvOffset);
+		if(p->bCmd == CMD_DLEVEL_END) {
+			sgbDeltaChunks = 20;
+			sgbRecvCmd = CMD_DLEVEL_END;
+			return p->wBytes + sizeof(*p);
+		} else {
+			sgdwRecvOffset = 0;
+			sgbRecvCmd = p->bCmd;
+		}
 	}
-	if (pCmd->bCmd == CMD_DLEVEL_0 && !pCmd->wOffset) {
-		sgdwRecvOffset = 0;
-		goto LABEL_16;
-	}
-	return pCmd->wBytes + 5;
+
+	/// ASSERT: assert(p->wOffset == sgdwRecvOffset);
+	memcpy(&sgRecvBuf[p->wOffset], &p[1], p->wBytes);
+	sgdwRecvOffset += p->wBytes;
+	return p->wBytes + sizeof(*p);
 }
 
-void __fastcall DeltaImportData(BYTE cmd, DWORD recv_offset)
+void DeltaImportData(BYTE cmd, DWORD recv_offset)
 {
 	BYTE i;
 	BYTE *src;
@@ -1221,7 +1227,7 @@ void __fastcall DeltaImportData(BYTE cmd, DWORD recv_offset)
 		src = DeltaImportObject(src, sgLevels[i].object);
 		DeltaImportMonster(src, sgLevels[i].monster);
 	} else {
-		TermMsg("msg:1");
+		app_fatal("msg:1");
 	}
 
 	sgbDeltaChunks++;
@@ -1229,7 +1235,7 @@ void __fastcall DeltaImportData(BYTE cmd, DWORD recv_offset)
 }
 // 67618D: using guessed type char sgbDeltaChunks;
 
-BYTE *__fastcall DeltaImportItem(BYTE *src, TCmdPItem *dst)
+BYTE *DeltaImportItem(BYTE *src, TCmdPItem *dst)
 {
 	int i;
 
@@ -1247,13 +1253,13 @@ BYTE *__fastcall DeltaImportItem(BYTE *src, TCmdPItem *dst)
 	return src;
 }
 
-BYTE *__fastcall DeltaImportObject(BYTE *src, DObjectStr *dst)
+BYTE *DeltaImportObject(BYTE *src, DObjectStr *dst)
 {
 	memcpy(dst, src, sizeof(DObjectStr) * MAXOBJECTS);
 	return src + sizeof(DObjectStr) * MAXOBJECTS;
 }
 
-BYTE *__fastcall DeltaImportMonster(BYTE *src, DMonsterStr *dst)
+BYTE *DeltaImportMonster(BYTE *src, DMonsterStr *dst)
 {
 	int i;
 
@@ -1271,9 +1277,10 @@ BYTE *__fastcall DeltaImportMonster(BYTE *src, DMonsterStr *dst)
 	return src;
 }
 
-void __fastcall DeltaImportJunk(BYTE *src)
+void DeltaImportJunk(BYTE *src)
 {
 	int i;
+	MultiQuests *mq;
 
 	for (i = 0; i < MAXPORTAL; i++) {
 		if (*src == 0xFF) {
@@ -1293,23 +1300,25 @@ void __fastcall DeltaImportJunk(BYTE *src)
 		}
 	}
 
+	mq = sgJunk.quests;
 	for (i = 0; i < MAXMULTIQUESTS; i++) {
 		if (questlist[i]._qflags & 1) {
-			memcpy(&sgJunk.quests[i], src, sizeof(MultiQuests));
+			memcpy(mq, src, sizeof(MultiQuests));
 			src += sizeof(MultiQuests);
-			quests[i]._qlog = sgJunk.quests[i].qlog;
-			quests[i]._qactive = sgJunk.quests[i].qstate;
-			quests[i]._qvar1 = sgJunk.quests[i].qvar1;
+			quests[i]._qlog = mq->qlog;
+			quests[i]._qactive = mq->qstate;
+			quests[i]._qvar1 = mq->qvar1;
+			mq++;
 		}
 	}
 }
 
-int __fastcall On_SYNCDATA(void *packet, int pnum)
+int On_SYNCDATA(void *packet, int pnum)
 {
-	return SyncData(pnum, (TSyncHeader *)packet);
+	return sync_update(pnum, (const BYTE *)packet);
 }
 
-int __fastcall On_WALKXY(TCmdLoc *pCmd, int pnum)
+int On_WALKXY(TCmdLoc *pCmd, int pnum)
 {
 	if (gbBufferMsgs != 1 && currlevel == plr[pnum].plrlevel) {
 		ClrPlrPath(pnum);
@@ -1320,7 +1329,7 @@ int __fastcall On_WALKXY(TCmdLoc *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_ADDSTR(TCmdParam1 *pCmd, int pnum)
+int On_ADDSTR(TCmdParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -1330,7 +1339,7 @@ int __fastcall On_ADDSTR(TCmdParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_ADDMAG(TCmdParam1 *pCmd, int pnum)
+int On_ADDMAG(TCmdParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -1340,7 +1349,7 @@ int __fastcall On_ADDMAG(TCmdParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_ADDDEX(TCmdParam1 *pCmd, int pnum)
+int On_ADDDEX(TCmdParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -1350,7 +1359,7 @@ int __fastcall On_ADDDEX(TCmdParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_ADDVIT(TCmdParam1 *pCmd, int pnum)
+int On_ADDVIT(TCmdParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -1360,7 +1369,7 @@ int __fastcall On_ADDVIT(TCmdParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_SBSPELL(TCmdParam1 *pCmd, int pnum)
+int On_SBSPELL(TCmdParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs != 1) {
 		if (currlevel != 0 || spelldata[pCmd->wParam1].sTownSpell) {
@@ -1375,7 +1384,7 @@ int __fastcall On_SBSPELL(TCmdParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-void msg_errorf(const char *pszFmt, ...)
+void __cdecl msg_errorf(const char *pszFmt, ...)
 {
 	static DWORD msg_err_timer;
 	DWORD ticks;
@@ -1392,7 +1401,7 @@ void msg_errorf(const char *pszFmt, ...)
 	va_end(va);
 }
 
-int __fastcall On_GOTOGETITEM(TCmdLocParam1 *pCmd, int pnum)
+int On_GOTOGETITEM(TCmdLocParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs != 1 && currlevel == plr[pnum].plrlevel) {
 		MakePlrPath(pnum, pCmd->x, pCmd->y, FALSE);
@@ -1403,7 +1412,7 @@ int __fastcall On_GOTOGETITEM(TCmdLocParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_REQUESTGITEM(TCmdGItem *pCmd, int pnum)
+int On_REQUESTGITEM(TCmdGItem *pCmd, int pnum)
 {
 	if (gbBufferMsgs != 1 && i_own_level(plr[pnum].plrlevel)) {
 		if (GetItemRecord(pCmd->dwSeed, pCmd->wCI, pCmd->wIndx)) {
@@ -1423,7 +1432,7 @@ int __fastcall On_REQUESTGITEM(TCmdGItem *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-BOOL __fastcall i_own_level(int nReqLevel)
+BOOL i_own_level(int nReqLevel)
 {
 	int i;
 
@@ -1439,7 +1448,7 @@ BOOL __fastcall i_own_level(int nReqLevel)
 }
 // 676194: using guessed type char gbBufferMsgs;
 
-int __fastcall On_GETITEM(TCmdGItem *pCmd, int pnum)
+int On_GETITEM(TCmdGItem *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -1464,42 +1473,44 @@ int __fastcall On_GETITEM(TCmdGItem *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-BOOL __fastcall delta_get_item(TCmdGItem *pI, BYTE bLevel)
+BOOL delta_get_item(TCmdGItem *pI, BYTE bLevel)
 {
 	BOOL result;
 	TCmdPItem *pD;
 	int i;
+	BOOL found;
 
+	result = TRUE;
+	found = FALSE;
 	if (gbMaxPlayers != 1) {
-		for (i = 0; i < MAXITEMS; i++) {
-			pD = &sgLevels[bLevel].item[i];
-			if (*(BYTE *)pD != 0xFF
-			    && pD->wIndx == pI->wIndx
-			    && pD->wCI == pI->wCI
-			    && pD->dwSeed == pI->dwSeed) {
-				if (pD->bCmd == CMD_STAND) {
-					sgbDeltaChanged = 1;
-					pD->bCmd = CMD_WALKXY;
-					return TRUE;
-				} else if (pD->bCmd == CMD_WALKXY) {
-					return TRUE;
-				} else if (pD->bCmd == CMD_ACK_PLRINFO) {
-					*(BYTE *)pD = 0xFF;
-					sgbDeltaChanged = 1;
-					return TRUE;
-				} else {
-					TermMsg("delta:1");
-				}
-				return result;
+		pD = sgLevels[bLevel].item;
+		for (i = 0; i < MAXITEMS; i++, pD++) {
+			if (pD->bCmd != 0xFF && pD->wIndx == pI->wIndx && pD->wCI == pI->wCI && pD->dwSeed == pI->dwSeed) {
+				found = TRUE;
+				break;
 			}
 		}
-
+		if (found) {
+			if (pD->bCmd == CMD_WALKXY) {
+				return result;
+			}
+			if (pD->bCmd == CMD_STAND) {
+				sgbDeltaChanged = 1;
+				pD->bCmd = CMD_WALKXY;
+				return result;
+			}
+			if (pD->bCmd == CMD_ACK_PLRINFO) {
+				pD->bCmd = 0xFF;
+				sgbDeltaChanged = 1;
+				return result;
+			}
+			app_fatal("delta:1");
+		}
 		if (((pI->wCI >> 8) & 0x80) == 0)
 			return FALSE;
-
-		for (i = 0; i < MAXITEMS; i++) {
-			pD = &sgLevels[bLevel].item[i];
-			if (*(BYTE *)pD == 0xFF) {
+		pD = sgLevels[bLevel].item;
+		for (i = 0; i < MAXITEMS; i++, pD++) {
+			if (pD->bCmd == 0xFF) {
 				sgbDeltaChanged = 1;
 				pD->bCmd = CMD_WALKXY;
 				pD->x = pI->x;
@@ -1514,15 +1525,16 @@ BOOL __fastcall delta_get_item(TCmdGItem *pI, BYTE bLevel)
 				pD->bMCh = pI->bMCh;
 				pD->wValue = pI->wValue;
 				pD->dwBuff = pI->dwBuff;
-				return TRUE;
+				result = TRUE;
+				break;
 			}
 		}
 	}
-	return TRUE;
+	return result;
 }
 // 679660: using guessed type char gbMaxPlayers;
 
-int __fastcall On_GOTOAGETITEM(TCmdLocParam1 *pCmd, int pnum)
+int On_GOTOAGETITEM(TCmdLocParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs != 1 && currlevel == plr[pnum].plrlevel) {
 		MakePlrPath(pnum, pCmd->x, pCmd->y, FALSE);
@@ -1533,7 +1545,7 @@ int __fastcall On_GOTOAGETITEM(TCmdLocParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_REQUESTAGITEM(TCmdGItem *pCmd, int pnum)
+int On_REQUESTAGITEM(TCmdGItem *pCmd, int pnum)
 {
 	if (gbBufferMsgs != 1 && i_own_level(plr[pnum].plrlevel)) {
 		if (GetItemRecord(pCmd->dwSeed, pCmd->wCI, pCmd->wIndx)) {
@@ -1553,7 +1565,7 @@ int __fastcall On_REQUESTAGITEM(TCmdGItem *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_AGETITEM(TCmdGItem *pCmd, int pnum)
+int On_AGETITEM(TCmdGItem *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -1578,7 +1590,7 @@ int __fastcall On_AGETITEM(TCmdGItem *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_ITEMEXTRA(TCmdGItem *pCmd, int pnum)
+int On_ITEMEXTRA(TCmdGItem *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -1591,7 +1603,7 @@ int __fastcall On_ITEMEXTRA(TCmdGItem *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_PUTITEM(TCmdPItem *pCmd, int pnum)
+int On_PUTITEM(TCmdPItem *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -1616,48 +1628,48 @@ int __fastcall On_PUTITEM(TCmdPItem *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-void __fastcall delta_put_item(TCmdPItem *pI, int x, int y, BYTE bLevel)
+void delta_put_item(TCmdPItem *pI, int x, int y, BYTE bLevel)
 {
 	int i;
 	TCmdPItem *pD;
 
-	if (gbMaxPlayers != 1) {
-		for (i = 0; i < MAXITEMS; i++) {
-			pD = &sgLevels[bLevel].item[i];
-			if (pD->bCmd != CMD_WALKXY
-			    && pD->bCmd != 0xFF
-			    && pD->wIndx == pI->wIndx
-			    && pD->wCI == pI->wCI
-			    && pD->dwSeed == pI->dwSeed) {
-				if (pD->bCmd == CMD_ACK_PLRINFO)
-					return;
-				TermMsg("Trying to drop a floor item?");
-			}
-		}
-
-		for (i = 0; i < MAXITEMS; i++) {
-			pD = &sgLevels[bLevel].item[i];
-			if (pD->bCmd == 0xFF) {
-				sgbDeltaChanged = TRUE;
-				memcpy(pD, pI, sizeof(TCmdPItem));
-				pD->bCmd = CMD_ACK_PLRINFO;
-				pD->x = x;
-				pD->y = y;
+	if (gbMaxPlayers == 1) {
+		return;
+	}
+	pD = sgLevels[bLevel].item;
+	for (i = 0; i < MAXITEMS; i++, pD++) {
+		if (pD->bCmd != CMD_WALKXY
+		    && pD->bCmd != 0xFF
+		    && pD->wIndx == pI->wIndx
+		    && pD->wCI == pI->wCI
+		    && pD->dwSeed == pI->dwSeed) {
+			if (pD->bCmd == CMD_ACK_PLRINFO)
 				return;
-			}
+			app_fatal("Trying to drop a floor item?");
+		}
+	}
+
+	pD = sgLevels[bLevel].item;
+	for (i = 0; i < MAXITEMS; i++, pD++) {
+		if (pD->bCmd == 0xFF) {
+			sgbDeltaChanged = TRUE;
+			memcpy(pD, pI, sizeof(TCmdPItem));
+			pD->bCmd = CMD_ACK_PLRINFO;
+			pD->x = x;
+			pD->y = y;
+			return;
 		}
 	}
 }
-// 679660: using guessed type char gbMaxPlayers;
 
-void __fastcall check_update_plr(int pnum)
+void check_update_plr(int pnum)
 {
 	if (gbMaxPlayers != 1 && pnum == myplr)
 		pfile_update(1);
 }
 // 679660: using guessed type char gbMaxPlayers;
 
-int __fastcall On_SYNCPUTITEM(TCmdPItem *pCmd, int pnum)
+int On_SYNCPUTITEM(TCmdPItem *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -1678,7 +1690,7 @@ int __fastcall On_SYNCPUTITEM(TCmdPItem *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_RESPAWNITEM(TCmdPItem *pCmd, int pnum)
+int On_RESPAWNITEM(TCmdPItem *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -1692,7 +1704,7 @@ int __fastcall On_RESPAWNITEM(TCmdPItem *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_ATTACKXY(TCmdLoc *pCmd, int pnum)
+int On_ATTACKXY(TCmdLoc *pCmd, int pnum)
 {
 	if (gbBufferMsgs != 1 && currlevel == plr[pnum].plrlevel) {
 		MakePlrPath(pnum, pCmd->x, pCmd->y, FALSE);
@@ -1704,7 +1716,7 @@ int __fastcall On_ATTACKXY(TCmdLoc *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_SATTACKXY(TCmdLoc *pCmd, int pnum)
+int On_SATTACKXY(TCmdLoc *pCmd, int pnum)
 {
 	if (gbBufferMsgs != 1 && currlevel == plr[pnum].plrlevel) {
 		ClrPlrPath(pnum);
@@ -1716,7 +1728,7 @@ int __fastcall On_SATTACKXY(TCmdLoc *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_RATTACKXY(TCmdLoc *pCmd, int pnum)
+int On_RATTACKXY(TCmdLoc *pCmd, int pnum)
 {
 	if (gbBufferMsgs != 1 && currlevel == plr[pnum].plrlevel) {
 		ClrPlrPath(pnum);
@@ -1728,7 +1740,7 @@ int __fastcall On_RATTACKXY(TCmdLoc *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_SPELLXYD(TCmdLocParam3 *pCmd, int pnum)
+int On_SPELLXYD(TCmdLocParam3 *pCmd, int pnum)
 {
 	if (gbBufferMsgs != 1 && currlevel == plr[pnum].plrlevel) {
 		if (currlevel != 0 || spelldata[pCmd->wParam1].sTownSpell) {
@@ -1748,7 +1760,7 @@ int __fastcall On_SPELLXYD(TCmdLocParam3 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_SPELLXY(TCmdLocParam2 *pCmd, int pnum)
+int On_SPELLXY(TCmdLocParam2 *pCmd, int pnum)
 {
 	if (gbBufferMsgs != 1 && currlevel == plr[pnum].plrlevel) {
 		if (currlevel != 0 || spelldata[pCmd->wParam1].sTownSpell) {
@@ -1767,7 +1779,7 @@ int __fastcall On_SPELLXY(TCmdLocParam2 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_TSPELLXY(TCmdLocParam2 *pCmd, int pnum)
+int On_TSPELLXY(TCmdLocParam2 *pCmd, int pnum)
 {
 	if (gbBufferMsgs != 1 && currlevel == plr[pnum].plrlevel) {
 		if (currlevel != 0 || spelldata[pCmd->wParam1].sTownSpell) {
@@ -1786,7 +1798,7 @@ int __fastcall On_TSPELLXY(TCmdLocParam2 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_OPOBJXY(TCmdLocParam1 *pCmd, int pnum)
+int On_OPOBJXY(TCmdLocParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs != 1 && currlevel == plr[pnum].plrlevel) {
 		if (object[pCmd->wParam1]._oSolidFlag || object[pCmd->wParam1]._oDoorFlag)
@@ -1800,7 +1812,7 @@ int __fastcall On_OPOBJXY(TCmdLocParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_DISARMXY(TCmdLocParam1 *pCmd, int pnum)
+int On_DISARMXY(TCmdLocParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs != 1 && currlevel == plr[pnum].plrlevel) {
 		if (object[pCmd->wParam1]._oSolidFlag || object[pCmd->wParam1]._oDoorFlag)
@@ -1814,7 +1826,7 @@ int __fastcall On_DISARMXY(TCmdLocParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_OPOBJT(TCmdParam1 *pCmd, int pnum)
+int On_OPOBJT(TCmdParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs != 1 && currlevel == plr[pnum].plrlevel) {
 		plr[pnum].destAction = ACTION_OPERATETK;
@@ -1824,7 +1836,7 @@ int __fastcall On_OPOBJT(TCmdParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_ATTACKID(TCmdParam1 *pCmd, int pnum)
+int On_ATTACKID(TCmdParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs != 1 && currlevel == plr[pnum].plrlevel) {
 		int distx = abs(plr[pnum].WorldX - monster[pCmd->wParam1]._mfutx);
@@ -1838,7 +1850,7 @@ int __fastcall On_ATTACKID(TCmdParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_ATTACKPID(TCmdParam1 *pCmd, int pnum)
+int On_ATTACKPID(TCmdParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs != 1 && currlevel == plr[pnum].plrlevel) {
 		MakePlrPath(pnum, plr[pCmd->wParam1]._px, plr[pCmd->wParam1]._py, FALSE);
@@ -1849,7 +1861,7 @@ int __fastcall On_ATTACKPID(TCmdParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_RATTACKID(TCmdParam1 *pCmd, int pnum)
+int On_RATTACKID(TCmdParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs != 1 && currlevel == plr[pnum].plrlevel) {
 		ClrPlrPath(pnum);
@@ -1860,7 +1872,7 @@ int __fastcall On_RATTACKID(TCmdParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_RATTACKPID(TCmdParam1 *pCmd, int pnum)
+int On_RATTACKPID(TCmdParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs != 1 && currlevel == plr[pnum].plrlevel) {
 		ClrPlrPath(pnum);
@@ -1871,7 +1883,7 @@ int __fastcall On_RATTACKPID(TCmdParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_SPELLID(TCmdParam3 *pCmd, int pnum)
+int On_SPELLID(TCmdParam3 *pCmd, int pnum)
 {
 	if (gbBufferMsgs != 1 && currlevel == plr[pnum].plrlevel) {
 		if (currlevel != 0 || spelldata[pCmd->wParam2].sTownSpell) {
@@ -1889,7 +1901,7 @@ int __fastcall On_SPELLID(TCmdParam3 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_SPELLPID(TCmdParam3 *pCmd, int pnum)
+int On_SPELLPID(TCmdParam3 *pCmd, int pnum)
 {
 	if (gbBufferMsgs != 1 && currlevel == plr[pnum].plrlevel) {
 		if (currlevel != 0 || spelldata[pCmd->wParam2].sTownSpell) {
@@ -1907,7 +1919,7 @@ int __fastcall On_SPELLPID(TCmdParam3 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_TSPELLID(TCmdParam3 *pCmd, int pnum)
+int On_TSPELLID(TCmdParam3 *pCmd, int pnum)
 {
 	if (gbBufferMsgs != 1 && currlevel == plr[pnum].plrlevel) {
 		if (currlevel != 0 || spelldata[pCmd->wParam2].sTownSpell) {
@@ -1925,7 +1937,7 @@ int __fastcall On_TSPELLID(TCmdParam3 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_TSPELLPID(TCmdParam3 *pCmd, int pnum)
+int On_TSPELLPID(TCmdParam3 *pCmd, int pnum)
 {
 	if (gbBufferMsgs != 1 && currlevel == plr[pnum].plrlevel) {
 		if (currlevel != 0 || spelldata[pCmd->wParam2].sTownSpell) {
@@ -1943,7 +1955,7 @@ int __fastcall On_TSPELLPID(TCmdParam3 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_KNOCKBACK(TCmdParam1 *pCmd, int pnum)
+int On_KNOCKBACK(TCmdParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs != 1 && currlevel == plr[pnum].plrlevel) {
 		M_GetKnockback(pCmd->wParam1);
@@ -1953,7 +1965,7 @@ int __fastcall On_KNOCKBACK(TCmdParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_RESURRECT(TCmdParam1 *pCmd, int pnum)
+int On_RESURRECT(TCmdParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -1965,7 +1977,7 @@ int __fastcall On_RESURRECT(TCmdParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_HEALOTHER(TCmdParam1 *pCmd, int pnum)
+int On_HEALOTHER(TCmdParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs != 1 && currlevel == plr[pnum].plrlevel)
 		DoHealOther(pnum, pCmd->wParam1);
@@ -1973,7 +1985,7 @@ int __fastcall On_HEALOTHER(TCmdParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_TALKXY(TCmdLocParam1 *pCmd, int pnum)
+int On_TALKXY(TCmdLocParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs != 1 && currlevel == plr[pnum].plrlevel) {
 		MakePlrPath(pnum, pCmd->x, pCmd->y, FALSE);
@@ -1984,7 +1996,7 @@ int __fastcall On_TALKXY(TCmdLocParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_NEWLVL(TCmdParam2 *pCmd, int pnum)
+int On_NEWLVL(TCmdParam2 *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -1994,7 +2006,7 @@ int __fastcall On_NEWLVL(TCmdParam2 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_WARP(TCmdParam1 *pCmd, int pnum)
+int On_WARP(TCmdParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -2009,7 +2021,7 @@ int __fastcall On_WARP(TCmdParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_MONSTDEATH(TCmdLocParam1 *pCmd, int pnum)
+int On_MONSTDEATH(TCmdLocParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -2022,7 +2034,7 @@ int __fastcall On_MONSTDEATH(TCmdLocParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_KILLGOLEM(TCmdLocParam1 *pCmd, int pnum)
+int On_KILLGOLEM(TCmdLocParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -2035,7 +2047,7 @@ int __fastcall On_KILLGOLEM(TCmdLocParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_AWAKEGOLEM(TCmdGolem *pCmd, int pnum)
+int On_AWAKEGOLEM(TCmdGolem *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -2059,7 +2071,7 @@ int __fastcall On_AWAKEGOLEM(TCmdGolem *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_MONSTDAMAGE(TCmdParam2 *pCmd, int pnum)
+int On_MONSTDAMAGE(TCmdParam2 *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -2079,7 +2091,7 @@ int __fastcall On_MONSTDAMAGE(TCmdParam2 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_PLRDEAD(TCmdParam1 *pCmd, int pnum)
+int On_PLRDEAD(TCmdParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -2091,7 +2103,7 @@ int __fastcall On_PLRDEAD(TCmdParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_PLRDAMAGE(TCmdDamage *pCmd, int pnum)
+int On_PLRDAMAGE(TCmdDamage *pCmd, int pnum)
 {
 	if (pCmd->bPlr == myplr && currlevel != 0) {
 		if (gbBufferMsgs != 1 && currlevel == plr[pnum].plrlevel && pCmd->dwDam <= 192000) {
@@ -2112,7 +2124,7 @@ int __fastcall On_PLRDAMAGE(TCmdDamage *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_OPENDOOR(TCmdParam1 *pCmd, int pnum)
+int On_OPENDOOR(TCmdParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -2125,7 +2137,7 @@ int __fastcall On_OPENDOOR(TCmdParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-void __fastcall delta_sync_object(int oi, BYTE bCmd, BYTE bLevel)
+void delta_sync_object(int oi, BYTE bCmd, BYTE bLevel)
 {
 	if (gbMaxPlayers != 1) {
 		sgbDeltaChanged = TRUE;
@@ -2134,7 +2146,7 @@ void __fastcall delta_sync_object(int oi, BYTE bCmd, BYTE bLevel)
 }
 // 679660: using guessed type char gbMaxPlayers;
 
-int __fastcall On_CLOSEDOOR(TCmdParam1 *pCmd, int pnum)
+int On_CLOSEDOOR(TCmdParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -2147,7 +2159,7 @@ int __fastcall On_CLOSEDOOR(TCmdParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_OPERATEOBJ(TCmdParam1 *pCmd, int pnum)
+int On_OPERATEOBJ(TCmdParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -2160,7 +2172,7 @@ int __fastcall On_OPERATEOBJ(TCmdParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_PLROPOBJ(TCmdParam2 *pCmd, int pnum)
+int On_PLROPOBJ(TCmdParam2 *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -2173,7 +2185,7 @@ int __fastcall On_PLROPOBJ(TCmdParam2 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_BREAKOBJ(TCmdParam2 *pCmd, int pnum)
+int On_BREAKOBJ(TCmdParam2 *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -2186,7 +2198,7 @@ int __fastcall On_BREAKOBJ(TCmdParam2 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_CHANGEPLRITEMS(TCmdChItem *pCmd, int pnum)
+int On_CHANGEPLRITEMS(TCmdChItem *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -2196,7 +2208,7 @@ int __fastcall On_CHANGEPLRITEMS(TCmdChItem *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_DELPLRITEMS(TCmdDelItem *pCmd, int pnum)
+int On_DELPLRITEMS(TCmdDelItem *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -2206,7 +2218,7 @@ int __fastcall On_DELPLRITEMS(TCmdDelItem *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_PLRLEVEL(TCmdParam1 *pCmd, int pnum)
+int On_PLRLEVEL(TCmdParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -2216,7 +2228,7 @@ int __fastcall On_PLRLEVEL(TCmdParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_DROPITEM(TCmdPItem *pCmd, int pnum)
+int On_DROPITEM(TCmdPItem *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -2226,29 +2238,29 @@ int __fastcall On_DROPITEM(TCmdPItem *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_SEND_PLRINFO(TCmdPlrInfoHdr *pCmd, int pnum)
+int On_SEND_PLRINFO(TCmdPlrInfoHdr *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, pCmd->wBytes + sizeof(*pCmd));
 	else
-		multi_player_joins(pnum, pCmd, pCmd->bCmd == CMD_ACK_PLRINFO);
+		recv_plrinfo(pnum, pCmd, pCmd->bCmd == CMD_ACK_PLRINFO);
 
 	return pCmd->wBytes + sizeof(*pCmd);
 }
 
-int __fastcall On_ACK_PLRINFO(TCmdPlrInfoHdr *pCmd, int pnum)
+int On_ACK_PLRINFO(TCmdPlrInfoHdr *pCmd, int pnum)
 {
 	return On_SEND_PLRINFO(pCmd, pnum);
 }
 
-int __fastcall On_PLAYER_JOINLEVEL(TCmdLocParam1 *pCmd, int pnum)
+int On_PLAYER_JOINLEVEL(TCmdLocParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
 	else {
 		plr[pnum]._pLvlChanging = 0;
 		if (plr[pnum]._pName[0] && !plr[pnum].plractive) {
-			plr[pnum].plractive = 1;
+			plr[pnum].plractive = TRUE;
 			gbActivePlayers++;
 			EventPlrMsg("Player '%s' (level %d) just joined the game", plr[pnum]._pName, plr[pnum]._pLevel);
 		}
@@ -2270,7 +2282,7 @@ int __fastcall On_PLAYER_JOINLEVEL(TCmdLocParam1 *pCmd, int pnum)
 					NewPlrAnim(pnum, plr[pnum]._pDAnim[0], plr[pnum]._pDFrames, 1, plr[pnum]._pDWidth);
 					plr[pnum]._pAnimFrame = plr[pnum]._pAnimLen - 1;
 					plr[pnum]._pVar8 = plr[pnum]._pAnimLen << 1;
-					dFlags[plr[pnum].WorldX][plr[pnum].WorldY] |= DFLAG_DEAD_PLAYER;
+					dFlags[plr[pnum].WorldX][plr[pnum].WorldY] |= BFLAG_DEAD_PLAYER;
 				}
 
 				plr[pnum]._pvid = AddVision(plr[pnum].WorldX, plr[pnum].WorldY, plr[pnum]._pLightRad, pnum == myplr);
@@ -2282,7 +2294,7 @@ int __fastcall On_PLAYER_JOINLEVEL(TCmdLocParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_ACTIVATEPORTAL(TCmdLocParam3 *pCmd, int pnum)
+int On_ACTIVATEPORTAL(TCmdLocParam3 *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -2312,7 +2324,7 @@ int __fastcall On_ACTIVATEPORTAL(TCmdLocParam3 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-void __fastcall delta_open_portal(int pnum, BYTE x, BYTE y, BYTE bLevel, BYTE bLType, BYTE bSetLvl)
+void delta_open_portal(int pnum, BYTE x, BYTE y, BYTE bLevel, BYTE bLType, BYTE bSetLvl)
 {
 	sgbDeltaChanged = TRUE;
 	sgJunk.portal[pnum].x = x;
@@ -2322,7 +2334,7 @@ void __fastcall delta_open_portal(int pnum, BYTE x, BYTE y, BYTE bLevel, BYTE bL
 	sgJunk.portal[pnum].setlvl = bSetLvl;
 }
 
-int __fastcall On_DEACTIVATEPORTAL(TCmd *pCmd, int pnum)
+int On_DEACTIVATEPORTAL(TCmd *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -2336,7 +2348,7 @@ int __fastcall On_DEACTIVATEPORTAL(TCmd *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_RETOWN(TCmd *pCmd, int pnum)
+int On_RETOWN(TCmd *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -2351,7 +2363,7 @@ int __fastcall On_RETOWN(TCmd *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_SETSTR(TCmdParam1 *pCmd, int pnum)
+int On_SETSTR(TCmdParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -2361,7 +2373,7 @@ int __fastcall On_SETSTR(TCmdParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_SETDEX(TCmdParam1 *pCmd, int pnum)
+int On_SETDEX(TCmdParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -2371,7 +2383,7 @@ int __fastcall On_SETDEX(TCmdParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_SETMAG(TCmdParam1 *pCmd, int pnum)
+int On_SETMAG(TCmdParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -2381,7 +2393,7 @@ int __fastcall On_SETMAG(TCmdParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_SETVIT(TCmdParam1 *pCmd, int pnum)
+int On_SETVIT(TCmdParam1 *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -2391,12 +2403,12 @@ int __fastcall On_SETVIT(TCmdParam1 *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_STRING(TCmdString *pCmd, int pnum)
+int On_STRING(TCmdString *pCmd, int pnum)
 {
 	return On_STRING2(pnum, pCmd);
 }
 
-int __fastcall On_STRING2(int pnum, TCmdString *pCmd)
+int On_STRING2(int pnum, TCmdString *pCmd)
 {
 	int len = strlen(pCmd->str);
 	if (!gbBufferMsgs)
@@ -2405,7 +2417,7 @@ int __fastcall On_STRING2(int pnum, TCmdString *pCmd)
 	return len + 2; // length of string + nul terminator + sizeof(pCmd->bCmd)
 }
 
-int __fastcall On_SYNCQUEST(TCmdQuest *pCmd, int pnum)
+int On_SYNCQUEST(TCmdQuest *pCmd, int pnum)
 {
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, pCmd, sizeof(*pCmd));
@@ -2418,7 +2430,7 @@ int __fastcall On_SYNCQUEST(TCmdQuest *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_ENDSHIELD(TCmd *pCmd, int pnum)
+int On_ENDSHIELD(TCmd *pCmd, int pnum)
 {
 	int i;
 
@@ -2435,7 +2447,7 @@ int __fastcall On_ENDSHIELD(TCmd *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_CHEAT_EXPERIENCE(TCmd *pCmd, int pnum)
+int On_CHEAT_EXPERIENCE(TCmd *pCmd, int pnum)
 {
 #ifdef _DEBUG
 	if (gbBufferMsgs == 1)
@@ -2448,7 +2460,7 @@ int __fastcall On_CHEAT_EXPERIENCE(TCmd *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_CHEAT_SPELL_LEVEL(TCmd *pCmd, int pnum)
+int On_CHEAT_SPELL_LEVEL(TCmd *pCmd, int pnum)
 {
 #ifdef _DEBUG
 	if (gbBufferMsgs == 1)
@@ -2459,12 +2471,12 @@ int __fastcall On_CHEAT_SPELL_LEVEL(TCmd *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_DEBUG(TCmd *pCmd, int pnum)
+int On_DEBUG(TCmd *pCmd, int pnum)
 {
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_NOVA(TCmdLoc *pCmd, int pnum)
+int On_NOVA(TCmdLoc *pCmd, int pnum)
 {
 	if (gbBufferMsgs != 1 && currlevel == plr[pnum].plrlevel && pnum != myplr) {
 		ClrPlrPath(pnum);
@@ -2479,7 +2491,7 @@ int __fastcall On_NOVA(TCmdLoc *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_SETSHIELD(TCmd *pCmd, int pnum)
+int On_SETSHIELD(TCmd *pCmd, int pnum)
 {
 	if (gbBufferMsgs != 1)
 		plr[pnum].pManaShield = TRUE;
@@ -2487,7 +2499,7 @@ int __fastcall On_SETSHIELD(TCmd *pCmd, int pnum)
 	return sizeof(*pCmd);
 }
 
-int __fastcall On_REMSHIELD(TCmd *pCmd, int pnum)
+int On_REMSHIELD(TCmd *pCmd, int pnum)
 {
 	if (gbBufferMsgs != 1)
 		plr[pnum].pManaShield = FALSE;

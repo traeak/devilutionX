@@ -35,9 +35,18 @@ if(NIGHTLY_BUILD)
   set(FASTER ON)
 endif()
 
+if(${CMAKE_SYSTEM_NAME} STREQUAL FreeBSD)
+  set(ASAN OFF)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DO_LARGEFILE=0 -Dstat64=stat -Dlstat64=lstat -Dlseek64=lseek -Doff64_t=off_t -Dfstat64=fstat -Dftruncate64=ftruncate")
+endif()
+
 if(WIN32)
   set(ASAN OFF)
   set(DIST ON)
+endif()
+
+if(HAIKU)
+  set(ASAN OFF)
 endif()
 
 if(DIST)
@@ -118,13 +127,16 @@ add_library(devilution STATIC
   Source/init.cpp
   Source/interfac.cpp
   Source/inv.cpp
+  Source/itemdat.cpp
   Source/items.cpp
   Source/lighting.cpp
   Source/loadsave.cpp
   Source/logging.cpp
   Source/mainmenu.cpp
   Source/minitext.cpp
+  Source/misdat.cpp
   Source/missiles.cpp
+  Source/monstdat.cpp
   Source/monster.cpp
   Source/movie.cpp
   Source/mpqapi.cpp
@@ -132,6 +144,7 @@ add_library(devilution STATIC
   Source/msg.cpp
   Source/multi.cpp
   Source/nthread.cpp
+  Source/objdat.cpp
   Source/objects.cpp
   Source/pack.cpp
   Source/palette.cpp
@@ -140,6 +153,7 @@ add_library(devilution STATIC
   Source/player.cpp
   Source/plrmsg.cpp
   Source/portal.cpp
+  Source/spelldat.cpp
   Source/quests.cpp
   Source/render.cpp
   Source/restrict.cpp
@@ -168,6 +182,7 @@ add_executable(devilutionx
   SourceX/miniwin/rand.cpp
   SourceX/miniwin/thread.cpp
   SourceX/miniwin/dsound.cpp
+  SourceX/miniwin/ddraw.cpp
   SourceX/sound.cpp
   SourceX/storm/storm.cpp
   SourceX/storm/storm_net.cpp
@@ -232,20 +247,35 @@ if(WIN32)
   target_compile_options(devilution PUBLIC $<$<CONFIG:Debug>:-gstabs>)
 endif()
 
-target_compile_options(devilution PUBLIC -Wno-unknown-pragmas)
-# Note: In Debug mode, GCC generates spurious memory references that upset Valgrind,
-# these options fix that.
-target_compile_options(devilution PUBLIC $<$<CONFIG:Debug>:-fno-omit-frame-pointer>)
-# Ignore serious warnings due to "quality" of decompiled code
-# Currently, disable ignore all warnings (-w), to be removed later
-target_compile_options(devilution PRIVATE -fpermissive -Wno-write-strings -Wno-multichar -w)
-# Disable optimizations that can break non-standards-conforming code
-target_compile_options(devilution PRIVATE -fno-strict-aliasing)
+if(HAIKU)
+  target_link_libraries(devilutionx PRIVATE network)
+endif()
+
+if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+  # Note: In Debug mode, GCC generates spurious memory references that upset Valgrind,
+  # these options fix that.
+  target_compile_options(devilution PUBLIC $<$<CONFIG:Debug>:-fno-omit-frame-pointer>)
+  target_compile_options(devilution PUBLIC -Wno-unknown-pragmas)
+  # Ignore serious warnings due to "quality" of decompiled code
+  # Currently, disable ignore all warnings (-w), to be removed later
+  target_compile_options(devilution PRIVATE -fpermissive -Wno-write-strings -Wno-multichar -w)
+  # Disable optimizations that can break non-standards-conforming code
+  target_compile_options(devilution PRIVATE -fno-strict-aliasing)
+
+  # Warnings for devilutionX
+  target_compile_options(devilutionx PRIVATE -Wall -Wextra -Wno-write-strings -Wno-multichar -Wno-unused-parameter)
+endif()
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+  target_compile_options(devilution PRIVATE "/W0")
+endif()
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   target_compile_options(devilution PRIVATE -fno-aggressive-loop-optimizations)
 endif()
-# Warnings for devilutionX
-target_compile_options(devilutionx PRIVATE -Wall -Wextra -Wno-write-strings -Wno-multichar -Wno-unused-parameter)
+
+target_compile_options(devilution PRIVATE -fsigned-char)
+target_compile_options(devilutionx PRIVATE -fsigned-char)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   # Style issues
@@ -254,6 +284,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   target_compile_options(devilutionx PRIVATE -Wno-ignored-attributes)
   # Fix: error: cast from pointer to smaller type 'unsigned char' loses information
   target_compile_options(devilution PRIVATE -fms-extensions -fms-compatibility -fms-compatibility-version=19.00)
-
-  set_target_properties(devilutionx PROPERTIES LINK_FLAGS "-liconv")
+	# Silence appfat.cpp warnings
+  set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wno-narrowing")
 endif()

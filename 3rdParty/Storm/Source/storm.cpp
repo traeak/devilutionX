@@ -23,7 +23,7 @@ BOOL STORMAPI SNetJoinGame(int id, char *gameName, char *gamePassword, char *pla
 BOOL STORMAPI SNetLeaveGame(int type) rBool;
 BOOL STORMAPI SNetPerformUpgrade(DWORD *upgradestatus) rBool;
 BOOL STORMAPI SNetReceiveMessage(int *senderplayerid, char **data, int *databytes) rBool;
-BOOL STORMAPI SNetReceiveTurns(int a1, int arraysize, char **arraydata, unsigned int *arraydatabytes, DWORD *arrayplayerstatus) rBool;
+BOOL STORMAPI SNetReceiveTurns(int a1, int arraysize, char **arraydata, DWORD *arraydatabytes, DWORD *arrayplayerstatus) rBool;
 //HANDLE STORMAPI SNetRegisterEventHandler(int type, void (STORMAPI *sEvent)(PS_EVT)) rPVoid;
 
 int STORMAPI SNetSelectGame(int a1, int a2, int a3, int a4, int a5, int *playerid) rInt;
@@ -67,7 +67,7 @@ BOOL STORMAPI SFileCloseFile(HANDLE hFile) rBool;
 BOOL STORMAPI SFileDdaBeginEx(HANDLE hFile, DWORD flags, DWORD mask, unsigned __int32 lDistanceToMove, signed __int32 volume, signed int a6, int a7) rBool;
 BOOL STORMAPI SFileDdaDestroy() rBool;
 BOOL STORMAPI SFileDdaEnd(HANDLE hFile) rBool;
-BOOL STORMAPI SFileDdaGetPos(HANDLE hFile, int *current, int *end) rBool;
+BOOL STORMAPI SFileDdaGetPos(HANDLE hFile, DWORD *current, DWORD *end) rBool;
 
 BOOL STORMAPI SFileDdaInitialize(HANDLE directsound) rBool;
 BOOL STORMAPI SFileDdaSetVolume(HANDLE hFile, signed int bigvolume, signed int volume) rBool;
@@ -134,7 +134,7 @@ BOOL STORMAPI SGdiSetPitch(int pitch) rBool;
 
 BOOL STORMAPI Ordinal393(char *string, int, int) rBool;
 
-void* STORMAPI SMemAlloc(size_t amount, char *logfilename, int logline, char defaultValue) rPVoid;
+void *STORMAPI SMemAlloc(size_t amount, char *logfilename, int logline, int defaultValue) rPVoid;
 
 BOOL STORMAPI SMemFree(void *location, char *logfilename, int logline, char defaultValue) rBool;
 
@@ -227,12 +227,12 @@ int STORMAPI SBigToBinaryBuffer(void *buffer, int length, int a3, int a4) rInt;
 void __stdcall SDrawMessageBox(char *,char *,int) rVoid;
 void __cdecl SDrawDestroy(void) rVoid;
 BOOLEAN __cdecl StormDestroy(void) rBool;
-BOOLEAN __stdcall SFileSetBasePath(char *) rBool;
+BOOL __stdcall SFileSetBasePath(char *) rBool;
 void __cdecl SDrawRealizePalette(void) rVoid;
 BOOL __cdecl SVidPlayContinue(void) rBool;
 BOOL __stdcall SNetGetOwnerTurnsWaiting(DWORD *) rBool;
-void * __stdcall SNetUnregisterEventHandler(int,void (__stdcall*)(struct _SNETEVENT *)) rPVoid;
-void * __stdcall SNetRegisterEventHandler(int,void (__stdcall*)(struct _SNETEVENT *)) rPVoid;
+BOOL __stdcall SNetUnregisterEventHandler(int,SEVTHANDLER) rPVoid;
+BOOL __stdcall SNetRegisterEventHandler(int,SEVTHANDLER) rPVoid;
 BOOLEAN __stdcall SNetSetBasePlayer(int) rBool;
 int __stdcall SNetInitializeProvider(unsigned long,struct _SNETPROGRAMDATA *,struct _SNETPLAYERDATA *,struct _SNETUIDATA *,struct _SNETVERSIONDATA *) rInt;
 int __stdcall SNetGetProviderCaps(struct _SNETCAPS *) rInt;

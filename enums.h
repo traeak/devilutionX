@@ -1451,6 +1451,20 @@ typedef enum _monster_id {
 	NUM_MTYPES
 } _monster_id;
 
+// this enum contains indexes from UniqMonst array for special unique monsters (usually quest related)
+typedef enum {
+	UMT_GARBUD    = 0,
+	UMT_SKELKING  = 1,
+	UMT_ZHAR      = 2,
+	UMT_SNOTSPIL  = 3,
+	UMT_LAZURUS   = 4,
+	UMT_RED_VEX   = 5,
+	UMT_BLACKJADE = 6,
+	UMT_LACHDAN   = 7,
+	UMT_WARLORD   = 8,
+	UMT_BUTCHER   = 9,
+} _uniq_monsterid;
+
 typedef enum monster_flag {
 	MFLAG_HIDDEN          = 0x01,
 	MFLAG_LOCK_ANIMATION  = 0x02,
@@ -1826,14 +1840,14 @@ typedef enum dungeon_type {
 } dungeon_type;
 
 typedef enum dflag {
-	DFLAG_MISSILE     = 0x01,
-	DFLAG_VISIBLE     = 0x02,
-	DFLAG_DEAD_PLAYER = 0x04,
-	DFLAG_POPULATED   = 0x08,
-	DFLAG_MONSTER     = 0x10,
-	DFLAG_PLAYER      = 0x20,
-	DFLAG_LIT         = 0x40,
-	DFLAG_EXPLORED    = 0x80,
+	BFLAG_MISSILE     = 0x01,
+	BFLAG_VISIBLE     = 0x02,
+	BFLAG_DEAD_PLAYER = 0x04,
+	BFLAG_POPULATED   = 0x08,
+	BFLAG_MONSTLR     = 0x10,
+	BFLAG_PLAYERLR    = 0x20,
+	BFLAG_LIT         = 0x40,
+	BFLAG_EXPLORED    = 0x80,
 } dflag;
 
 typedef enum dungeon_message {
@@ -1915,7 +1929,7 @@ typedef enum theme_id {
 	THEME_TEARFOUNTAIN      = 0xE,
 	THEME_BRNCROSS          = 0xF,
 	THEME_WEAPONRACK        = 0x10,
-	THEME_NONE              = 0xFF,
+	THEME_NONE              = -1,
 } theme_id;
 
 typedef enum event_type {

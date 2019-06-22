@@ -4,7 +4,9 @@
 #define DMAXY					40
 
 #define LIGHTSIZE				6912 // 27 * 256
-#define ROW_PITCH				768
+
+#define GMENU_SLIDER			(DWORD)1 << 30
+#define GMENU_ENABLED			(DWORD)1 << 31
 
 // must be unsigned to generate unsigned comparisons with pnum
 #define MAX_PLRS				4
@@ -20,6 +22,7 @@
 #define MAXDUNY					112
 #define MAXITEMS				127
 #define MAXBELTITEMS			8
+#define MAXLIGHTS				32
 #define MAXMISSILES				125
 #define MAXMONSTERS				200
 #define MAXMULTIQUESTS			4
@@ -29,6 +32,7 @@
 #define MAXTHEMES				50
 #define MAXTILES				2048
 #define MAXTRIGGERS				5
+#define MAXVISION				32
 #define MDMAXX					40
 #define MDMAXY					40
 #define MAXCHARLEVEL			51
@@ -49,6 +53,10 @@
 
 // from diablo 2 beta
 #define MAXEXP					2000000000
+
+#define GOLD_SMALL_LIMIT		1000
+#define GOLD_MEDIUM_LIMIT		2500
+#define GOLD_MAX_LIMIT			5000
 
 #define PLR_NAME_LEN			32
 
@@ -83,7 +91,49 @@
 #define PAL16_RED		224
 #define PAL16_GRAY		240
 
-#define SCREENXY(x, y)	((x) + 64 + (((y) + 160) * 768))
+#define SCREEN_WIDTH	640
+#define SCREEN_HEIGHT	480
+
+// If defined, use 32-bit colors instead of 8-bit [Default -> Undefined]
+//#define RGBMODE
+
+#ifndef RGBMODE
+#define SCREEN_BPP		8
+#else
+#define SCREEN_BPP		32
+#endif
+
+#define BORDER_LEFT		64
+#define BORDER_TOP		160
+#define BORDER_RIGHT	64
+#define BORDER_BOTTOM	16
+
+#define SCREEN_X		BORDER_LEFT
+#define SCREEN_Y		BORDER_TOP
+
+#define BUFFER_WIDTH	(BORDER_LEFT + SCREEN_WIDTH + BORDER_RIGHT)
+#define BUFFER_HEIGHT	(BORDER_TOP + SCREEN_HEIGHT + BORDER_BOTTOM)
+#define TILE_SIZE		32
+
+#define VIEWPORT_HEIGHT	352
+
+#define SCREENXY(x, y)	((x) + SCREEN_X + ((y) + SCREEN_Y) * BUFFER_WIDTH)
+
+#define MemFreeDbg(p)	\
+{						\
+	void *p__p;			\
+	p__p = p;			\
+	p = NULL;			\
+	mem_free_dbg(p__p);	\
+}
+
+#undef assert
+
+#ifndef _DEBUG
+#define assert(exp) ((void)0)
+#else
+#define assert(exp) (void)( (exp) || (assert_fail(__LINE__, __FILE__, #exp), 0) )
+#endif
 
 #ifndef INVALID_FILE_ATTRIBUTES
 #define INVALID_FILE_ATTRIBUTES ((DWORD)-1)
@@ -95,66 +145,13 @@
 /////////////////////////////////////////////////////////////////////////
 #ifndef IDA_GARBAGE
 #define IDA_GARBAGE
-
-// Partially defined types. They are used when the decompiler does not know
-// anything about the type except its size.
-#define _BYTE  unsigned char
-#define _WORD  unsigned short
-#define _DWORD unsigned int
-
-// Some convenience macros to make partial accesses nicer
-#define LAST_IND(x,part_type)    (sizeof(x)/sizeof(part_type) - 1)
-#if defined(__BYTE_ORDER) && __BYTE_ORDER == __BIG_ENDIAN
-#  define LOW_IND(x,part_type)   LAST_IND(x,part_type)
-#  define HIGH_IND(x,part_type)  0
-#else
-#  define HIGH_IND(x,part_type)  LAST_IND(x,part_type)
-#  define LOW_IND(x,part_type)   0
-#endif
-
-// first unsigned macros:
-#define BYTEn(x, n)   (*((BYTE*)&(x)+n))
-#define WORDn(x, n)   (*((WORD*)&(x)+n))
-
-#define _LOBYTE(x)  BYTEn(x,LOW_IND(x,BYTE))
-#define _LOWORD(x)  WORDn(x,LOW_IND(x,WORD))
-#define _HIBYTE(x)  BYTEn(x,HIGH_IND(x,BYTE))
-#define _HIWORD(x)  WORDn(x,HIGH_IND(x,WORD))
-#define BYTE1(x)   BYTEn(x,  1)         // byte 1 (counting from 0)
-#define BYTE2(x)   BYTEn(x,  2)
-
-// now signed macros (the same but with sign extension)
-#define SBYTEn(x, n)   (*((char*)&(x)+n))
-
-#define SLOBYTE(x)  SBYTEn(x,LOW_IND(x,char))
-
-// Helper functions to represent some assembly instructions.
-
-__inline void *qmemcpy(void *dst, const void *src, size_t cnt)
-{
-	char *out      = (char *)dst;
-	const char *in = (const char *)src;
-	while (cnt > 0) {
-		*out++ = *in++;
-		--cnt;
-	}
-	return dst;
-}
-
-// rotate right
-__inline WORD __ROR2__(WORD value, DWORD count)
-{
-	count %= 16;
-
-	return value >> count | value << (16 - count);
-}
-
+#define _LOBYTE(x)  (*((BYTE*)&(x)))
 #endif /* IDA_GARBAGE */
 
 // Typedef for the function pointer
 typedef void (*_PVFV)(void);
 
-#if defined(_MSC_VER) && !defined(__APPLE__)
+#if defined(_MSC_VER) && !(defined(__APPLE__)|| defined(__FreeBSD__))
 // Define our segment names
 #define SEGMENT_C_INIT ".CRT$XCU"
 
@@ -165,4 +162,11 @@ typedef void (*_PVFV)(void);
 #define SEG_ALLOCATE(SEGMENT) __declspec(allocate(SEGMENT))
 #else
 #define SEG_ALLOCATE(SEGMENT)
+#endif
+
+// To apply to certain functions which have local variables aligned by 1 for unknown yet reason
+#ifdef _MSC_VER
+#define ALIGN_BY_1 __declspec(align(1))
+#else
+#define ALIGN_BY_1
 #endif

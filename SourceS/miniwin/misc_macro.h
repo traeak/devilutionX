@@ -15,9 +15,13 @@
 #define LOWORD(l) ((WORD)(((DWORD_PTR)(l)) & 0xffff))
 #define HIWORD(l) ((WORD)((((DWORD_PTR)(l)) >> 16) & 0xffff))
 
+#ifdef _MSC_VER
+#define InterlockedIncrement(x) (x)
+#else
 #define InterlockedIncrement(x) __sync_add_and_fetch(x, 1)
+#endif
 
-#define INFINITE DVL_INFINITE;
+#define INFINITE DVL_INFINITE
 
 #define MAKEFOURCC(x, y, z, w)             \
 	(((uint32_t)((uint8_t)x))              \
@@ -35,7 +39,6 @@
 
 #define PM_NOREMOVE DVL_PM_NOREMOVE
 #define PM_REMOVE DVL_PM_REMOVE
-
 #define WM_QUIT DVL_WM_QUIT
 
 #define PeekMessage PeekMessageA
@@ -89,7 +92,6 @@
 #define FILE_SHARE_READ 1
 
 #define OFS_MAXPATHNAME DVL_OFS_MAXPATHNAME
-#define MAX_PATH DVL_MAX_PATH
 
 //
 // Calculate the byte offset of a field in a structure of type type.
@@ -105,6 +107,9 @@
 #define GetVersionEx GetVersionExA
 
 #define lstrcpyn lstrcpynA
+
+#define MEM_COMMIT 0x1000
+#define MEM_RELEASE 0x8000
 
 #define SEC_COMMIT 0x8000000
 #define PAGE_READWRITE 0x04
@@ -327,3 +332,8 @@
 #define MB_TASKMODAL DVL_MB_TASKMODAL
 #define MB_ICONHAND DVL_MB_ICONHAND
 #define MB_ICONEXCLAMATION DVL_MB_ICONEXCLAMATION
+
+/*
+ * GetWindow() Constants
+ */
+#define GW_HWNDPREV         3

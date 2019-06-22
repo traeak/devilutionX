@@ -1,10 +1,31 @@
-#include <SDL.h>
-
 #include "devilution.h"
+#include "miniwin/ddraw.h"
 #include "stubs.h"
-#include "dx.h"
-#include "DiabloUI/diabloui.h"
+#include <SDL.h>
 #include <string>
+
+#include "DiabloUI/diabloui.h"
+
+#ifdef _MSC_VER
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
+#endif
+
+#if !defined(_MSC_VER) && !defined(__x86_64__) && !defined(__i386__)
+unsigned int _rotl(unsigned int value, int shift)
+{
+	if ((shift &= 31) == 0)
+		return value;
+	return (value << shift) | (value >> (32 - shift));
+}
+
+unsigned int _rotr(unsigned int value, int shift)
+{
+	if ((shift &= 31) == 0)
+		return value;
+	return (value >> shift) | (value << (32 - shift));
+}
+#endif
 
 namespace dvl {
 
@@ -43,6 +64,11 @@ int wvsprintfA(LPSTR dest, LPCSTR format, va_list arglist)
 int _strcmpi(const char *_Str1, const char *_Str2)
 {
 	return strcasecmp(_Str1, _Str2);
+}
+
+int _strnicmp(const char *_Str1, const char *_Str2, size_t n)
+{
+	return strncasecmp(_Str1, _Str2, n);
 }
 
 char *_itoa(int _Value, char *_Dest, int _Radix)
@@ -84,6 +110,7 @@ HANDLE FindFirstFileA(LPCSTR lpFileName, LPWIN32_FIND_DATAA lpFindFileData)
 WINBOOL FindClose(HANDLE hFindFile)
 {
 	UNIMPLEMENTED();
+	return true;
 }
 
 /**
@@ -172,7 +199,8 @@ BOOL VerQueryValueA(LPCVOID pBlock, LPCSTR lpSubBlock, LPVOID *lplpBuffer, PUINT
 DWORD GetCurrentDirectory(DWORD nBufferLength, LPTSTR lpBuffer)
 {
 	char *base_path = SDL_GetBasePath();
-	if (!base_path) {
+	if (base_path == NULL) {
+		SDL_Log(SDL_GetError());
 		base_path = SDL_strdup("./");
 	}
 	eprintf("BasePath: %s\n", base_path);
@@ -200,11 +228,13 @@ UINT GetDriveTypeA(LPCSTR lpRootPathName)
 WINBOOL DeleteFileA(LPCSTR lpFileName)
 {
 	UNIMPLEMENTED();
+	return true;
 }
 
 WINBOOL CopyFileA(LPCSTR lpExistingFileName, LPCSTR lpNewFileName, WINBOOL bFailIfExists)
 {
 	UNIMPLEMENTED();
+	return true;
 }
 
 HFILE OpenFile(LPCSTR lpFileName, LPOFSTRUCT lpReOpenBuff, UINT uStyle)
@@ -234,21 +264,37 @@ WINBOOL DestroyWindow(HWND hWnd)
 HWND GetLastActivePopup(HWND hWnd)
 {
 	UNIMPLEMENTED();
+	return hWnd;
+}
+
+DWORD GdiSetBatchLimit(DWORD dw)
+{
+	DUMMY();
+	return 1;
 }
 
 HWND GetTopWindow(HWND hWnd)
 {
 	UNIMPLEMENTED();
+	return NULL;
 }
 
 WINBOOL SetForegroundWindow(HWND hWnd)
 {
 	UNIMPLEMENTED();
+	return true;
 }
 
+/**
+ * @return Always null as it's unused
+ */
 HWND SetFocus(HWND hWnd)
 {
-	UNIMPLEMENTED();
+	if (SDL_SetWindowInputFocus(window) <= -1) {
+		SDL_Log(SDL_GetError());
+	}
+	MainWndProc(NULL, DVL_WM_ACTIVATEAPP, true, 0); // SDL_WINDOWEVENT_FOCUS_GAINED
+	return NULL;
 }
 
 HWND FindWindowA(LPCSTR lpClassName, LPCSTR lpWindowName)
@@ -276,14 +322,26 @@ HWND CreateWindowExA(
     HINSTANCE hInstance,
     LPVOID lpParam)
 {
-	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
-		SDL_Log("SDL_Init: %s\n", SDL_GetError());
+	if (SDL_Init(SDL_INIT_EVERYTHING) <= -1) {
+		SDL_Log(SDL_GetError());
 		return NULL;
 	}
 	atexit(SDL_Quit);
 
+	int upscale = 1;
+	DvlIntSetting("upscale", &upscale);
 	DvlIntSetting("fullscreen", &fullscreen);
-	int flags = fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : SDL_WINDOW_RESIZABLE;
+
+	int flags = 0;
+	if (upscale) {
+		flags |= fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : SDL_WINDOW_RESIZABLE;
+
+		char scaleQuality[2] = "2";
+		DvlStringSetting("scaling quality", scaleQuality, 2);
+		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, scaleQuality);
+	} else if (fullscreen) {
+		flags |= SDL_WINDOW_FULLSCREEN;
+	}
 
 	int grabInput = 1;
 	DvlIntSetting("grab input", &grabInput);
@@ -292,7 +350,26 @@ HWND CreateWindowExA(
 	}
 
 	window = SDL_CreateWindow(lpWindowName, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, nWidth, nHeight, flags);
+	if (window == NULL) {
+		SDL_Log(SDL_GetError());
+	}
 	atexit(FakeWMDestroy);
+
+	if (upscale) {
+		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
+		if (renderer == NULL) {
+			SDL_Log(SDL_GetError());
+		}
+
+		texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, nWidth, nHeight);
+		if (texture == NULL) {
+			SDL_Log(SDL_GetError());
+		}
+
+		if (SDL_RenderSetLogicalSize(renderer, nWidth, nHeight) <= -1) {
+			SDL_Log(SDL_GetError());
+		}
+	}
 
 	return window;
 }
@@ -520,8 +597,8 @@ int GetDeviceCaps(HDC hdc, int index)
 {
 	SDL_DisplayMode current;
 
-	if (SDL_GetCurrentDisplayMode(0, &current) != 0) {
-		SDL_Log("SDL_GetCurrentDisplayMode: %s", SDL_GetError());
+	if (SDL_GetCurrentDisplayMode(0, &current) <= -1) {
+		SDL_Log(SDL_GetError());
 		return 0;
 	}
 
@@ -591,33 +668,39 @@ DWORD GetCurrentProcessId()
 HANDLE CreateFileMappingA(HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttributes, DWORD flProtect,
     DWORD dwMaximumSizeHigh, DWORD dwMaximumSizeLow, LPCSTR lpName)
 {
-	UNIMPLEMENTED();
+	DUMMY();
+	return NULL;
 }
 
 LPVOID MapViewOfFile(HANDLE hFileMappingObject, DWORD dwDesiredAccess, DWORD dwFileOffsetHigh,
     DWORD dwFileOffsetLow, SIZE_T dwNumberOfBytesToMap)
 {
 	UNIMPLEMENTED();
+	return NULL;
 }
 
 WINBOOL UnmapViewOfFile(LPCVOID lpBaseAddress)
 {
 	UNIMPLEMENTED();
+	return false;
 }
 
 DWORD WaitForInputIdle(HANDLE hProcess, DWORD dwMilliseconds)
 {
 	UNIMPLEMENTED();
+	return 0;
 }
 
 HWND GetWindow(HWND hWnd, UINT uCmd)
 {
 	UNIMPLEMENTED();
+	return NULL;
 }
 
 DWORD GetWindowThreadProcessId(HWND hWnd, LPDWORD lpdwProcessId)
 {
 	UNIMPLEMENTED();
+	return 0;
 }
 
 DWORD GetPrivateProfileStringA(LPCSTR lpAppName, LPCSTR lpKeyName, LPCSTR lpDefault, LPSTR lpReturnedString,
@@ -639,7 +722,12 @@ int MessageBoxA(HWND hWnd, const char *Text, const char *Title, UINT Flags)
 		SDLFlags |= SDL_MESSAGEBOX_WARNING;
 	}
 
-	return SDL_ShowSimpleMessageBox(SDLFlags, Title, Text, window) < 0 ? -1 : 0;
+	if (SDL_ShowSimpleMessageBox(SDLFlags, Title, Text, window) <= -1) {
+		SDL_Log(SDL_GetError());
+		return -1;
+	}
+
+	return 0;
 }
 
 LSTATUS RegOpenKeyExA(HKEY hKey, LPCSTR lpSubKey, DWORD ulOptions, REGSAM samDesired, PHKEY phkResult)
@@ -706,6 +794,11 @@ LONG SetWindowLongA(HWND hWnd, int nIndex, LONG dwNewLong)
 {
 	DUMMY();
 	return 0;
+}
+
+void __debugbreak()
+{
+	DUMMY();
 }
 
 }

@@ -1,6 +1,4 @@
-//HEADER_GOES_HERE
-
-#include "../types.h"
+#include "diablo.h"
 
 DEVILUTION_BEGIN_NAMESPACE
 
@@ -41,33 +39,24 @@ const unsigned char mfontkern[56] = {
 
 int qscroll_spd_tbl[9] = { 2, 4, 6, 8, 0, -1, -2, -3, -4 };
 
-void __cdecl FreeQuestText()
+void FreeQuestText()
 {
-	void *ptr;
-
-	ptr = pMedTextCels;
-	pMedTextCels = NULL;
-	mem_free_dbg(ptr);
-	ptr = pTextBoxCels;
-	pTextBoxCels = NULL;
-	mem_free_dbg(ptr);
+	MemFreeDbg(pMedTextCels);
+	MemFreeDbg(pTextBoxCels);
 }
 
-void __cdecl InitQuestText()
+void InitQuestText()
 {
-	unsigned char *v0; // eax
-
 	pMedTextCels = LoadFileInMem("Data\\MedTextS.CEL", 0);
-	v0 = LoadFileInMem("Data\\TextBox.CEL", 0);
+	pTextBoxCels = LoadFileInMem("Data\\TextBox.CEL", 0);
 	qtextflag = FALSE;
-	pTextBoxCels = v0;
 }
 // 646D00: using guessed type char qtextflag;
 
-void __fastcall InitQTextMsg(int m)
+void InitQTextMsg(int m)
 {
 	if (alltext[m].scrlltxt) {
-		questlog = 0;
+		questlog = FALSE;
 		qtextptr = alltext[m].txtstr;
 		qtextflag = TRUE;
 		qtexty = 500;
@@ -82,26 +71,25 @@ void __fastcall InitQTextMsg(int m)
 // 646D00: using guessed type char qtextflag;
 // 646D04: using guessed type int scrolltexty;
 // 646D08: using guessed type int sgLastScroll;
-// 69BD04: using guessed type int questlog;
 
-void __cdecl DrawQTextBack()
+void DrawQTextBack()
 {
 	CelDecodeOnly(88, 487, (BYTE *)pTextBoxCels, 1, 591);
 
 	trans_rect(27,28,585,297);
 }
 
-void __fastcall PrintQTextChr(int sx, int sy, BYTE *pCelBuff, int nCel)
+void PrintQTextChr(int sx, int sy, BYTE *pCelBuff, int nCel)
 {
 	BYTE *dst, *pStart, *pEnd, *end;
 
 	/// ASSERT: assert(gpBuffer);
 
-	dst = &gpBuffer[sx + screen_y_times_768[sy]];
-	pStart = &gpBuffer[screen_y_times_768[209]];
-	pEnd = &gpBuffer[screen_y_times_768[469]];
+	dst = &gpBuffer[sx + PitchTbl[sy]];
+	pStart = &gpBuffer[PitchTbl[209]];
+	pEnd = &gpBuffer[PitchTbl[469]];
 
-#if (_MSC_VER >= 800) && (_MSC_VER <= 1200)
+#ifdef USE_ASM
 	__asm {
 		mov		ebx, pCelBuff
 		mov		eax, nCel
@@ -153,7 +141,7 @@ void __fastcall PrintQTextChr(int sx, int sy, BYTE *pCelBuff, int nCel)
 		sub		edx, eax
 		jnz		label2
 	label8:
-		sub		edi, 768 + 22
+		sub		edi, BUFFER_WIDTH + 22
 		cmp		ebx, esi
 		jnz		label1
 	}
@@ -167,26 +155,26 @@ void __fastcall PrintQTextChr(int sx, int sy, BYTE *pCelBuff, int nCel)
 	src = &pCelBuff[pFrameTable[0]];
 	end = &src[pFrameTable[1] - pFrameTable[0]];
 
-	for(; src != end; dst -= 768 + 22) {
-		for(i = 22; i;) {
+	for (; src != end; dst -= BUFFER_WIDTH + 22) {
+		for (i = 22; i;) {
 			width = *src++;
-			if(!(width & 0x80)) {
+			if (!(width & 0x80)) {
 				i -= width;
-				if(dst >= pStart && dst <= pEnd) {
-					if(width & 1) {
+				if (dst >= pStart && dst <= pEnd) {
+					if (width & 1) {
 						dst[0] = src[0];
 						src++;
 						dst++;
 					}
 					width >>= 1;
-					if(width & 1) {
+					if (width & 1) {
 						dst[0] = src[0];
 						dst[1] = src[1];
 						src += 2;
 						dst += 2;
 					}
 					width >>= 1;
-					for(; width; width--) {
+					for (; width; width--) {
 						dst[0] = src[0];
 						dst[1] = src[1];
 						dst[2] = src[2];
@@ -208,105 +196,96 @@ void __fastcall PrintQTextChr(int sx, int sy, BYTE *pCelBuff, int nCel)
 #endif
 }
 
-void __cdecl DrawQText()
+void DrawQText()
 {
-	char *v0;          // edi
-	signed int v1;     // edx
-	int v2;            // ecx
-	char *i;           // esi
-	unsigned char v4;  // al
-	unsigned char v5;  // al
-	char v6;           // dl
-	char *v7;          // eax
-	unsigned char v8;  // al
-	char *v9;          // esi
-	unsigned char v10; // bl
-	DWORD v11;         // eax
-	char qstr[128];    // [esp+8h] [ebp-90h]
-	char *v13;         // [esp+88h] [ebp-10h]
-	int v14;           // [esp+8Ch] [ebp-Ch]
-	int screen_y;      // [esp+90h] [ebp-8h]
-	int screen_x;      // [esp+94h] [ebp-4h]
+	int i, l, w, tx, ty;
+	BYTE c;
+	char *p, *pnl, *s;
+	char tempstr[128];
+	BOOL doneflag;
+	DWORD currTime;
 
 	DrawQTextBack();
-	v0 = qtextptr;
-	screen_x = MAXDUNX;
-	v13 = 0;
-	screen_y = qtexty;
-	v14 = 0;
-	do {
-		v1 = 0;
-		v2 = 0;
-		for (i = v0; *i != 10; ++v2) {
-			if (*i == 124 || v1 >= 543)
-				break;
-			v4 = *i++;
-			v5 = gbFontTransTbl[v4];
-			if (v5) {
-				qstr[v2] = v5;
-				v1 += mfontkern[mfontframe[v5]] + 2;
+
+	p = qtextptr;
+	pnl = NULL;
+	tx = 112;
+	ty = qtexty;
+
+	doneflag = FALSE;
+	while (!doneflag) {
+		w = 0;
+		s = p;
+		l = 0;
+		while (*s != '\n' && *s != '|' && w < 543) {
+			c = gbFontTransTbl[(BYTE)*s];
+			s++;
+			if (c != '\0') {
+				tempstr[l] = c;
+				w += mfontkern[mfontframe[c]] + 2;
 			} else {
-				--v2;
+				l--;
+			}
+			l++;
+		}
+		tempstr[l] = '\0';
+		if (*s == '|') {
+			tempstr[l] = '\0';
+			doneflag = TRUE;
+		} else if (*s != '\n') {
+			while (tempstr[l] != ' ' && l > 0) {
+				tempstr[l] = '\0';
+				l--;
 			}
 		}
-		v6 = *i;
-		v7 = &qstr[v2];
-		qstr[v2] = 0;
-		if (v6 == 124) {
-			*v7 = 0;
-			v14 = 1;
-		} else if (v6 != 10) {
-			while (*v7 != 32 && v2 > 0) {
-				*v7 = 0;
-				v7 = &qstr[--v2];
+		for (i = 0; tempstr[i]; i++) {
+			p++;
+			c = mfontframe[gbFontTransTbl[(BYTE)tempstr[i]]];
+			if (*p == '\n') {
+				p++;
 			}
+			if (c != 0) {
+				PrintQTextChr(tx, ty, (BYTE *)pMedTextCels, c);
+			}
+			tx += mfontkern[c] + 2;
 		}
-		v8 = qstr[0];
-		if (qstr[0]) {
-			v9 = qstr;
-			do {
-				++v0;
-				v10 = mfontframe[gbFontTransTbl[v8]];
-				if (*v0 == 10)
-					++v0;
-				if (v10)
-					PrintQTextChr(screen_x, screen_y, (BYTE *)pMedTextCels, v10);
-				++v9;
-				screen_x += mfontkern[v10] + 2;
-				v8 = *v9;
-			} while (*v9);
+		if (pnl == NULL) {
+			pnl = p;
 		}
-		if (!v13)
-			v13 = v0;
-		screen_y += 38;
-		screen_x = MAXDUNX;
-		if (screen_y > 501)
-			v14 = 1;
-	} while (!v14);
-	v11 = GetTickCount();
+		tx = 112;
+		ty += 38;
+		if (ty > 501) {
+			doneflag = TRUE;
+		}
+	}
+
+	currTime = GetTickCount();
 	while (1) {
 		if (sgLastScroll <= 0) {
-			qtexty = qtexty + sgLastScroll - 1;
-			goto LABEL_33;
+			qtexty--;
+			qtexty += sgLastScroll;
+		} else {
+			scrolltexty--;
+			if (scrolltexty != 0) {
+				qtexty--;
+			}
 		}
-		if (--scrolltexty) {
-			--qtexty;
-		LABEL_33:
-			if (scrolltexty)
-				goto LABEL_35;
+		if (scrolltexty == 0) {
+			scrolltexty = sgLastScroll;
 		}
-		scrolltexty = sgLastScroll;
-	LABEL_35:
-		if (qtexty <= 209)
+		if (qtexty <= 209) {
+			qtexty += 38;
+			qtextptr = pnl;
+			if (*pnl == '|') {
+				qtextflag = 0;
+			}
 			break;
+		}
 		qtextSpd += 50;
-		if (v11 - qtextSpd >= 0x7FFFFFFF)
-			return;
+		if (currTime - qtextSpd >= 0x7FFFFFFF) {
+			break;
+		}
 	}
-	qtexty += 38;
-	qtextptr = v13;
-	if (*v13 == 124)
-		qtextflag = FALSE;
 }
 // 646CF4: using guessed type int qtexty;
 // 646CFC: using guessed type int qtextSpd;

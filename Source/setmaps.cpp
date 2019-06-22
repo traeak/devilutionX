@@ -1,6 +1,4 @@
-//HEADER_GOES_HERE
-
-#include "../types.h"
+#include "diablo.h"
 
 DEVILUTION_BEGIN_NAMESPACE
 
@@ -67,7 +65,7 @@ char *quest_level_names[] = {
 	"Archbishop Lazarus' Lair"
 };
 
-int __fastcall ObjIndex(int x, int y)
+int ObjIndex(int x, int y)
 {
 	int i;
 	int oi;
@@ -77,11 +75,11 @@ int __fastcall ObjIndex(int x, int y)
 		if (object[oi]._ox == x && object[oi]._oy == y)
 			return oi;
 	}
-	TermMsg("ObjIndex: Active object not found at (%d,%d)", x, y);
+	app_fatal("ObjIndex: Active object not found at (%d,%d)", x, y);
 	return -1;
 }
 
-void __cdecl AddSKingObjs()
+void AddSKingObjs()
 {
 	SetObjMapRange(ObjIndex(64, 34), 20, 7, 23, 10, 1);
 	SetObjMapRange(ObjIndex(64, 59), 20, 14, 21, 16, 2);
@@ -91,20 +89,20 @@ void __cdecl AddSKingObjs()
 	SetObjMapRange(ObjIndex(27, 53), 8, 1, 15, 11, 3);
 }
 
-void __cdecl AddSChamObjs()
+void AddSChamObjs()
 {
 	SetObjMapRange(ObjIndex(37, 30), 17, 0, 21, 5, 1);
 	SetObjMapRange(ObjIndex(37, 46), 13, 0, 16, 5, 2);
 }
 
-void __cdecl AddVileObjs()
+void AddVileObjs()
 {
 	SetObjMapRange(ObjIndex(26, 45), 1, 1, 9, 10, 1);
 	SetObjMapRange(ObjIndex(45, 46), 11, 1, 20, 10, 2);
 	SetObjMapRange(ObjIndex(35, 36), 7, 11, 13, 18, 3);
 }
 
-void __fastcall DRLG_SetMapTrans(char *sFileName)
+void DRLG_SetMapTrans(char *sFileName)
 {
 	int x, y;
 	int i, j;
@@ -124,14 +122,14 @@ void __fastcall DRLG_SetMapTrans(char *sFileName)
 
 	for (j = 0; j < y; j++) {
 		for (i = 0; i < x; i++) {
-			dung_map[16 + i][16 + j] = *d;
+			dTransVal[16 + i][16 + j] = *d;
 			d += 2;
 		}
 	}
 	mem_free_dbg(pLevelMap);
 }
 
-void __cdecl LoadSetMap()
+void LoadSetMap()
 {
 	switch (setlvlnum) {
 	case SL_SKELKING:

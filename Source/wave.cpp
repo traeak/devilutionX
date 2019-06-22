@@ -1,17 +1,16 @@
-//HEADER_GOES_HERE
-
-#include "../types.h"
+#include "diablo.h"
+#include "../3rdParty/Storm/Source/storm.h"
 
 DEVILUTION_BEGIN_NAMESPACE
 
-BOOL __fastcall WCloseFile(HANDLE file)
+BOOL WCloseFile(HANDLE file)
 {
 	return SFileCloseFile(file);
 }
 
-LONG __fastcall WGetFileSize(HANDLE hsFile, DWORD *lpFileSizeHigh)
+LONG WGetFileSize(HANDLE hsFile, DWORD *lpFileSizeHigh)
 {
-	unsigned int retry = 0;
+	DWORD retry = 0;
 	LONG ret;
 
 	while ((ret = SFileGetFileSize(hsFile, lpFileSizeHigh)) == 0)
@@ -20,7 +19,7 @@ LONG __fastcall WGetFileSize(HANDLE hsFile, DWORD *lpFileSizeHigh)
 	return ret;
 }
 
-void __fastcall WGetFileArchive(HANDLE hsFile, unsigned int *retries, const char *FileName)
+void WGetFileArchive(HANDLE hsFile, DWORD *retries, const char *FileName)
 {
 	HANDLE archive;
 
@@ -34,9 +33,9 @@ void __fastcall WGetFileArchive(HANDLE hsFile, unsigned int *retries, const char
 		FileErrDlg(FileName);
 }
 
-BOOL __fastcall WOpenFile(const char *FileName, HANDLE *phsFile, BOOL mayNotExist)
+BOOL WOpenFile(const char *FileName, HANDLE *phsFile, BOOL mayNotExist)
 {
-	unsigned int retry = 0;
+	DWORD retry = 0;
 
 	while (1) {
 		if (SFileOpenFile(FileName, phsFile))
@@ -48,9 +47,9 @@ BOOL __fastcall WOpenFile(const char *FileName, HANDLE *phsFile, BOOL mayNotExis
 	return FALSE;
 }
 
-void __fastcall WReadFile(HANDLE hsFile, LPVOID buf, DWORD to_read)
+void WReadFile(HANDLE hsFile, LPVOID buf, DWORD to_read)
 {
-	unsigned int retry = 0;
+	DWORD retry = 0;
 	DWORD readed;
 	int initial_pos = WSetFilePointer(hsFile, 0, NULL, FILE_CURRENT);
 
@@ -60,9 +59,9 @@ void __fastcall WReadFile(HANDLE hsFile, LPVOID buf, DWORD to_read)
 	}
 }
 
-int __fastcall WSetFilePointer(HANDLE file1, int offset, HANDLE file2, int whence)
+int WSetFilePointer(HANDLE file1, int offset, HANDLE file2, int whence)
 {
-	unsigned int retry = 0;
+	DWORD retry = 0;
 	int result;
 
 	while (1) {
@@ -74,7 +73,7 @@ int __fastcall WSetFilePointer(HANDLE file1, int offset, HANDLE file2, int whenc
 	return result;
 }
 
-BOOL __fastcall LoadWaveFormat(HANDLE hsFile, WAVEFORMATEX *pwfx)
+BOOL LoadWaveFormat(HANDLE hsFile, WAVEFORMATEX *pwfx)
 {
 	BOOL ret;
 	MEMFILE wave_file;
@@ -85,7 +84,7 @@ BOOL __fastcall LoadWaveFormat(HANDLE hsFile, WAVEFORMATEX *pwfx)
 	return ret;
 }
 
-void *__fastcall AllocateMemFile(HANDLE hsFile, MEMFILE *pMemFile, DWORD dwPos)
+void *AllocateMemFile(HANDLE hsFile, MEMFILE *pMemFile, DWORD dwPos)
 {
 	DWORD length;
 
@@ -103,14 +102,12 @@ void *__fastcall AllocateMemFile(HANDLE hsFile, MEMFILE *pMemFile, DWORD dwPos)
 	return pMemFile->buf;
 }
 
-void __fastcall FreeMemFile(MEMFILE *pMemFile)
+void FreeMemFile(MEMFILE *pMemFile)
 {
-	void *mem = pMemFile->buf;
-	pMemFile->buf = NULL;
-	mem_free_dbg(mem);
+	MemFreeDbg(pMemFile->buf);
 }
 
-BOOL __fastcall ReadWaveFile(MEMFILE *pMemFile, WAVEFORMATEX *pwfx, CKINFO *chunk)
+BOOL ReadWaveFile(MEMFILE *pMemFile, WAVEFORMATEX *pwfx, CKINFO *chunk)
 {
 	MMCKINFO hdr;
 	CKINFO fmt;
@@ -141,7 +138,7 @@ BOOL __fastcall ReadWaveFile(MEMFILE *pMemFile, WAVEFORMATEX *pwfx, CKINFO *chun
 	return ReadWaveSection(pMemFile, MAKEFOURCC('d', 'a', 't', 'a'), chunk);
 }
 
-BOOL __fastcall ReadMemFile(MEMFILE *pMemFile, void *lpBuf, size_t length)
+BOOL ReadMemFile(MEMFILE *pMemFile, void *lpBuf, size_t length)
 {
 	while (length) {
 		size_t to_copy;
@@ -162,7 +159,7 @@ BOOL __fastcall ReadMemFile(MEMFILE *pMemFile, void *lpBuf, size_t length)
 	return TRUE;
 }
 
-void __fastcall FillMemFile(MEMFILE *pMemFile)
+void FillMemFile(MEMFILE *pMemFile)
 {
 	DWORD to_read;
 	WSetFilePointer(pMemFile->file, pMemFile->offset, NULL, FILE_BEGIN);
@@ -175,7 +172,7 @@ void __fastcall FillMemFile(MEMFILE *pMemFile)
 	pMemFile->bytes_to_read = to_read;
 }
 
-int __fastcall SeekMemFile(MEMFILE *pMemFile, LONG lDist, DWORD dwMethod)
+int SeekMemFile(MEMFILE *pMemFile, ULONG lDist, DWORD dwMethod)
 {
 	if (lDist < pMemFile->bytes_to_read) {
 		pMemFile->bytes_to_read -= lDist;
@@ -186,7 +183,7 @@ int __fastcall SeekMemFile(MEMFILE *pMemFile, LONG lDist, DWORD dwMethod)
 	return pMemFile->offset;
 }
 
-BOOL __fastcall ReadWaveSection(MEMFILE *pMemFile, DWORD id, CKINFO *chunk)
+BOOL ReadWaveSection(MEMFILE *pMemFile, DWORD id, CKINFO *chunk)
 {
 	DWORD hdr[2];
 
@@ -204,7 +201,7 @@ BOOL __fastcall ReadWaveSection(MEMFILE *pMemFile, DWORD id, CKINFO *chunk)
 	return chunk->dwOffset != (DWORD)-1;
 }
 
-BYTE *__fastcall LoadWaveFile(HANDLE hsFile, WAVEFORMATEX *pwfx, CKINFO *chunk)
+BYTE *LoadWaveFile(HANDLE hsFile, WAVEFORMATEX *pwfx, CKINFO *chunk)
 {
 	MEMFILE wave_file;
 

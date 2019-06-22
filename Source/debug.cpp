@@ -1,67 +1,120 @@
-//HEADER_GOES_HERE
-
-#include "../types.h"
+#include "diablo.h"
 
 DEVILUTION_BEGIN_NAMESPACE
+
+#ifdef _DEBUG
+BOOL update_seed_check = FALSE;
+#endif
+
+int seed_index;
+int level_seeds[NUMLEVELS];
+int seed_table[4096];
 
 void *pSquareCel;
 char dMonsDbg[NUMLEVELS][MAXDUNX][MAXDUNY];
 char dFlagDbg[NUMLEVELS][MAXDUNX][MAXDUNY];
 
-void __cdecl LoadDebugGFX()
+void LoadDebugGFX()
 {
 	if (visiondebug)
 		pSquareCel = LoadFileInMem("Data\\Square.CEL", 0);
 }
-// 525720: using guessed type int visiondebug;
 
-void __cdecl FreeDebugGFX()
+void FreeDebugGFX()
 {
-	void *temp = pSquareCel;
-	pSquareCel = NULL;
-	mem_free_dbg(temp);
+	MemFreeDbg(pSquareCel);
 }
 
-void __cdecl CheckDungeonClear()
+#ifdef _DEBUG
+void init_seed_desync()
 {
 	int i;
-	int j;
+
+	for (i = 0; i < 4096; i++) {
+		seed_table[i] = -1;
+	}
+
+	seed_index = 0;
+
+	for (i = 0; i < NUMLEVELS; i++) {
+		level_seeds[i] = 0;
+	}
+}
+
+void seed_desync_index_get()
+{
+	if (currlevel == 0) {
+		return;
+	}
+
+	update_seed_check = TRUE;
+	seed_index = level_seeds[currlevel];
+}
+
+void seed_desync_index_set()
+{
+	if (currlevel == 0) {
+		return;
+	}
+
+	update_seed_check = FALSE;
+	level_seeds[currlevel + 1] = seed_index;
+}
+
+void seed_desync_check(int seed)
+{
+	if (!update_seed_check || seed_index == 4096 || currlevel == 0) {
+		return;
+	}
+
+	if (seed_table[seed_index] == -1) {
+		seed_table[seed_index] = seed;
+	} else if (seed != seed_table[seed_index]) {
+		app_fatal("Seeds desynced");
+	}
+
+	seed_index++;
+}
+#endif
+
+void CheckDungeonClear()
+{
+	int i, j;
 
 	for (j = 0; j < MAXDUNY; j++) {
 		for (i = 0; i < MAXDUNX; i++) {
 			if (dMonster[i][j])
-				TermMsg("Monsters not cleared");
+				app_fatal("Monsters not cleared");
 			if (dPlayer[i][j])
-				TermMsg("Players not cleared");
+				app_fatal("Players not cleared");
 
-			dMonsDbg[currlevel][i][j] = dFlags[i][j] & DFLAG_VISIBLE;
-			dFlagDbg[currlevel][i][j] = dFlags[i][j] & DFLAG_POPULATED;
+			dMonsDbg[currlevel][i][j] = dFlags[i][j] & BFLAG_VISIBLE;
+			dFlagDbg[currlevel][i][j] = dFlags[i][j] & BFLAG_POPULATED;
 		}
 	}
 }
 
 #ifdef _DEBUG
-void __cdecl GiveGoldCheat()
+void GiveGoldCheat()
 {
-	int i;  // esi
-	int ni; // ebp
+	int i, ni;
 
 	for (i = 0; i < 40; i++) {
 		if (!plr[myplr].InvGrid[i]) {
 			ni = plr[myplr]._pNumInv++;
 			SetPlrHandItem(&plr[myplr].InvList[ni], IDI_GOLD);
 			GetPlrHandSeed(&plr[myplr].InvList[ni]);
-			plr[myplr].InvList[ni]._ivalue = 5000;
+			plr[myplr].InvList[ni]._ivalue = GOLD_MAX_LIMIT;
 			plr[myplr].InvList[ni]._iCurs = 6;
-			plr[myplr]._pGold += 5000;
+			plr[myplr]._pGold += GOLD_MAX_LIMIT;
 			plr[myplr].InvGrid[i] = plr[myplr]._pNumInv;
 		}
 	}
 }
 
-void __cdecl StoresCheat()
+void StoresCheat()
 {
-	int i; // eax
+	int i;
 
 	numpremium = 0;
 
@@ -76,10 +129,10 @@ void __cdecl StoresCheat()
 	SpawnWitch(30);
 }
 
-void __cdecl TakeGoldCheat()
+void TakeGoldCheat()
 {
-	int i;   // esi
-	char ig; // cl
+	int i;
+	char ig;
 
 	for (i = 0; i < 40; i++) {
 		ig = plr[myplr].InvGrid[i];
@@ -95,7 +148,7 @@ void __cdecl TakeGoldCheat()
 	plr[myplr]._pGold = 0;
 }
 
-void __cdecl MaxSpellsCheat()
+void MaxSpellsCheat()
 {
 	int i;
 
@@ -107,13 +160,13 @@ void __cdecl MaxSpellsCheat()
 	}
 }
 
-void __fastcall SetSpellLevelCheat(char spl, int spllvl)
+void SetSpellLevelCheat(char spl, int spllvl)
 {
 	plr[myplr]._pMemSpells |= (__int64)1 << (spl - 1);
 	plr[myplr]._pSplLvl[spl] = spllvl;
 }
 
-void __cdecl SetAllSpellsCheat()
+void SetAllSpellsCheat()
 {
 	SetSpellLevelCheat(SPL_FIREBOLT, 8);
 	SetSpellLevelCheat(SPL_CBOLT, 11);
@@ -139,12 +192,12 @@ void __cdecl SetAllSpellsCheat()
 	SetSpellLevelCheat(SPL_BONESPIRIT, 1);
 }
 
-void __fastcall PrintDebugPlayer(BOOLEAN bNextPlayer)
+void PrintDebugPlayer(BOOL bNextPlayer)
 {
-	char dstr[128]; // [esp+Ch] [ebp-80h]
+	char dstr[128];
 
 	if (bNextPlayer)
-		dbgplr = ((_BYTE)dbgplr + 1) & 3;
+		dbgplr = ((BYTE)dbgplr + 1) & 3;
 
 	sprintf(dstr, "Plr %i : Active = %i", dbgplr, plr[dbgplr].plractive);
 	NetSendCmdString(1 << myplr, dstr);
@@ -163,21 +216,23 @@ void __fastcall PrintDebugPlayer(BOOLEAN bNextPlayer)
 	}
 }
 
-void __cdecl PrintDebugQuest()
+void PrintDebugQuest()
 {
-	char dstr[128]; // [esp+0h] [ebp-80h]
+	char dstr[128];
 
 	sprintf(dstr, "Quest %i :  Active = %i, Var1 = %i", dbgqst, quests[dbgqst]._qactive, quests[dbgqst]._qvar1);
 	NetSendCmdString(1 << myplr, dstr);
-	if (++dbgqst == MAXQUESTS)
+
+	dbgqst++;
+	if (dbgqst == MAXQUESTS)
 		dbgqst = 0;
 }
 
-void __fastcall PrintDebugMonster(int m)
+void PrintDebugMonster(int m)
 {
-	BOOLEAN bActive; // ecx
-	int i;           // eax
-	char dstr[128];  // [esp+Ch] [ebp-80h]
+	BOOL bActive;
+	int i;
+	char dstr[128];
 
 	sprintf(dstr, "Monster %i = %s", m, monster[m].mName);
 	NetSendCmdString(1 << myplr, dstr);
@@ -199,28 +254,27 @@ void __fastcall PrintDebugMonster(int m)
 	NetSendCmdString(1 << myplr, dstr);
 }
 
-void __cdecl GetDebugMonster()
+void GetDebugMonster()
 {
-	int v0; // ecx
-	int v1; // eax
+	int mi1, mi2;
 
-	v0 = pcursmonst;
-	if (pcursmonst == -1) {
-		v1 = dMonster[cursmx][cursmy];
-		if (v1) {
-			v0 = v1 - 1;
-			if (v1 <= 0)
-				v0 = -1 - v1;
+	mi1 = pcursmonst;
+	if (mi1 == -1) {
+		mi2 = dMonster[cursmx][cursmy];
+		if (mi2) {
+			mi1 = mi2 - 1;
+			if (mi2 <= 0)
+				mi1 = -1 - mi2;
 		} else {
-			v0 = dbgmon;
+			mi1 = dbgmon;
 		}
 	}
-	PrintDebugMonster(v0);
+	PrintDebugMonster(mi1);
 }
 
-void __cdecl NextDebugMonster()
+void NextDebugMonster()
 {
-	char dstr[128]; // [esp+0h] [ebp-80h]
+	char dstr[128];
 
 	if (dbgmon++ == MAXMONSTERS)
 		dbgmon = 0;

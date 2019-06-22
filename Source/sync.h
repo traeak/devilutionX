@@ -2,19 +2,19 @@
 #ifndef __SYNC_H__
 #define __SYNC_H__
 
-extern short sync_word_6AA708[MAXMONSTERS];
-extern int syncmonsters; // weak
-extern short sync_word_6AA89C[MAXMONSTERS];
-extern int syncitems;
+extern WORD sync_word_6AA708[MAXMONSTERS];
+extern int sgnMonsters;
+extern WORD sgwLRU[MAXMONSTERS];
+extern int sgnSyncItem;
 
-int __fastcall sync_all_monsters(TSyncHeader *packet, int size);
-void __cdecl sync_one_monster();
-int __fastcall sync_monster_active(TSyncMonster *packet);
-void __fastcall sync_monster_pos(TSyncMonster *packet, int mon_id);
-int __fastcall sync_monster_active2(TSyncMonster *packet);
-void __fastcall SyncPlrInv(TSyncHeader *pSync);
-int __fastcall SyncData(int pnum, TSyncHeader *packet);
-void __fastcall sync_monster_data(int pnum, TSyncMonster *packet);
-void __cdecl sync_clear_pkt();
+DWORD sync_all_monsters(const BYTE *pbBuf, DWORD dwMaxLen);
+void sync_one_monster();
+BOOL sync_monster_active(TSyncMonster *p);
+void sync_monster_pos(TSyncMonster *p, int ndx);
+BOOL sync_monster_active2(TSyncMonster *p);
+void SyncPlrInv(TSyncHeader *pHdr);
+DWORD sync_update(int pnum, const BYTE *pbBuf);
+void sync_monster(int pnum, const TSyncMonster *p);
+void sync_init();
 
 #endif /* __SYNC_H__ */

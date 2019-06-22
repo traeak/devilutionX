@@ -1,10 +1,24 @@
 #include <SDL.h>
 
 #include "devilution.h"
-#include "dx.h"
+#include "miniwin/ddraw.h"
 #include "stubs.h"
 
 namespace dvl {
+
+BOOL SDrawManualInitialize(
+    HWND hWnd,
+    LPDIRECTDRAW ddInterface,
+    LPDIRECTDRAWSURFACE primarySurface,
+    LPDIRECTDRAWSURFACE surface2,
+    LPDIRECTDRAWSURFACE surface3,
+    LPDIRECTDRAWSURFACE backSurface,
+    LPDIRECTDRAWPALETTE ddPalette,
+    HPALETTE hPalette)
+{
+	DUMMY();
+	return true;
+}
 
 BOOL SDrawUpdatePalette(unsigned int firstentry, unsigned int numentries, PALETTEENTRY *pPalEntries, int a4)
 {
@@ -22,17 +36,12 @@ BOOL SDrawUpdatePalette(unsigned int firstentry, unsigned int numentries, PALETT
 	}
 
 	assert(palette);
-	if (SDL_SetPaletteColors(palette, colors, firstentry, numentries) != 0) {
-		SDL_Log("SDL_SetPaletteColors: %s\n", SDL_GetError());
+	if (SDL_SetPaletteColors(palette, colors, firstentry, numentries) <= -1) {
+		SDL_Log(SDL_GetError());
 		return false;
-	}
-
-	if (pal_surface) {
-		sdl_update_entire_surface();
-		sdl_present_surface();
 	}
 
 	return true;
 }
 
-}  // namespace dvl
+} // namespace dvl

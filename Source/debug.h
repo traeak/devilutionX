@@ -6,21 +6,27 @@ extern void *pSquareCel;
 extern char dMonsDbg[NUMLEVELS][MAXDUNX][MAXDUNY];
 extern char dFlagDbg[NUMLEVELS][MAXDUNX][MAXDUNY];
 
-void __cdecl LoadDebugGFX();
-void __cdecl FreeDebugGFX();
-void __cdecl CheckDungeonClear();
+void LoadDebugGFX();
+void FreeDebugGFX();
 #ifdef _DEBUG
-void __cdecl GiveGoldCheat();
-void __cdecl StoresCheat();
-void __cdecl TakeGoldCheat();
-void __cdecl MaxSpellsCheat();
-void __fastcall SetSpellLevelCheat(char spl, int spllvl);
-void __cdecl SetAllSpellsCheat();
-void __fastcall PrintDebugPlayer(BOOLEAN bNextPlayer);
-void __cdecl PrintDebugQuest();
-void __fastcall PrintDebugMonster(int m);
-void __cdecl GetDebugMonster();
-void __cdecl NextDebugMonster();
+void init_seed_desync();
+void seed_desync_index_get();
+void seed_desync_index_set();
+void seed_desync_check(int seed);
+#endif
+void CheckDungeonClear();
+#ifdef _DEBUG
+void GiveGoldCheat();
+void StoresCheat();
+void TakeGoldCheat();
+void MaxSpellsCheat();
+void SetSpellLevelCheat(char spl, int spllvl);
+void SetAllSpellsCheat();
+void PrintDebugPlayer(BOOL bNextPlayer);
+void PrintDebugQuest();
+void PrintDebugMonster(int m);
+void GetDebugMonster();
+void NextDebugMonster();
 #endif
 
 #endif /* __DEBUG_H__ */

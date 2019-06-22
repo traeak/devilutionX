@@ -1,6 +1,4 @@
-//HEADER_GOES_HERE
-
-#include "../types.h"
+#include "diablo.h"
 
 DEVILUTION_BEGIN_NAMESPACE
 
@@ -115,7 +113,7 @@ int WorldTbl17_2[17] = { 0, 32, 60, 88, 112, 136, 156, 176, 192, 208, 220, 232, 
 	|/
 */
 
-__inline void __fastcall CopyLine(BYTE **dst, BYTE **src, int w)
+__inline void CopyLine(BYTE **dst, BYTE **src, int w)
 {
 	int i;
 	unsigned int mask;
@@ -145,7 +143,7 @@ __inline void __fastcall CopyLine(BYTE **dst, BYTE **src, int w)
 	}
 }
 
-void __fastcall drawUpperScreen(BYTE *pBuff)
+void drawUpperScreen(BYTE *pBuff)
 {
 	int i, j;
 	BYTE width;
@@ -170,18 +168,18 @@ void __fastcall drawUpperScreen(BYTE *pBuff)
 		}
 	}
 
-	gpCelFrame = (unsigned char *)speed_cel_frame_num_from_light_index_frame_num;
+	gpCelFrame = (unsigned char *)SpeedFrameTbl;
 	dst = pBuff;
 	pFrameTable = (DWORD *)pDungeonCels;
 
 	if (light_table_index == lightmax) {
 		if (level_cel_block & 0x8000)
-			level_cel_block = *(_DWORD *)&gpCelFrame[64 * (level_cel_block & 0xFFF)] + (level_cel_block & 0xF000);
+			level_cel_block = *(DWORD *)&gpCelFrame[64 * (level_cel_block & 0xFFF)] + (level_cel_block & 0xF000);
 		src = &pDungeonCels[pFrameTable[level_cel_block & 0xFFF]];
 		cel_type_16 = level_cel_block >> 12;
 	} else if (!light_table_index) {
 		if (level_cel_block & 0x8000)
-			level_cel_block = *(_DWORD *)&gpCelFrame[64 * (level_cel_block & 0xFFF)] + (level_cel_block & 0xF000);
+			level_cel_block = *(DWORD *)&gpCelFrame[64 * (level_cel_block & 0xFFF)] + (level_cel_block & 0xF000);
 		src = &pDungeonCels[pFrameTable[level_cel_block & 0xFFF]];
 		cel_type_16 = level_cel_block >> 12;
 	} else if (!(level_cel_block & 0x8000)) {
@@ -189,18 +187,18 @@ void __fastcall drawUpperScreen(BYTE *pBuff)
 		gpDrawTbl = (BYTE *)&pLightTbl[256 * light_table_index];
 		cel_type_16 = level_cel_block >> 12;
 	} else {
-		src = &pSpeedCels[*(_DWORD *)&gpCelFrame[4 * (light_table_index + 16 * (level_cel_block & 0xFFF))]];
+		src = &pSpeedCels[*(DWORD *)&gpCelFrame[4 * (light_table_index + 16 * (level_cel_block & 0xFFF))]];
 		cel_type_16 = (level_cel_block >> 12) - 8;
 	}
 
 	switch (cel_type_16 & 7) {
 	case 0:
-		for (i = 32; i; i--, dst -= 768 + 32) {
+		for (i = 32; i; i--, dst -= BUFFER_WIDTH + 32) {
 			CopyLine(&dst, &src, 32);
 		}
 		break;
 	case 1:
-		for (i = 32; i; i--, dst -= 768 + 32) {
+		for (i = 32; i; i--, dst -= BUFFER_WIDTH + 32) {
 			for (j = 32; j;) {
 				width = *src++;
 				if (!(width & 0x80)) {
@@ -215,71 +213,71 @@ void __fastcall drawUpperScreen(BYTE *pBuff)
 		}
 		break;
 	case 2:
-		for (i = 30; i >= 0; i -= 2, dst -= 768 + 32) {
+		for (i = 30; i >= 0; i -= 2, dst -= BUFFER_WIDTH + 32) {
 			dst += i;
 			src += i & 2;
 			CopyLine(&dst, &src, 32 - i);
 		}
-		for (i = 2; i != 32; i += 2, dst -= 768 + 32) {
+		for (i = 2; i != 32; i += 2, dst -= BUFFER_WIDTH + 32) {
 			dst += i;
 			src += i & 2;
 			CopyLine(&dst, &src, 32 - i);
 		}
 		break;
 	case 3:
-		for (i = 30; i >= 0; i -= 2, dst -= 768 + 32) {
+		for (i = 30; i >= 0; i -= 2, dst -= BUFFER_WIDTH + 32) {
 			CopyLine(&dst, &src, 32 - i);
 			src += i & 2;
 			dst += i;
 		}
-		for (i = 2; i != 32; i += 2, dst -= 768 + 32) {
+		for (i = 2; i != 32; i += 2, dst -= BUFFER_WIDTH + 32) {
 			CopyLine(&dst, &src, 32 - i);
 			src += i & 2;
 			dst += i;
 		}
 		break;
 	case 4:
-		for (i = 30; i >= 0; i -= 2, dst -= 768 + 32) {
+		for (i = 30; i >= 0; i -= 2, dst -= BUFFER_WIDTH + 32) {
 			dst += i;
 			src += i & 2;
 			CopyLine(&dst, &src, 32 - i);
 		}
-		for (i = 16; i; i--, dst -= 768 + 32) {
+		for (i = 16; i; i--, dst -= BUFFER_WIDTH + 32) {
 			CopyLine(&dst, &src, 32);
 		}
 		break;
 	default:
-		for (i = 30; i >= 0; i -= 2, dst -= 768 + 32) {
+		for (i = 30; i >= 0; i -= 2, dst -= BUFFER_WIDTH + 32) {
 			CopyLine(&dst, &src, 32 - i);
 			src += i & 2;
 			dst += i;
 		}
-		for (i = 16; i; i--, dst -= 768 + 32) {
+		for (i = 16; i; i--, dst -= BUFFER_WIDTH + 32) {
 			CopyLine(&dst, &src, 32);
 		}
 		break;
 	}
 }
 
-void __fastcall drawLowerScreen(BYTE *pBuff)
+void drawLowerScreen(BYTE *pBuff)
 {
 	drawUpperScreen(pBuff);
 }
 
-void __fastcall world_draw_black_tile(BYTE *pBuff)
+void world_draw_black_tile(BYTE *pBuff)
 {
 	int i, j, k;
 	BYTE *dst;
 
 	dst = pBuff;
 
-	for (i = 30, j = 1; i >= 0; i -= 2, j++, dst -= 768 + 64) {
+	for (i = 30, j = 1; i >= 0; i -= 2, j++, dst -= BUFFER_WIDTH + 64) {
 		dst += i;
 		for (k = 0; k < 4 * j; k++)
 			*dst++ = 0;
 		dst += i;
 	}
-	for (i = 2, j = 15; i != 32; i += 2, j--, dst -= 768 + 64) {
+	for (i = 2, j = 15; i != 32; i += 2, j--, dst -= BUFFER_WIDTH + 64) {
 		dst += i;
 		for (k = 0; k < 4 * j; k++)
 			*dst++ = 0;
@@ -287,7 +285,7 @@ void __fastcall world_draw_black_tile(BYTE *pBuff)
 	}
 }
 
-void __fastcall trans_rect(int x, int y, int w, int h)
+void trans_rect(int x, int y, int w, int h)
 {
 	int row, col;
 	BYTE *dst = &gpBuffer[SCREENXY(x, y)];
@@ -296,7 +294,7 @@ void __fastcall trans_rect(int x, int y, int w, int h)
 			*dst = pTransTbl[0][*dst];
 			dst++;
 		}
-		dst += ROW_PITCH - w;
+		dst += BUFFER_WIDTH - w;
 	}
 }
 

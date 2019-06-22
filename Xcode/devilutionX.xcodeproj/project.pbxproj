@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		032E95600DA8694091B99E01 /* spelldat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5EF1B0CBE63E676700D98F /* spelldat.cpp */; };
+		2C3599B2CA5DBDB42B1BE7A8 /* monstdat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DE0A12E19BA25264D89498BD /* monstdat.cpp */; };
 		433449A42240500B003AB4F2 /* libpng16.16.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 433449A222404FFA003AB4F2 /* libpng16.16.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		43398749223E5D3A001F8420 /* SDL2_mixer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 43398741223E5CB0001F8420 /* SDL2_mixer.framework */; };
 		4339874A223E5D3A001F8420 /* SDL2_mixer.framework in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 43398741223E5CB0001F8420 /* SDL2_mixer.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -39,16 +41,12 @@
 		43B6C7CC224068AB007313EA /* credits.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43B6C7A92240688C007313EA /* credits.cpp */; };
 		43B6C7CD224068AB007313EA /* diabloui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43B6C79122406889007313EA /* diabloui.cpp */; };
 		43B6C7CE224068AB007313EA /* dialogs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43B6C7AA2240688D007313EA /* dialogs.cpp */; };
-		43B6C7CF224068AB007313EA /* dsound.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43B6C7982240688A007313EA /* dsound.cpp */; };
 		43B6C7D0224068AB007313EA /* dx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43B6C7A02240688B007313EA /* dx.cpp */; };
 		43B6C7D1224068AB007313EA /* frame_queue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43B6C79A2240688A007313EA /* frame_queue.cpp */; };
 		43B6C7D2224068AB007313EA /* loopback.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43B6C7A62240688C007313EA /* loopback.cpp */; };
 		43B6C7D3224068AB007313EA /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43B6C79722406889007313EA /* main.cpp */; };
 		43B6C7D4224068AB007313EA /* mainmenu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43B6C79222406889007313EA /* mainmenu.cpp */; };
 		43B6C7D5224068AB007313EA /* misc_dx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43B6C78F22406888007313EA /* misc_dx.cpp */; };
-		43B6C7D6224068AB007313EA /* misc_io.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43B6C7A32240688B007313EA /* misc_io.cpp */; };
-		43B6C7D7224068AB007313EA /* misc_msg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43B6C79B2240688A007313EA /* misc_msg.cpp */; };
-		43B6C7D8224068AB007313EA /* misc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43B6C79C2240688A007313EA /* misc.cpp */; };
 		43B6C7D9224068AB007313EA /* packet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43B6C79522406889007313EA /* packet.cpp */; };
 		43B6C7DA224068AB007313EA /* progress.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43B6C79322406889007313EA /* progress.cpp */; };
 		43B6C7DB224068AB007313EA /* rand.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43B6C7A22240688B007313EA /* rand.cpp */; };
@@ -61,7 +59,6 @@
 		43B6C7E2224068AB007313EA /* storm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43B6C7AB2240688D007313EA /* storm.cpp */; };
 		43B6C7E3224068AB007313EA /* tcp_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43B6C7A12240688B007313EA /* tcp_client.cpp */; };
 		43B6C7E4224068AB007313EA /* tcp_server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43B6C7A52240688C007313EA /* tcp_server.cpp */; };
-		43B6C7E5224068AB007313EA /* thread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43B6C79E2240688A007313EA /* thread.cpp */; };
 		43B6C7E6224068AB007313EA /* title.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43B6C79F2240688B007313EA /* title.cpp */; };
 		43B6C7E7224068AB007313EA /* udp_p2p.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43B6C78E22406888007313EA /* udp_p2p.cpp */; };
 		43B6C82A224068CF007313EA /* appfat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43B6C72B2240686D007313EA /* appfat.cpp */; };
@@ -131,13 +128,22 @@
 		43B6C86A224068CF007313EA /* trigs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43B6C74522406874007313EA /* trigs.cpp */; };
 		43B6C86B224068CF007313EA /* wave.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43B6C73A22406872007313EA /* wave.cpp */; };
 		43BA39B122375D8A009041FF /* AppIcon.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 43BA39AF22375925009041FF /* AppIcon.xcassets */; };
+		43DA133C2271574900E21D4A /* thread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43DA13322271574600E21D4A /* thread.cpp */; };
+		43DA133E2271574900E21D4A /* misc_io.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43DA13342271574700E21D4A /* misc_io.cpp */; };
+		43DA133F2271574900E21D4A /* dsound.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43DA13352271574700E21D4A /* dsound.cpp */; };
+		43DA13402271574900E21D4A /* ddraw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43DA13382271574800E21D4A /* ddraw.cpp */; };
+		43DA13412271574900E21D4A /* misc_msg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43DA13392271574800E21D4A /* misc_msg.cpp */; };
+		43DA13422271574900E21D4A /* misc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43DA133A2271574800E21D4A /* misc.cpp */; };
 		652BBCD55FBE46CC941FD64C /* smk_bitstream.c in Sources */ = {isa = PBXBuildFile; fileRef = 670494A24D7F4CFFACCD3BFB /* smk_bitstream.c */; };
 		73E86BC9E2714148AD560C46 /* smacker.c in Sources */ = {isa = PBXBuildFile; fileRef = 622A8C6A02D94FFC996C2CAE /* smacker.c */; };
+		769D23B7F293054B68BEE3D8 /* misdat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D7AC290594F8E8AFC64A9BD6 /* misdat.cpp */; };
 		8305C713732C4CECA36F37E9 /* explode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6D7FE30F050049FB933D2788 /* explode.cpp */; };
+		83FC98A9D008E3B0FC44D7BC /* objdat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9544864FEB328522685D5D6E /* objdat.cpp */; };
 		8FA4E9B3FA7D4B6AAB10EF73 /* implode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B1B2D29A5A284CD29205745F /* implode.cpp */; };
 		C794AF87232B4745B3C48397 /* Key.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0B8A000CA684B9FAF88F313 /* Key.cpp */; };
 		E3C499D08A284F95BDB46B42 /* smk_hufftree.c in Sources */ = {isa = PBXBuildFile; fileRef = 500C9F6E13FE44BFAEFCB81B /* smk_hufftree.c */; };
 		EF709BC9D0B245338D17E9D7 /* Section.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F074DDFE42C4B46A93CC4A9 /* Section.cpp */; };
+		F16C32785EE2116E6D0573E5 /* itemdat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A8C902DAE79069232EF316BF /* itemdat.cpp */; };
 		F425942E977042C9AAD29647 /* File.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 722EB8D86DBF49368AAFEE3C /* File.cpp */; };
 		FB80B52A619D452FA9BDE316 /* Named.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B229DB87369B4D76B0A60580 /* Named.cpp */; };
 /* End PBXBuildFile section */
@@ -302,18 +308,13 @@
 		43B6C79522406889007313EA /* packet.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = packet.cpp; path = SourceX/dvlnet/packet.cpp; sourceTree = "<group>"; };
 		43B6C79622406889007313EA /* storm_net.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = storm_net.cpp; path = SourceX/storm/storm_net.cpp; sourceTree = "<group>"; };
 		43B6C79722406889007313EA /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = SourceX/main.cpp; sourceTree = "<group>"; };
-		43B6C7982240688A007313EA /* dsound.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dsound.cpp; path = SourceX/miniwin/dsound.cpp; sourceTree = "<group>"; };
 		43B6C7992240688A007313EA /* abstract_net.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = abstract_net.cpp; path = SourceX/dvlnet/abstract_net.cpp; sourceTree = "<group>"; };
 		43B6C79A2240688A007313EA /* frame_queue.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = frame_queue.cpp; path = SourceX/dvlnet/frame_queue.cpp; sourceTree = "<group>"; };
-		43B6C79B2240688A007313EA /* misc_msg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = misc_msg.cpp; path = SourceX/miniwin/misc_msg.cpp; sourceTree = "<group>"; };
-		43B6C79C2240688A007313EA /* misc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = misc.cpp; path = SourceX/miniwin/misc.cpp; sourceTree = "<group>"; };
 		43B6C79D2240688A007313EA /* sound.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sound.cpp; path = SourceX/sound.cpp; sourceTree = "<group>"; };
-		43B6C79E2240688A007313EA /* thread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = thread.cpp; path = SourceX/miniwin/thread.cpp; sourceTree = "<group>"; };
 		43B6C79F2240688B007313EA /* title.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = title.cpp; path = SourceX/DiabloUI/title.cpp; sourceTree = "<group>"; };
 		43B6C7A02240688B007313EA /* dx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dx.cpp; path = SourceX/dx.cpp; sourceTree = "<group>"; };
 		43B6C7A12240688B007313EA /* tcp_client.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tcp_client.cpp; path = SourceX/dvlnet/tcp_client.cpp; sourceTree = "<group>"; };
 		43B6C7A22240688B007313EA /* rand.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = rand.cpp; path = SourceX/miniwin/rand.cpp; sourceTree = "<group>"; };
-		43B6C7A32240688B007313EA /* misc_io.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = misc_io.cpp; path = SourceX/miniwin/misc_io.cpp; sourceTree = "<group>"; };
 		43B6C7A42240688B007313EA /* selgame.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = selgame.cpp; path = SourceX/DiabloUI/selgame.cpp; sourceTree = "<group>"; };
 		43B6C7A52240688C007313EA /* tcp_server.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tcp_server.cpp; path = SourceX/dvlnet/tcp_server.cpp; sourceTree = "<group>"; };
 		43B6C7A62240688C007313EA /* loopback.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = loopback.cpp; path = SourceX/dvlnet/loopback.cpp; sourceTree = "<group>"; };
@@ -324,6 +325,12 @@
 		43B6C7AB2240688D007313EA /* storm.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = storm.cpp; path = SourceX/storm/storm.cpp; sourceTree = "<group>"; };
 		43BA39AF22375925009041FF /* AppIcon.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = AppIcon.xcassets; path = Xcode/AppIcon.xcassets; sourceTree = SOURCE_ROOT; };
 		43BF58B52235DEB8001F9748 /* devilutionX.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = devilutionX.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		43DA13322271574600E21D4A /* thread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = thread.cpp; path = SourceX/miniwin/thread.cpp; sourceTree = "<group>"; };
+		43DA13342271574700E21D4A /* misc_io.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = misc_io.cpp; path = SourceX/miniwin/misc_io.cpp; sourceTree = "<group>"; };
+		43DA13352271574700E21D4A /* dsound.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dsound.cpp; path = SourceX/miniwin/dsound.cpp; sourceTree = "<group>"; };
+		43DA13382271574800E21D4A /* ddraw.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ddraw.cpp; path = SourceX/miniwin/ddraw.cpp; sourceTree = "<group>"; };
+		43DA13392271574800E21D4A /* misc_msg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = misc_msg.cpp; path = SourceX/miniwin/misc_msg.cpp; sourceTree = "<group>"; };
+		43DA133A2271574800E21D4A /* misc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = misc.cpp; path = SourceX/miniwin/misc.cpp; sourceTree = "<group>"; };
 		500C9F6E13FE44BFAEFCB81B /* smk_hufftree.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = smk_hufftree.c; path = 3rdParty/libsmacker/smk_hufftree.c; sourceTree = SOURCE_ROOT; };
 		622A8C6A02D94FFC996C2CAE /* smacker.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = smacker.c; path = 3rdParty/libsmacker/smacker.c; sourceTree = SOURCE_ROOT; };
 		646292CBB776434AA4CA1C94 /* libPKWare.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libPKWare.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -332,10 +339,15 @@
 		6F074DDFE42C4B46A93CC4A9 /* Section.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Section.cpp; path = 3rdParty/Radon/Radon/source/Section.cpp; sourceTree = SOURCE_ROOT; };
 		722EB8D86DBF49368AAFEE3C /* File.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = File.cpp; path = 3rdParty/Radon/Radon/source/File.cpp; sourceTree = SOURCE_ROOT; };
 		92E1DAF5C7BA48E5A1E39C04 /* libRadon.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libRadon.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		9544864FEB328522685D5D6E /* objdat.cpp */ = {isa = PBXFileReference; includeInIndex = 1; name = objdat.cpp; path = Source/objdat.cpp; sourceTree = "<group>"; };
+		A8C902DAE79069232EF316BF /* itemdat.cpp */ = {isa = PBXFileReference; includeInIndex = 1; name = itemdat.cpp; path = Source/itemdat.cpp; sourceTree = "<group>"; };
 		B1B2D29A5A284CD29205745F /* implode.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = implode.cpp; path = 3rdParty/PKWare/implode.cpp; sourceTree = SOURCE_ROOT; };
 		B229DB87369B4D76B0A60580 /* Named.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Named.cpp; path = 3rdParty/Radon/Radon/source/Named.cpp; sourceTree = SOURCE_ROOT; };
+		BF5EF1B0CBE63E676700D98F /* spelldat.cpp */ = {isa = PBXFileReference; includeInIndex = 1; name = spelldat.cpp; path = Source/spelldat.cpp; sourceTree = "<group>"; };
 		C0B8A000CA684B9FAF88F313 /* Key.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Key.cpp; path = 3rdParty/Radon/Radon/source/Key.cpp; sourceTree = SOURCE_ROOT; };
+		D7AC290594F8E8AFC64A9BD6 /* misdat.cpp */ = {isa = PBXFileReference; includeInIndex = 1; name = misdat.cpp; path = Source/misdat.cpp; sourceTree = "<group>"; };
 		DCC453E263C842279A5E02E7 /* libsmacker.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libsmacker.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		DE0A12E19BA25264D89498BD /* monstdat.cpp */ = {isa = PBXFileReference; includeInIndex = 1; name = monstdat.cpp; path = Source/monstdat.cpp; sourceTree = "<group>"; };
 		F249E02C422E4EC2B812E004 /* libStormLib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libStormLib.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -561,18 +573,16 @@
 				43B6C7992240688A007313EA /* abstract_net.cpp */,
 				43B6C79022406888007313EA /* base.cpp */,
 				43B6C7A92240688C007313EA /* credits.cpp */,
+				43DA13382271574800E21D4A /* ddraw.cpp */,
 				43B6C79122406889007313EA /* diabloui.cpp */,
 				43B6C7AA2240688D007313EA /* dialogs.cpp */,
-				43B6C7982240688A007313EA /* dsound.cpp */,
+				43DA13352271574700E21D4A /* dsound.cpp */,
 				43B6C7A02240688B007313EA /* dx.cpp */,
 				43B6C79A2240688A007313EA /* frame_queue.cpp */,
 				43B6C7A62240688C007313EA /* loopback.cpp */,
 				43B6C79722406889007313EA /* main.cpp */,
 				43B6C79222406889007313EA /* mainmenu.cpp */,
 				43B6C78F22406888007313EA /* misc_dx.cpp */,
-				43B6C7A32240688B007313EA /* misc_io.cpp */,
-				43B6C79B2240688A007313EA /* misc_msg.cpp */,
-				43B6C79C2240688A007313EA /* misc.cpp */,
 				43B6C79522406889007313EA /* packet.cpp */,
 				43B6C79322406889007313EA /* progress.cpp */,
 				43B6C7A22240688B007313EA /* rand.cpp */,
@@ -585,7 +595,6 @@
 				43B6C7AB2240688D007313EA /* storm.cpp */,
 				43B6C7A12240688B007313EA /* tcp_client.cpp */,
 				43B6C7A52240688C007313EA /* tcp_server.cpp */,
-				43B6C79E2240688A007313EA /* thread.cpp */,
 				43B6C79F2240688B007313EA /* title.cpp */,
 				43B6C78E22406888007313EA /* udp_p2p.cpp */,
 			);
@@ -596,6 +605,11 @@
 			isa = PBXGroup;
 			children = (
 				7F95B2EF6FB44A038C321DA7 /* Source Files */,
+				A8C902DAE79069232EF316BF /* itemdat.cpp */,
+				D7AC290594F8E8AFC64A9BD6 /* misdat.cpp */,
+				DE0A12E19BA25264D89498BD /* monstdat.cpp */,
+				9544864FEB328522685D5D6E /* objdat.cpp */,
+				BF5EF1B0CBE63E676700D98F /* spelldat.cpp */,
 			);
 			name = devilution;
 			sourceTree = "<group>";
@@ -737,6 +751,7 @@
 				Base,
 			);
 			mainGroup = 9D3E0550F1EA4EA2A17A9E26;
+			productRefGroup = 23279744C0AF493896E2217C /* Products */;
 			projectDirPath = ../;
 			projectRoot = "";
 			targets = (
@@ -833,6 +848,11 @@
 				43B6C869224068CF007313EA /* track.cpp in Sources */,
 				43B6C86A224068CF007313EA /* trigs.cpp in Sources */,
 				43B6C86B224068CF007313EA /* wave.cpp in Sources */,
+				F16C32785EE2116E6D0573E5 /* itemdat.cpp in Sources */,
+				769D23B7F293054B68BEE3D8 /* misdat.cpp in Sources */,
+				2C3599B2CA5DBDB42B1BE7A8 /* monstdat.cpp in Sources */,
+				83FC98A9D008E3B0FC44D7BC /* objdat.cpp in Sources */,
+				032E95600DA8694091B99E01 /* spelldat.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -842,20 +862,21 @@
 			files = (
 				43B6C7CA224068AB007313EA /* abstract_net.cpp in Sources */,
 				43B6C7CB224068AB007313EA /* base.cpp in Sources */,
+				43DA133E2271574900E21D4A /* misc_io.cpp in Sources */,
 				43B6C7CC224068AB007313EA /* credits.cpp in Sources */,
 				43B6C7CD224068AB007313EA /* diabloui.cpp in Sources */,
 				43B6C7CE224068AB007313EA /* dialogs.cpp in Sources */,
-				43B6C7CF224068AB007313EA /* dsound.cpp in Sources */,
+				43DA13402271574900E21D4A /* ddraw.cpp in Sources */,
 				43B6C7D0224068AB007313EA /* dx.cpp in Sources */,
 				43B6C7D1224068AB007313EA /* frame_queue.cpp in Sources */,
 				43B6C7D2224068AB007313EA /* loopback.cpp in Sources */,
 				43B6C7D3224068AB007313EA /* main.cpp in Sources */,
 				43B6C7D4224068AB007313EA /* mainmenu.cpp in Sources */,
 				43B6C7D5224068AB007313EA /* misc_dx.cpp in Sources */,
-				43B6C7D6224068AB007313EA /* misc_io.cpp in Sources */,
-				43B6C7D7224068AB007313EA /* misc_msg.cpp in Sources */,
-				43B6C7D8224068AB007313EA /* misc.cpp in Sources */,
+				43DA13422271574900E21D4A /* misc.cpp in Sources */,
 				43B6C7D9224068AB007313EA /* packet.cpp in Sources */,
+				43DA13412271574900E21D4A /* misc_msg.cpp in Sources */,
+				43DA133F2271574900E21D4A /* dsound.cpp in Sources */,
 				43B6C7DA224068AB007313EA /* progress.cpp in Sources */,
 				43B6C7DB224068AB007313EA /* rand.cpp in Sources */,
 				43B6C7DC224068AB007313EA /* selconn.cpp in Sources */,
@@ -864,10 +885,10 @@
 				43B6C7DF224068AB007313EA /* sound.cpp in Sources */,
 				43B6C7E0224068AB007313EA /* storm_dx.cpp in Sources */,
 				43B6C7E1224068AB007313EA /* storm_net.cpp in Sources */,
+				43DA133C2271574900E21D4A /* thread.cpp in Sources */,
 				43B6C7E2224068AB007313EA /* storm.cpp in Sources */,
 				43B6C7E3224068AB007313EA /* tcp_client.cpp in Sources */,
 				43B6C7E4224068AB007313EA /* tcp_server.cpp in Sources */,
-				43B6C7E5224068AB007313EA /* thread.cpp in Sources */,
 				43B6C7E6224068AB007313EA /* title.cpp in Sources */,
 				43B6C7E7224068AB007313EA /* udp_p2p.cpp in Sources */,
 			);
@@ -1317,6 +1338,7 @@
 					"-fms-extensions",
 					"-fms-compatibility",
 					"'-fms-compatibility-version=19.00'",
+					"-Wno-narrowing",
 					"'-std=c++14'",
 				);
 				OTHER_LIBTOOLFLAGS = " ";
@@ -1354,7 +1376,10 @@
 				LIBRARY_STYLE = STATIC;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				ONLY_ACTIVE_ARCH = NO;
-				OTHER_CFLAGS = "    -DNDEBUG  ";
+				OTHER_CFLAGS = (
+					"-DNDEBUG",
+					" ",
+				);
 				OTHER_LIBTOOLFLAGS = " ";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = smacker;
@@ -1460,6 +1485,7 @@
 					"-fms-extensions",
 					"-fms-compatibility",
 					"'-fms-compatibility-version=19.00'",
+					"-Wno-narrowing",
 					"'-std=c++14'",
 				);
 				OTHER_LIBTOOLFLAGS = " ";
@@ -1497,7 +1523,10 @@
 				LIBRARY_STYLE = STATIC;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				ONLY_ACTIVE_ARCH = NO;
-				OTHER_CPLUSPLUSFLAGS = "   '-std=c++14'  ";
+				OTHER_CPLUSPLUSFLAGS = (
+					"'-std=c++14'",
+					" ",
+				);
 				OTHER_LIBTOOLFLAGS = " ";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = PKWare;
@@ -1608,7 +1637,10 @@
 				LIBRARY_STYLE = STATIC;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				ONLY_ACTIVE_ARCH = NO;
-				OTHER_CPLUSPLUSFLAGS = "   '-std=c++14'  ";
+				OTHER_CPLUSPLUSFLAGS = (
+					"'-std=c++14'",
+					" ",
+				);
 				OTHER_LIBTOOLFLAGS = " ";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = StormLib;

@@ -2,9 +2,14 @@
 #ifndef __DIABLOUI_H__
 #define __DIABLOUI_H__
 
-#if defined(__GNUC__) || defined(__cplusplus)
-extern "C" {
+#ifdef DEVILUTION_STUB
+#include "miniwin/pushdecl.inc"
+namespace dvl {
 #endif
+
+//#if defined(__GNUC__) || defined(__cplusplus)
+//extern "C" {
+//#endif
 
 struct FontStruct {
 	unsigned char fontbin[258];
@@ -25,9 +30,9 @@ struct ProfFntStruct {
 	int field_8;
 };
 
-void __cdecl UiDestroy();
+void __stdcall UiDestroy();
 BOOL __stdcall UiTitleDialog(int a1);
-void __cdecl UiInitialize();
+void __stdcall UiInitialize();
 BOOL __stdcall UiCopyProtError(int *pdwResult);
 void __stdcall UiAppActivate(BOOL bActive);
 BOOL __fastcall UiValidPlayerName(char *name); /* check __stdcall */
@@ -35,11 +40,11 @@ BOOL __stdcall UiSelHeroMultDialog(BOOL(__stdcall *fninfo)(BOOL(__stdcall *fninf
 BOOL __stdcall UiSelHeroSingDialog(BOOL(__stdcall *fninfo)(BOOL(__stdcall *fninfofunc)(_uiheroinfo *)), BOOL(__stdcall *fncreate)(_uiheroinfo *), BOOL(__stdcall *fnremove)(_uiheroinfo *), BOOL(__stdcall *fnstats)(unsigned int, _uidefaultstats *), int *dlgresult, char *name, int *difficulty);
 BOOL __stdcall UiCreditsDialog(int a1);
 BOOL __stdcall UiMainMenuDialog(char *name, int *pdwResult, void(__stdcall *fnSound)(char *file), int a4);
-int __stdcall UiProgressDialog(HWND window, char *msg, int enable, int(__cdecl *fnfunc)(), int rate);
-int __cdecl UiProfileGetString();
+BOOL __stdcall UiProgressDialog(HWND window, char *msg, int enable, int(*fnfunc)(), int rate);
+int __stdcall UiProfileGetString();
 void __cdecl UiProfileCallback();
 void __cdecl UiProfileDraw();
-BOOL __stdcall UiCategoryCallback(int a1, int a2, int a3, int a4, int a5, _DWORD *a6, _DWORD *a7);
+BOOL __stdcall UiCategoryCallback(int a1, int a2, int a3, int a4, int a5, DWORD *a6, DWORD *a7);
 BOOL __stdcall UiGetDataCallback(int game_type, int data_code, void *a3, int a4, int a5);
 BOOL __stdcall UiAuthCallback(int a1, char *a2, char *a3, char a4, char *a5, LPSTR lpBuffer, int cchBufferMax);
 BOOL __stdcall UiSoundCallback(int a1, int type, int a3);
@@ -55,8 +60,13 @@ void __stdcall UiCreateGameCriteria(_uiheroinfo *pInfo, char *str);
 BOOL __stdcall UiGetDefaultStats(int pclass, _uidefaultstats *pStats);
 BOOL __stdcall UiBetaDisclaimer(int a1);
 
-#if defined(__GNUC__) || defined(__cplusplus)
+//#if defined(__GNUC__) || defined(__cplusplus)
+//}
+//#endif
+
+#ifdef DEVILUTION_STUB
 }
+#include "miniwin/popdecl.inc"
 #endif
 
 #endif /* __DIABLOUI_H__ */

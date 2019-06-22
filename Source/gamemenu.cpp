@@ -1,48 +1,46 @@
-//HEADER_GOES_HERE
-
-#include "../types.h"
+#include "diablo.h"
 
 DEVILUTION_BEGIN_NAMESPACE
 
 TMenuItem sgSingleMenu[6] = {
 	// clang-format off
 	//   dwFlags, pszStr,        fnMenu
-	{ 0x80000000, "Save Game",   &gamemenu_save_game },
-	{ 0x80000000, "Options",     &gamemenu_options   },
-	{ 0x80000000, "New Game",    &gamemenu_new_game  },
-	{ 0x80000000, "Load Game",   &gamemenu_load_game },
-	{ 0x80000000, "Quit Diablo", &gamemenu_quit_game },
-	{ 0x80000000, NULL, NULL }
+	{ GMENU_ENABLED, "Save Game",   &gamemenu_save_game },
+	{ GMENU_ENABLED, "Options",     &gamemenu_options   },
+	{ GMENU_ENABLED, "New Game",    &gamemenu_new_game  },
+	{ GMENU_ENABLED, "Load Game",   &gamemenu_load_game },
+	{ GMENU_ENABLED, "Quit Diablo", &gamemenu_quit_game },
+	{ GMENU_ENABLED, NULL, NULL }
 	// clang-format on
 };
 TMenuItem sgMultiMenu[5] = {
 	// clang-format off
 	//   dwFlags, pszStr,            fnMenu
-	{ 0x80000000, "Options",         &gamemenu_options      },
-	{ 0x80000000, "New Game",        &gamemenu_new_game     },
-	{ 0x80000000, "Restart In Town", &gamemenu_restart_town },
-	{ 0x80000000, "Quit Diablo",     &gamemenu_quit_game    },
-	{ 0x80000000, NULL,              NULL                   }
+	{ GMENU_ENABLED, "Options",         &gamemenu_options      },
+	{ GMENU_ENABLED, "New Game",        &gamemenu_new_game     },
+	{ GMENU_ENABLED, "Restart In Town", &gamemenu_restart_town },
+	{ GMENU_ENABLED, "Quit Diablo",     &gamemenu_quit_game    },
+	{ GMENU_ENABLED, NULL,              NULL                   }
 	// clang-format on
 };
 TMenuItem sgOptionMenu[6] = {
 	// clang-format off
-	//   dwFlags, pszStr,          fnMenu
-	{ 0xC0000000, NULL,            (void(__cdecl *)(void)) & gamemenu_music_volume },
-	{ 0xC0000000, NULL,            (void(__cdecl *)(void)) & gamemenu_sound_volume },
-	{ 0xC0000000, "Gamma",         (void(__cdecl *)(void)) & gamemenu_gamma        },
-	{ 0x80000000, NULL,            &gamemenu_color_cycling                         },
-	{ 0x80000000, "Previous Menu", &gamemenu_previous                              },
-	{ 0x80000000, NULL,            NULL                                            }
+	//                     dwFlags, pszStr,          fnMenu
+	{ GMENU_ENABLED | GMENU_SLIDER, NULL,            &gamemenu_music_volume  },
+	{ GMENU_ENABLED | GMENU_SLIDER, NULL,            &gamemenu_sound_volume  },
+	{ GMENU_ENABLED | GMENU_SLIDER, "Gamma",         &gamemenu_gamma         },
+	{ GMENU_ENABLED               , NULL,            &gamemenu_color_cycling },
+	{ GMENU_ENABLED               , "Previous Menu", &j_gamemenu_previous    },
+	{ GMENU_ENABLED               , NULL,            NULL                    }
 	// clang-format on
 };
 char *music_toggle_names[] = { "Music", "Music Disabled" };
 char *sound_toggle_names[] = { "Sound", "Sound Disabled" };
 char *color_cycling_toggle_names[] = { "Color Cycling Off", "Color Cycling On" };
 
-void __cdecl gamemenu_previous()
+void gamemenu_previous()
 {
-	void(__cdecl * proc)();
+	void (*proc)(TMenuItem *);
 	TMenuItem *item;
 
 	if (gbMaxPlayers == 1) {
@@ -56,7 +54,7 @@ void __cdecl gamemenu_previous()
 	PressEscKey();
 }
 
-void __cdecl gamemenu_enable_single()
+void gamemenu_enable_single(TMenuItem *pMenuItems)
 {
 	BOOL enable;
 
@@ -69,17 +67,17 @@ void __cdecl gamemenu_enable_single()
 	gmenu_enable(sgSingleMenu, enable);
 }
 
-void __cdecl gamemenu_enable_multi()
+void gamemenu_enable_multi(TMenuItem *pMenuItems)
 {
 	gmenu_enable(&sgMultiMenu[2], deathflag);
 }
 
-void __cdecl gamemenu_off()
+void gamemenu_off()
 {
 	gmenu_call_proc(0, NULL);
 }
 
-void __cdecl gamemenu_handle_previous()
+void gamemenu_handle_previous()
 {
 	if (gmenu_exception())
 		gamemenu_off();
@@ -87,7 +85,12 @@ void __cdecl gamemenu_handle_previous()
 		gamemenu_previous();
 }
 
-void __cdecl gamemenu_new_game()
+void j_gamemenu_previous(BOOL bActivate)
+{
+	gamemenu_previous();
+}
+
+void gamemenu_new_game(BOOL bActivate)
 {
 	int i;
 
@@ -102,15 +105,14 @@ void __cdecl gamemenu_new_game()
 	gbRunGame = FALSE;
 	gamemenu_off();
 }
-// 52571C: using guessed type int drawpanflag;
 
-void __cdecl gamemenu_quit_game()
+void gamemenu_quit_game(BOOL bActivate)
 {
-	gamemenu_new_game();
+	gamemenu_new_game(bActivate);
 	gbRunGameResult = FALSE;
 }
 
-void __cdecl gamemenu_load_game()
+void gamemenu_load_game(BOOL bActivate)
 {
 	WNDPROC saveProc = SetWindowProc(DisableInputWndProc);
 	gamemenu_off();
@@ -129,37 +131,38 @@ void __cdecl gamemenu_load_game()
 	interface_msg_pump();
 	SetWindowProc(saveProc);
 }
-// 52571C: using guessed type int drawpanflag;
 
-void __cdecl gamemenu_save_game()
+void gamemenu_save_game(BOOL bActivate)
 {
-	if (pcurs == CURSOR_HAND) {
-		if (plr[myplr]._pmode == PM_DEATH || deathflag) {
-			gamemenu_off();
-		} else {
-			WNDPROC saveProc = SetWindowProc(DisableInputWndProc);
-			SetCursor_(CURSOR_NONE);
-			gamemenu_off();
-			InitDiabloMsg(EMSG_SAVING);
-			drawpanflag = 255;
-			DrawAndBlit();
-			SaveGame();
-			ClrDiabloMsg();
-			drawpanflag = 255;
-			SetCursor_(CURSOR_HAND);
-			interface_msg_pump();
-			SetWindowProc(saveProc);
-		}
+	if (pcurs != CURSOR_HAND) {
+		return;
 	}
-}
-// 52571C: using guessed type int drawpanflag;
 
-void __cdecl gamemenu_restart_town()
+	if (plr[myplr]._pmode == PM_DEATH || deathflag) {
+		gamemenu_off();
+		return;
+	}
+
+	WNDPROC saveProc = SetWindowProc(DisableInputWndProc);
+	SetCursor_(CURSOR_NONE);
+	gamemenu_off();
+	InitDiabloMsg(EMSG_SAVING);
+	drawpanflag = 255;
+	DrawAndBlit();
+	SaveGame();
+	ClrDiabloMsg();
+	drawpanflag = 255;
+	SetCursor_(CURSOR_HAND);
+	interface_msg_pump();
+	SetWindowProc(saveProc);
+}
+
+void gamemenu_restart_town(BOOL bActivate)
 {
 	NetSendCmd(TRUE, CMD_RETOWN);
 }
 
-void __cdecl gamemenu_options()
+void gamemenu_options(BOOL bActivate)
 {
 	gamemenu_get_music();
 	gamemenu_get_sound();
@@ -168,43 +171,45 @@ void __cdecl gamemenu_options()
 	gmenu_call_proc(sgOptionMenu, NULL);
 }
 
-void __cdecl gamemenu_get_music()
+void gamemenu_get_music()
 {
 	gamemenu_sound_music_toggle(music_toggle_names, sgOptionMenu, sound_get_or_set_music_volume(1));
 }
 
-void __fastcall gamemenu_sound_music_toggle(char **names, TMenuItem *menu_item, int volume)
+void gamemenu_sound_music_toggle(char **names, TMenuItem *menu_item, int volume)
 {
 	if (gbSndInited) {
-		menu_item->dwFlags |= 0xC0000000;
+		menu_item->dwFlags |= GMENU_ENABLED | GMENU_SLIDER;
 		menu_item->pszStr = *names;
-		gmenu_slider_3(menu_item, 17);
-		gmenu_slider_1(menu_item, VOLUME_MIN, VOLUME_MAX, volume);
-	} else {
-		menu_item->dwFlags &= 0x3FFFFFFF;
-		menu_item->pszStr = names[1];
+		gmenu_slider_steps(menu_item, 17);
+		gmenu_slider_set(menu_item, VOLUME_MIN, VOLUME_MAX, volume);
+		return;
 	}
+
+	menu_item->dwFlags &= ~(GMENU_ENABLED | GMENU_SLIDER);
+	menu_item->pszStr = names[1];
 }
 
-void __cdecl gamemenu_get_sound()
+void gamemenu_get_sound()
 {
 	gamemenu_sound_music_toggle(sound_toggle_names, &sgOptionMenu[1], sound_get_or_set_sound_volume(1));
 }
 
-void __cdecl gamemenu_get_color_cycling()
+void gamemenu_get_color_cycling()
 {
 	sgOptionMenu[3].pszStr = color_cycling_toggle_names[palette_get_colour_cycling() & 1];
 }
 
-void __cdecl gamemenu_get_gamma()
+void gamemenu_get_gamma()
 {
-	gmenu_slider_3(&sgOptionMenu[2], 15);
-	gmenu_slider_1(&sgOptionMenu[2], 30, 100, UpdateGamma(0));
+	gmenu_slider_steps(&sgOptionMenu[2], 15);
+	gmenu_slider_set(&sgOptionMenu[2], 30, 100, UpdateGamma(0));
 }
 
-void __fastcall gamemenu_music_volume(int volume)
+void gamemenu_music_volume(BOOL bActivate)
 {
-	if (volume) {
+	int volume;
+	if (bActivate) {
 		if (gbMusicOn) {
 			gbMusicOn = FALSE;
 			music_stop();
@@ -243,14 +248,15 @@ void __fastcall gamemenu_music_volume(int volume)
 	gamemenu_get_music();
 }
 
-int __fastcall gamemenu_slider_music_sound(TMenuItem *menu_item)
+int gamemenu_slider_music_sound(TMenuItem *menu_item)
 {
 	return gmenu_slider_get(menu_item, VOLUME_MIN, VOLUME_MAX);
 }
 
-void __fastcall gamemenu_sound_volume(int volume)
+void gamemenu_sound_volume(BOOL bActivate)
 {
-	if (volume) {
+	int volume;
+	if (bActivate) {
 		if (gbSoundOn) {
 			gbSoundOn = FALSE;
 			FreeMonsterSnd();
@@ -275,9 +281,10 @@ void __fastcall gamemenu_sound_volume(int volume)
 	gamemenu_get_sound();
 }
 
-void __fastcall gamemenu_gamma(int gamma)
+void gamemenu_gamma(BOOL bActivate)
 {
-	if (gamma) {
+	int gamma;
+	if (bActivate) {
 		if (UpdateGamma(0) == 30)
 			gamma = 100;
 		else
@@ -290,15 +297,17 @@ void __fastcall gamemenu_gamma(int gamma)
 	gamemenu_get_gamma();
 }
 
-int __cdecl gamemenu_slider_gamma()
+int gamemenu_slider_gamma()
 {
 	return gmenu_slider_get(&sgOptionMenu[2], 30, 100);
 }
 
-void __cdecl gamemenu_color_cycling()
+void gamemenu_color_cycling(BOOL bActivate)
 {
-	palette_set_color_cycling(palette_get_colour_cycling() == 0);
-	sgOptionMenu[3].pszStr = color_cycling_toggle_names[palette_get_colour_cycling() & 1];
+	BOOL color_cycling;
+
+	color_cycling = palette_set_color_cycling(palette_get_colour_cycling() == 0);
+	sgOptionMenu[3].pszStr = color_cycling_toggle_names[color_cycling & 1];
 }
 
 DEVILUTION_END_NAMESPACE

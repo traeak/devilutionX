@@ -1,16 +1,18 @@
-#include <SDL.h>
-#include <SDL_mixer.h>
+#include "devilution.h"
+#include "miniwin/ddraw.h"
+#include "stubs.h"
 #include <Radon.hpp>
+#include <SDL.h>
+#include <SDL_endian.h>
+#include <SDL_mixer.h>
 #include <smacker.h>
 
-#include "devilution.h"
-#include "stubs.h"
 #include "DiabloUI/diabloui.h"
-#include "dx.h"
 
 namespace dvl {
 
 DWORD nLastError = 0;
+bool directFileAccess = false;
 
 static std::string getIniPath()
 {
@@ -54,6 +56,9 @@ BOOL SFileDdaBeginEx(HANDLE hFile, DWORD flags, DWORD mask, unsigned __int32 lDi
 	SFileReadFile(hFile, SFXbuffer, bytestoread, NULL, 0);
 
 	SDL_RWops *rw = SDL_RWFromConstMem(SFXbuffer, bytestoread);
+	if (rw == NULL) {
+		SDL_Log(SDL_GetError());
+	}
 	SFileChunk = Mix_LoadWAV_RW(rw, 1);
 	free(SFXbuffer);
 
@@ -79,7 +84,7 @@ BOOL SFileDdaEnd(HANDLE hFile)
 	return true;
 }
 
-BOOL SFileDdaGetPos(HANDLE hFile, int *current, int *end)
+BOOL SFileDdaGetPos(HANDLE hFile, DWORD *current, DWORD *end)
 {
 	*current = 0;
 	*end = 1;
@@ -120,13 +125,51 @@ BOOL SFileGetFileArchive(HANDLE hFile, HANDLE *archive)
 // 	UNIMPLEMENTED();
 // }
 
+// Converts ASCII characters to lowercase
+// Converts slash (0x2F) / backslash (0x5C) to system file-separator
+unsigned char AsciiToLowerTable_Path[256] = {
+	0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+	0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F,
+#ifdef _WIN32
+	0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x5C,
+#else
+	0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F,
+#endif
+	0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F,
+	0x40, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D, 0x6E, 0x6F,
+#ifdef _WIN32
+	0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7A, 0x5B, 0x5C, 0x5D, 0x5E, 0x5F,
+#else
+	0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7A, 0x5B, 0x2F, 0x5D, 0x5E, 0x5F,
+#endif
+	0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D, 0x6E, 0x6F,
+	0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7A, 0x7B, 0x7C, 0x7D, 0x7E, 0x7F,
+	0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, 0x8E, 0x8F,
+	0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9A, 0x9B, 0x9C, 0x9D, 0x9E, 0x9F,
+	0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7, 0xA8, 0xA9, 0xAA, 0xAB, 0xAC, 0xAD, 0xAE, 0xAF,
+	0xB0, 0xB1, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7, 0xB8, 0xB9, 0xBA, 0xBB, 0xBC, 0xBD, 0xBE, 0xBF,
+	0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF,
+	0xD0, 0xD1, 0xD2, 0xD3, 0xD4, 0xD5, 0xD6, 0xD7, 0xD8, 0xD9, 0xDA, 0xDB, 0xDC, 0xDD, 0xDE, 0xDF,
+	0xE0, 0xE1, 0xE2, 0xE3, 0xE4, 0xE5, 0xE6, 0xE7, 0xE8, 0xE9, 0xEA, 0xEB, 0xEC, 0xED, 0xEE, 0xEF,
+	0xF0, 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7, 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, 0xFF
+};
+
 BOOL SFileOpenFile(const char *filename, HANDLE *phFile)
 {
 	//eprintf("%s: %s\n", __FUNCTION__, filename);
 
-	BOOL result;
+	bool result = false;
 
-	result = patch_rt_mpq && SFileOpenFileEx((HANDLE)patch_rt_mpq, filename, 0, phFile);
+	if (directFileAccess) {
+		char directPath[DVL_MAX_PATH] = "\0";
+		for (int i = 0; i < strlen(filename); i++) {
+			directPath[i] = AsciiToLowerTable_Path[filename[i]];
+		}
+		result = SFileOpenFileEx((HANDLE)0, directPath, 0xFFFFFFFF, phFile);
+	}
+	if (!result && patch_rt_mpq) {
+		result = SFileOpenFileEx((HANDLE)patch_rt_mpq, filename, 0, phFile);
+	}
 	if (!result) {
 		result = SFileOpenFileEx((HANDLE)diabdat_mpq, filename, 0, phFile);
 	}
@@ -197,15 +240,15 @@ BOOL SBmpLoadImage(const char *pszFileName, PALETTEENTRY *pPalette, BYTE *pBuffe
 		return false;
 	}
 
-	int width = pcxhdr.xmax - pcxhdr.xmin + 1;
-	int height = pcxhdr.ymax - pcxhdr.ymin + 1;
+	int width = SDL_SwapLE16(pcxhdr.xmax) - SDL_SwapLE16(pcxhdr.xmin) + 1;
+	int height = SDL_SwapLE16(pcxhdr.ymax) - SDL_SwapLE16(pcxhdr.ymin) + 1;
 
 	if (pdwWidth)
 		*pdwWidth = width;
 	if (dwHeight)
 		*dwHeight = height;
 	if (pdwBpp)
-		*pdwBpp = pcxhdr.bitsPerPixel;
+		*pdwBpp = SDL_SwapLE16(pcxhdr.bitsPerPixel);
 
 	if (!pBuffer) {
 		SFileSetFilePointer(hFile, 0, 0, 2);
@@ -274,8 +317,7 @@ HWND SDrawGetFrameWindow(HWND *sdraw_framewindow)
 //{
 //	UNIMPLEMENTED();
 //}
-
-void *SMemAlloc(unsigned int amount, char *logfilename, int logline, char defaultValue)
+void *SMemAlloc(unsigned int amount, char *logfilename, int logline, int defaultValue)
 {
 	// fprintf(stderr, "%s: %d (%s:%d)\n", __FUNCTION__, amount, logfilename, logline);
 	assert(amount != -1u);
@@ -323,7 +365,7 @@ void setIniValue(const char *sectionName, const char *keyName, char *value, int 
 		section = ini.getSection(sectionName);
 	}
 
-	std::string stringValue(value, len ?: strlen(value));
+	std::string stringValue(value, len ? len : strlen(value));
 
 	radon::Key *key = section->getKey(keyName);
 	if (!key) {
@@ -400,6 +442,7 @@ SDL_Palette *SVidPalette;
 SDL_Surface *SVidSurface;
 BYTE *SVidBuffer;
 SDL_AudioDeviceID deviceId;
+unsigned long SVidWidth, SVidHeight;
 
 BOOL SVidPlayBegin(char *filename, int a2, int a3, int a4, int a5, int flags, HANDLE *video)
 {
@@ -441,38 +484,51 @@ BOOL SVidPlayBegin(char *filename, int a2, int a3, int a4, int a5, int flags, HA
 
 		deviceId = SDL_OpenAudioDevice(NULL, 0, &audioFormat, NULL, 0);
 		if (deviceId == 0) {
-			SDL_Log("SDL_OpenAudioDevice: %s\n", SDL_GetError());
+			SDL_Log(SDL_GetError());
 			return false;
 		} else {
 			SDL_PauseAudioDevice(deviceId, 0); /* start audio playing. */
 		}
 	}
 
-	unsigned long width, height, nFrames;
+	unsigned long nFrames;
 	smk_info_all(SVidSMK, NULL, &nFrames, &SVidFrameLength);
-	smk_info_video(SVidSMK, &width, &height, NULL);
+	smk_info_video(SVidSMK, &SVidWidth, &SVidHeight, NULL);
 
 	smk_enable_video(SVidSMK, enableVideo);
 	smk_first(SVidSMK); // Decode first frame
 
-	smk_info_video(SVidSMK, &width, &height, NULL);
-	SDL_DestroyTexture(texture);
-	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, width, height);
-	SDL_RenderSetLogicalSize(renderer, width, height);
+	smk_info_video(SVidSMK, &SVidWidth, &SVidHeight, NULL);
+	if (renderer) {
+		SDL_DestroyTexture(texture);
+		texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, SVidWidth, SVidHeight);
+		if (texture == NULL) {
+			SDL_Log(SDL_GetError());
+		}
+		if (SDL_RenderSetLogicalSize(renderer, SVidWidth, SVidHeight) <= -1) {
+			SDL_Log(SDL_GetError());
+		}
+	}
 	memcpy(SVidPreviousPalette, orig_palette, 1024);
 
 	// Copy frame to buffer
 	SVidSurface = SDL_CreateRGBSurfaceWithFormatFrom(
 	    (unsigned char *)smk_get_video(SVidSMK),
-	    width,
-	    height,
+	    SVidWidth,
+	    SVidHeight,
 	    8,
-	    width,
+	    SVidWidth,
 	    SDL_PIXELFORMAT_INDEX8);
+	if (SVidSurface == NULL) {
+		SDL_Log(SDL_GetError());
+	}
 
 	SVidPalette = SDL_AllocPalette(256);
-	if (SDL_SetSurfacePalette(SVidSurface, SVidPalette) != 0) {
-		SDL_Log("SDL_SetSurfacePalette: %s\n", SDL_GetError());
+	if (SVidPalette == NULL) {
+		SDL_Log(SDL_GetError());
+	}
+	if (SDL_SetSurfacePalette(SVidSurface, SVidPalette) <= -1) {
+		SDL_Log(SDL_GetError());
 		return false;
 	}
 
@@ -515,8 +571,8 @@ BOOL SVidPlayContinue(void)
 		}
 		memcpy(logical_palette, orig_palette, 1024);
 
-		if (SDL_SetPaletteColors(SVidPalette, colors, 0, 256) != 0) {
-			SDL_Log("SDL_SetPaletteColors: %s\n", SDL_GetError());
+		if (SDL_SetPaletteColors(SVidPalette, colors, 0, 256) <= -1) {
+			SDL_Log(SDL_GetError());
 			return false;
 		}
 	}
@@ -525,8 +581,8 @@ BOOL SVidPlayContinue(void)
 		return SVidLoadNextFrame(); // Skip video and audio if the system is to slow
 	}
 
-	if (deviceId && SDL_QueueAudio(deviceId, smk_get_audio(SVidSMK, 0), smk_get_audio_size(SVidSMK, 0)) == -1) {
-		SDL_Log("SDL_QueueAudio: %s\n", SDL_GetError());
+	if (deviceId && SDL_QueueAudio(deviceId, smk_get_audio(SVidSMK, 0), smk_get_audio_size(SVidSMK, 0)) <= -1) {
+		SDL_Log(SDL_GetError());
 		return false;
 	}
 
@@ -534,17 +590,39 @@ BOOL SVidPlayContinue(void)
 		return SVidLoadNextFrame(); // Skip video if the system is to slow
 	}
 
-	SDL_Rect pal_surface_offset = { 64, 160, 0, 0 };
-	if (SDL_BlitSurface(SVidSurface, NULL, pal_surface, &pal_surface_offset) != 0) {
-		SDL_Log("SDL_BlitSurface: %s\n", SDL_GetError());
-		return false;
+	if (renderer) {
+		if (SDL_BlitSurface(SVidSurface, NULL, surface, NULL) <= -1) {
+			SDL_Log(SDL_GetError());
+			return false;
+		}
+	} else {
+		int factor;
+		int wFactor = SCREEN_WIDTH / SVidWidth;
+		int hFactor = SCREEN_HEIGHT / SVidHeight;
+		if (wFactor > hFactor && SCREEN_HEIGHT > SVidHeight) {
+			factor = hFactor;
+		} else {
+			factor = wFactor;
+		}
+		int scaledW = SVidWidth * factor;
+		int scaledH = SVidHeight * factor;
+
+		SDL_Rect pal_surface_offset = { (SCREEN_WIDTH - scaledW) / 2, (SCREEN_HEIGHT - scaledH) / 2, scaledW, scaledH };
+		Uint32 format = SDL_GetWindowPixelFormat(window);
+		SDL_Surface *tmp = SDL_ConvertSurfaceFormat(SVidSurface, format, 0);
+		if (SDL_BlitScaled(tmp, NULL, surface, &pal_surface_offset) <= -1) {
+			SDL_Log(SDL_GetError());
+			return false;
+		}
+		SDL_FreeSurface(tmp);
 	}
 
-	SetFadeLevel(256); // present frame
+	bufferUpdated = true;
+	lpDDSPrimary->Unlock(NULL);
 
 	double now = SDL_GetTicks() * 1000;
 	if (now < SVidFrameEnd) {
-		SDL_Delay((SVidFrameEnd - now)/1000); // wait with next frame if the system is to fast
+		SDL_Delay((SVidFrameEnd - now) / 1000); // wait with next frame if the system is to fast
 	}
 
 	return SVidLoadNextFrame();
@@ -573,9 +651,16 @@ BOOL SVidPlayEnd(HANDLE video)
 	video = NULL;
 
 	memcpy(orig_palette, SVidPreviousPalette, 1024);
-	SDL_DestroyTexture(texture);
-	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
-	SDL_RenderSetLogicalSize(renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
+	if (renderer) {
+		SDL_DestroyTexture(texture);
+		texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
+		if (texture == NULL) {
+			SDL_Log(SDL_GetError());
+		}
+		if (renderer && SDL_RenderSetLogicalSize(renderer, SCREEN_WIDTH, SCREEN_HEIGHT) <= -1) {
+			SDL_Log(SDL_GetError());
+		}
+	}
 
 	return true;
 }
@@ -643,10 +728,10 @@ void SDrawMessageBox(char *Text, char *Title, int Flags)
 	MessageBoxA(NULL, Text, Title, Flags);
 }
 
-// void SDrawDestroy(void)
-//{
-//	UNIMPLEMENTED();
-//}
+void SDrawDestroy(void)
+{
+	DUMMY();
+}
 
 BOOLEAN StormDestroy(void)
 {
@@ -654,7 +739,7 @@ BOOLEAN StormDestroy(void)
 	return true;
 }
 
-BOOLEAN SFileSetBasePath(char *)
+BOOL SFileSetBasePath(char *)
 {
 	DUMMY();
 	return true;
@@ -667,7 +752,7 @@ void SDrawRealizePalette(void)
 
 BOOL SFileEnableDirectAccess(BOOL enable)
 {
-	DUMMY();
+	directFileAccess = enable;
 	return true;
 }
 

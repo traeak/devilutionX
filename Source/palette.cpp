@@ -1,130 +1,130 @@
-//HEADER_GOES_HERE
-
-#include "../types.h"
+#include "diablo.h"
+#include "../3rdParty/Storm/Source/storm.h"
 
 DEVILUTION_BEGIN_NAMESPACE
 
 PALETTEENTRY logical_palette[256];
 PALETTEENTRY system_palette[256];
 PALETTEENTRY orig_palette[256];
-UINT gdwPalEntries;
+int gdwPalEntries;
 
 /* data */
 
-int gamma_correction = 100; // idb
+int gamma_correction = 100;
 BOOL color_cycling_enabled = TRUE;
-BOOLEAN sgbFadedIn = 1;
+BOOLEAN sgbFadedIn = TRUE;
 
-void __cdecl SaveGamma()
+void SaveGamma()
 {
 	SRegSaveValue("Diablo", "Gamma Correction", 0, gamma_correction);
 	SRegSaveValue("Diablo", "Color Cycling", FALSE, color_cycling_enabled);
 }
 
-void __cdecl palette_init()
+void palette_init()
 {
-	int v0; // eax
-	int v1; // eax
+	DWORD error_code;
 
 	LoadGamma();
-	memcpy(system_palette, orig_palette, 0x400u);
+	memcpy(system_palette, orig_palette, sizeof(orig_palette));
 	LoadSysPal();
 #ifdef __cplusplus
-	v0 = lpDDInterface->CreatePalette(DDPCAPS_ALLOW256 | DDPCAPS_8BIT, system_palette, &lpDDPalette, NULL);
+	error_code = lpDDInterface->CreatePalette(DDPCAPS_ALLOW256 | DDPCAPS_8BIT, system_palette, &lpDDPalette, NULL);
 #else
-	v0 = lpDDInterface->lpVtbl->CreatePalette(lpDDInterface, DDPCAPS_ALLOW256 | DDPCAPS_8BIT, system_palette, &lpDDPalette, NULL);
+	error_code = lpDDInterface->lpVtbl->CreatePalette(lpDDInterface, DDPCAPS_ALLOW256 | DDPCAPS_8BIT, system_palette, &lpDDPalette, NULL);
 #endif
-	if (v0)
-		ErrDlg(IDD_DIALOG8, v0, "C:\\Src\\Diablo\\Source\\PALETTE.CPP", 143);
+	if (error_code)
+		ErrDlg(IDD_DIALOG8, error_code, "C:\\Src\\Diablo\\Source\\PALETTE.CPP", 143);
 #ifdef __cplusplus
-	v1 = lpDDSPrimary->SetPalette(lpDDPalette);
+	error_code = lpDDSPrimary->SetPalette(lpDDPalette);
 #else
-	v1 = lpDDSPrimary->lpVtbl->SetPalette(lpDDSPrimary, lpDDPalette);
+	error_code = lpDDSPrimary->lpVtbl->SetPalette(lpDDSPrimary, lpDDPalette);
 #endif
-	if (v1)
-		ErrDlg(IDD_DIALOG8, v1, "C:\\Src\\Diablo\\Source\\PALETTE.CPP", 146);
+#ifndef RGBMODE
+	if (error_code)
+		ErrDlg(IDD_DIALOG8, error_code, "C:\\Src\\Diablo\\Source\\PALETTE.CPP", 146);
+#endif
 }
 
-void __cdecl LoadGamma()
+void LoadGamma()
 {
-	int v3;    // eax
-	int value; // [esp+8h] [ebp-4h]
+	int gamma_value;
+	int value;
 
 	value = gamma_correction;
 	if (!SRegLoadValue("Diablo", "Gamma Correction", 0, &value))
 		value = 100;
-	if (value >= 30) {
-		if (value > 100)
-			value = 100;
-	} else {
-		value = 30;
+	gamma_value = value;
+	if (value < 30) {
+		gamma_value = 30;
+	} else if (value > 100) {
+		gamma_value = 100;
 	}
-	gamma_correction = value - value % 5;
-	if (SRegLoadValue("Diablo", "Color Cycling", 0, &value))
-		v3 = value;
-	else
-		v3 = TRUE;
-	color_cycling_enabled = v3;
+	gamma_correction = gamma_value - gamma_value % 5;
+	if (!SRegLoadValue("Diablo", "Color Cycling", 0, &value))
+		value = 1;
+	color_cycling_enabled = value;
 }
 
-void __cdecl LoadSysPal()
+void LoadSysPal()
 {
-	HDC hDC;         // ebx
-	int i;           // ecx
-	int iStartIndex; // edi
+	HDC hDC;
+	int i, iStartIndex;
 
 	for (i = 0; i < 256; i++)
 		system_palette[i].peFlags = PC_NOCOLLAPSE | PC_RESERVED;
 
 	if (!fullscreen) {
 		hDC = GetDC(NULL);
+
 		gdwPalEntries = GetDeviceCaps(hDC, NUMRESERVED) / 2;
 		GetSystemPaletteEntries(hDC, 0, gdwPalEntries, system_palette);
 		for (i = 0; i < gdwPalEntries; i++)
 			system_palette[i].peFlags = 0;
+
 		iStartIndex = 256 - gdwPalEntries;
 		GetSystemPaletteEntries(hDC, iStartIndex, gdwPalEntries, &system_palette[iStartIndex]);
 		if (iStartIndex < 256) {
 			for (i = iStartIndex; i < 256; i++)
 				system_palette[i].peFlags = 0;
 		}
+
 		ReleaseDC(NULL, hDC);
 	}
 }
 
-void __fastcall LoadPalette(char *pszFileName)
+void LoadPalette(char *pszFileName)
 {
-	int i;                // eax
-	char PalData[256][3]; // [esp+0h] [ebp-304h]
-	HANDLE pBuf;           // [esp+300h] [ebp-4h]
+	int i;
+	void *pBuf;
+	BYTE PalData[256][3];
+
+	/// ASSERT: assert(pszFileName);
 
 	WOpenFile(pszFileName, &pBuf, 0);
-	WReadFile(pBuf, (char *)PalData, 768);
+	WReadFile(pBuf, (char *)PalData, sizeof(PalData));
 	WCloseFile(pBuf);
 
 	for (i = 0; i < 256; i++) {
-		orig_palette[i].peFlags = 0;
 		orig_palette[i].peRed = PalData[i][0];
 		orig_palette[i].peGreen = PalData[i][1];
 		orig_palette[i].peBlue = PalData[i][2];
+		orig_palette[i].peFlags = 0;
 	}
 }
 
-void __fastcall LoadRndLvlPal(int l)
+void LoadRndLvlPal(int l)
 {
-	char *pszPal;     // ecx
-	char szTemp[260]; // [esp+4h] [ebp-104h]
+	char szFileName[MAX_PATH];
 
-	if (l) {
-		sprintf(szTemp, "Levels\\L%iData\\L%i_%i.PAL", l, l, random(0, 4) + 1);
-		pszPal = szTemp;
+	if (l == DTYPE_TOWN) {
+		LoadPalette("Levels\\TownData\\Town.pal");
 	} else {
-		pszPal = "Levels\\TownData\\Town.pal";
+		sprintf(szFileName, "Levels\\L%iData\\L%i_%i.PAL", l, l, random(0, 4) + 1);
+		LoadPalette(szFileName);
 	}
-	LoadPalette(pszPal);
 }
 
-void __cdecl ResetPal()
+void ResetPal()
 {
 	if (!lpDDSPrimary
 #ifdef __cplusplus
@@ -138,7 +138,7 @@ void __cdecl ResetPal()
 	}
 }
 
-void __cdecl IncreaseGamma()
+void IncreaseGamma()
 {
 	if (gamma_correction < 100) {
 		gamma_correction += 5;
@@ -149,44 +149,39 @@ void __cdecl IncreaseGamma()
 	}
 }
 
-void __cdecl palette_update()
+void palette_update()
 {
-	int v0; // ecx
-	int v1; // eax
+	int nentries;
+	int max_entries;
 
 	if (lpDDPalette) {
-		v0 = 0;
-		v1 = 256;
+		nentries = 0;
+		max_entries = 256;
 		if (!fullscreen) {
-			v0 = gdwPalEntries;
-			v1 = 2 * (128 - gdwPalEntries);
+			nentries = gdwPalEntries;
+			max_entries = 2 * (128 - gdwPalEntries);
 		}
-		SDrawUpdatePalette(v0, v1, &system_palette[v0], 0);
+		SDrawUpdatePalette(nentries, max_entries, &system_palette[nentries], 0);
 	}
 }
 
-void __fastcall ApplyGamma(PALETTEENTRY *dst, PALETTEENTRY *src, int n)
+void ApplyGamma(PALETTEENTRY *dst, PALETTEENTRY *src, int n)
 {
-	PALETTEENTRY *v3; // edi
-	PALETTEENTRY *v4; // esi
-	double v5;        // [esp+18h] [ebp-Ch]
+	int i;
+	double g;
 
-	v3 = src;
-	v4 = dst;
-	v5 = (double)gamma_correction * 0.01;
-	if (n > 0) {
-		do {
-			v4->peRed = pow(v3->peRed * 0.00390625, v5) * 256.0;
-			v4->peGreen = pow(v3->peGreen * 0.00390625, v5) * 256.0;
-			v4->peBlue = pow(v3->peBlue * 0.00390625, v5) * 256.0;
-			++v4;
-			++v3;
-			--n;
-		} while (n);
+	g = gamma_correction / 100.0;
+
+	for (i = 0; i < n; i++) {
+		dst->peRed = pow(src->peRed / 256.0, g) * 256.0;
+		dst->peGreen = pow(src->peGreen / 256.0, g) * 256.0;
+		dst->peBlue = pow(src->peBlue / 256.0, g) * 256.0;
+		dst++;
+		src++;
 	}
 }
 
-void __cdecl DecreaseGamma()
+void DecreaseGamma()
 {
 	if (gamma_correction > 30) {
 		gamma_correction -= 5;
@@ -197,7 +192,7 @@ void __cdecl DecreaseGamma()
 	}
 }
 
-int __fastcall UpdateGamma(int gamma)
+int UpdateGamma(int gamma)
 {
 	if (gamma) {
 		gamma_correction = 130 - gamma;
@@ -207,14 +202,15 @@ int __fastcall UpdateGamma(int gamma)
 	return 130 - gamma_correction;
 }
 
-void __cdecl BlackPalette()
+void BlackPalette()
 {
 	SetFadeLevel(0);
 }
 
-void __fastcall SetFadeLevel(int fadeval)
+void SetFadeLevel(DWORD fadeval)
 {
-	int i; // eax
+	int i;
+	RECT SrcRect;
 
 	if (lpDDInterface) {
 		for (i = 0; i < 255; i++) {
@@ -229,78 +225,81 @@ void __fastcall SetFadeLevel(int fadeval)
 		lpDDInterface->lpVtbl->WaitForVerticalBlank(lpDDInterface, DDWAITVB_BLOCKBEGIN, NULL);
 #endif
 		palette_update();
+
+		// Workaround for flickering mouse in caves https://github.com/diasurgical/devilutionX/issues/7
+		SrcRect.left = 64;
+		SrcRect.top = 160;
+		SrcRect.right = BUFFER_WIDTH;
+		SrcRect.bottom = BUFFER_HEIGHT; // menu isn't offset so make sure we copy all of it
+		lpDDSPrimary->BltFast(0, 0, lpDDSBackBuf, &SrcRect, DDBLTFAST_WAIT);
+		lpDDSPrimary->Unlock(NULL);
 	}
 }
 
-void __fastcall PaletteFadeIn(int fr)
+void PaletteFadeIn(int fr)
 {
-	int i; // ebp
+	int i;
 
 	ApplyGamma(logical_palette, orig_palette, 256);
-
-	for (i = 0; i < 256; i += fr)
+	for (i = 0; i < 256; i += fr) {
 		SetFadeLevel(i);
-
+	}
 	SetFadeLevel(256);
-	memcpy(logical_palette, orig_palette, 0x400u);
-	sgbFadedIn = 1;
+	memcpy(logical_palette, orig_palette, sizeof(orig_palette));
+	sgbFadedIn = TRUE;
 }
 
-void __fastcall PaletteFadeOut(int fr)
+void PaletteFadeOut(int fr)
 {
-	int i; // esi
+	int i;
 
 	if (sgbFadedIn) {
-		for (i = 256; i > 0; i -= fr)
+		for (i = 256; i > 0; i -= fr) {
 			SetFadeLevel(i);
-
+		}
 		SetFadeLevel(0);
-		sgbFadedIn = 0;
+		sgbFadedIn = FALSE;
 	}
 }
 
-void __cdecl palette_update_caves()
+void palette_update_caves()
 {
-	BYTE v0;       // cx
-	signed int v1; // esi
-	signed int v2; // eax
-	BYTE v4;       // [esp+6h] [ebp-2h]
-	BYTE v5;
+	int i;
+	PALETTEENTRY col;
 
-	v0 = system_palette[1].peRed;
-	v5 = system_palette[1].peGreen;
-	v4 = system_palette[1].peBlue;
-	v1 = 1;
-	do {
-		v2 = v1++;
-		system_palette[v2].peRed = system_palette[v2 + 1].peRed;
-		system_palette[v2].peGreen = system_palette[v2 + 1].peGreen;
-		system_palette[v2].peBlue = system_palette[v2 + 1].peBlue;
-	} while (v1 < 31);
-	system_palette[v1].peRed = v0;
-	system_palette[v1].peGreen = v5;
-	system_palette[v1].peBlue = v4;
+	col = system_palette[1];
+	for (i = 1; i < 31; i++) {
+		system_palette[i].peRed = system_palette[i + 1].peRed;
+		system_palette[i].peGreen = system_palette[i + 1].peGreen;
+		system_palette[i].peBlue = system_palette[i + 1].peBlue;
+	}
+	system_palette[i].peRed = col.peRed;
+	system_palette[i].peGreen = col.peGreen;
+	system_palette[i].peBlue = col.peBlue;
+
 	palette_update();
 }
 
-void __fastcall palette_update_quest_palette(int n)
+void palette_update_quest_palette(int n)
 {
-	int i; // eax
+	int i;
 
-	for (i = 32 - n; i >= 0; --i)
+	for (i = 32 - n; i >= 0; i--) {
 		logical_palette[i] = orig_palette[i];
+	}
 	ApplyGamma(system_palette, logical_palette, 32);
 	palette_update();
 }
 
-BOOLEAN __cdecl palette_get_colour_cycling()
+BOOL palette_get_colour_cycling()
 {
 	return color_cycling_enabled;
 }
 
-void __fastcall palette_set_color_cycling(BOOLEAN enabled)
+BOOL palette_set_color_cycling(BOOL enabled)
 {
 	color_cycling_enabled = enabled;
+	return enabled;
 }
 
 DEVILUTION_END_NAMESPACE

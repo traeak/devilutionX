@@ -5,8 +5,9 @@ Status | Platform
 ---:| ---
 [![CircleCI](https://circleci.com/gh/diasurgical/devilutionX.svg?style=svg)](https://circleci.com/gh/diasurgical/devilutionX) | Linux 32bit & 64bit, Windows 32bit
 [![Build Status](https://travis-ci.org/diasurgical/devilutionX.svg?branch=master)](https://travis-ci.org/diasurgical/devilutionX) | macOS 32bit & 64bit
+[![Build status](https://ci.appveyor.com/api/projects/status/1a0jus2372qvksht?svg=true)](https://ci.appveyor.com/project/AJenbo/devilutionx) | Windows MSVC
 
-[Discord Channel](https://discord.gg/aQBQdDe)
+![Discord Channel](https://avatars3.githubusercontent.com/u/1965106?s=16&v=4) [Discord Chat Channel](https://discord.gg/aQBQdDe)
 
 # How To Play:
  - Copy diabdat.mpq from your CD, or GoG install folder, to the DevilutionX game directory ; Make sure it is all lowercase.
@@ -22,7 +23,11 @@ Please keep in mind that this is still being worked on and is missing parts of U
 
 ### Installing dependencies on Debian and Ubuntu
 ```
-sudo apt-get install cmake g++-multilib libsdl2-dev:i386 libsdl2-mixer-dev:i386 libsdl2-ttf-dev:i386 libsodium-dev libsodium-dev:i386
+sudo apt-get install cmake g++-multilib libsdl2-mixer-dev:i386 libsdl2-ttf-dev:i386 libsodium-dev libsodium-dev:i386
+```
+### Installing dependencies on Fedora
+```
+sudo dnf install cmake glibc-devel.i686 SDL2-devel.i686 SDL2_ttf-devel.i686 SDL2_mixer-devel.i686 libsodium-devel.i686 libasan.i686
 ```
 ### Compiling
 ```
@@ -41,19 +46,27 @@ Note: Be sure that your to select the command line Xcode if you have more then o
 ```
 $ sudo xcode-select --switch /Applications/Xcode.app
 ```
-Install the build tools using [Homebrew](https://brew.sh/):
+
+Verify that you don't have FreeType and HarfBuzz installed from
+[Homebrew](https://brew.sh/), which will cause build errors for SDL2_ttf:
+
 ```
-brew install automake autoconf libtool
+brew info freetype
+brew info harfbuzz
 ```
-Get SDL2, SDL2_mixer, SDL2_ttf and Libsodium:
+
+If you do have those installed, you'll have to temporarily uninstall them:
+
 ```
-./xcode-build.sh --get-libs
+brew uninstall --ignore-dependencies freetype
+brew uninstall --ignore-dependencies harfbuzz
 ```
-### Compiling
+
+You can install FreeType and HarfBuzz from Homebrew again after devilutionX builds successfully.
+
+Now you can run the build script:
 ```
-./xcode-build.sh --build-libs
-./xcode-build.sh --build-project
-./xcode-build.sh --package
+./macos-build.sh --build-all-x86
 ```
 </details>
 <details><summary>Windows via MinGW</summary>
@@ -73,6 +86,17 @@ cmake -DASAN=OFF -DCMAKE_TOOLCHAIN_FILE=../CMake/mingwcc.cmake ..
 make -j$(nproc)
 ```
 </details>
+<details><summary>Windows via Visual Studio</summary>
+
+### Installing dependencies
+Make sure to install the `C++ CMake tools for Windows` component for Visual Studio.
+
+Download and place the 32bit MSVC Development Libraries of [SDL2](https://www.libsdl.org/download-2.0.php), [SDL2_mixer](https://www.libsdl.org/projects/SDL_mixer/), [SDL2_ttf](https://www.libsdl.org/projects/SDL_ttf/) and [Libsodium](https://github.com/jedisct1/libsodium/releases) in `%USERPROFILE%\AppData\Local\Microsoft\WindowsApps\`.
+
+Go to `File -> Open -> CMake`, select `CMakeLists` from the project root.
+### Compiling
+Select `Build devilution.exe` from the `Build` menu.
+</details>
 
 ## Building for the native platform
 *Note: Since 64-bit builds are currently not in a playable state, it is advised to build in a 32-bit environment. Another possibility is a 32-bit build on a 64-bit system (see above).*
@@ -80,7 +104,11 @@ make -j$(nproc)
 
 ### Installing dependencies on Debian and Ubuntu
 ```
-sudo apt-get install cmake g++ libsdl2-dev libsdl2-mixer-dev libsdl2-ttf-dev libsodium-dev
+sudo apt-get install cmake g++ libsdl2-mixer-dev libsdl2-ttf-dev libsodium-dev
+```
+### Installing dependencies on Fedora
+```
+sudo dnf install cmake glibc-devel SDL2-devel SDL2_ttf-devel SDL2_mixer-devel libsodium-devel libasan
 ```
 ### Compiling
 ```
@@ -92,16 +120,29 @@ make -j$(nproc)
 </details>
 <details><summary>macOS</summary>
 
-Install the dependencies using [Homebrew](https://brew.sh/):
+Make sure you have [Homebrew](https://brew.sh/) installed, then run:
+
 ```
-brew install cmake sdl2_mixer sdl2_ttf libsodium pkg-config
+brew bundle
+mkdir build
+cd build
+cmake ..
+make -j$(sysctl -n hw.physicalcpu)
+```
+</details>
+<details><summary>FreeBSD</summary>
+*Note: At the moment this only appears to work from a 32bit system.*
+
+### Installing dependencies
+```
+pkg install cmake gcc8 sdl2_mixer sdl2_ttf libsodium
 ```
 ### Compiling
 ```
 mkdir build
 cd build
-cmake ..
-make -j$(sysctl -n hw.physicalcpu)
+cmake -DCMAKE_C_COMPILER=/usr/local/bin/gcc8 -DCMAKE_CXX_COMPILER=/usr/local/bin/g++8 ..
+make -j$(sysctl -n hw.ncpu)
 ```
 </details>
 

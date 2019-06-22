@@ -268,6 +268,7 @@ WINBOOL WINAPI PostMessageA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 
 WINBOOL WINAPI DestroyWindow(HWND hWnd);
 HWND WINAPI GetLastActivePopup(HWND hWnd);
+DWORD GdiSetBatchLimit(DWORD dw);
 HWND WINAPI GetTopWindow(HWND hWnd);
 WINBOOL WINAPI SetForegroundWindow(HWND hWnd);
 HWND WINAPI SetFocus(HWND hWnd);
@@ -332,6 +333,7 @@ UINT WINAPI GetSystemPaletteEntries(HDC hdc, UINT iStart, UINT cEntries, LPPALET
 int WINAPIV wsprintfA(LPSTR, LPCSTR, ...);
 int WINAPIV wvsprintfA(LPSTR dest, LPCSTR format, va_list arglist);
 int __cdecl _strcmpi(const char *_Str1, const char *_Str2);
+int __cdecl _strnicmp(const char *_Str1, const char *_Str2, size_t n);
 char *__cdecl _itoa(int _Value, char *_Dest, int _Radix);
 
 char *__cdecl _strlwr(char *str);
@@ -354,7 +356,7 @@ typedef struct _WIN32_FIND_DATAA {
 	DWORD dwFileType;
 	DWORD dwCreatorType;
 	WORD wFinderFlags;
-} WIN32_FIND_DATAA, *LPWIN32_FIND_DATAA;
+} WIN32_FIND_DATAA, WIN32_FIND_DATA, *LPWIN32_FIND_DATAA;
 
 typedef void *LPOVERLAPPED;
 
@@ -475,7 +477,11 @@ typedef struct _PROCESS_INFORMATION {
 	DWORD dwThreadId;
 } PROCESS_INFORMATION, *PPROCESS_INFORMATION, *LPPROCESS_INFORMATION;
 
-typedef void *LPSTARTUPINFOA;
+typedef struct {
+	DWORD cb;
+} STARTUPINFOA, *LPSTARTUPINFOA;
+typedef STARTUPINFOA STARTUPINFO;
+
 WINBOOL WINAPI CreateProcessA(LPCSTR lpApplicationName, LPSTR lpCommandLine, LPSECURITY_ATTRIBUTES lpProcessAttributes,
     LPSECURITY_ATTRIBUTES lpThreadAttributes, WINBOOL bInheritHandles, DWORD dwCreationFlags,
     LPVOID lpEnvironment, LPCSTR lpCurrentDirectory, LPSTARTUPINFOA lpStartupInfo,
@@ -541,6 +547,8 @@ BOOL VerQueryValueA(LPCVOID pBlock, LPCSTR lpSubBlock, LPVOID *lplpBuffer, PUINT
 WINBOOL WINAPI DeleteFileA(LPCSTR lpFileName);
 WINBOOL WINAPI CopyFileA(LPCSTR lpExistingFileName, LPCSTR lpNewFileName, WINBOOL bFailIfExists);
 HFILE WINAPI OpenFile(LPCSTR lpFileName, LPOFSTRUCT lpReOpenBuff, UINT uStyle);
+
+void __debugbreak();
 
 typedef struct _CONTEXT {
 
@@ -648,10 +656,6 @@ typedef struct _MEMORY_BASIC_INFORMATION {
 //
 typedef struct {
 } SOCKADDR, GUID, *LPGUID;
-
-typedef struct {
-	DWORD cb;
-} STARTUPINFOA;
 
 BOOL IsBadReadPtr(const void *lp, UINT_PTR ucb);
 BOOL IsBadWritePtr(LPVOID lp, UINT_PTR ucb);
