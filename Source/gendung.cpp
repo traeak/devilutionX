@@ -544,13 +544,13 @@ void SetDungeonMicros()
 	SetSpeedCels();
 
 	if (zoomflag) {
-		scr_pix_width = 640;
+		scr_pix_width = SCREEN_WIDTH;
 		scr_pix_height = VIEWPORT_HEIGHT;
 		dword_5C2FF8 = 10;
 		dword_5C2FFC = 11;
 	} else {
-		scr_pix_width = 384;
-		scr_pix_height = 224;
+		scr_pix_width = SCREEN_WIDTH / 2 + 64;
+		scr_pix_height = VIEWPORT_HEIGHT / 2 + 48;
 		dword_5C2FF8 = 6;
 		dword_5C2FFC = 7;
 	}

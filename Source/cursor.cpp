@@ -211,14 +211,14 @@ void CheckCursMove()
 	if (sx < 0) {
 		sx = 0;
 	}
-	if (sx >= 640) {
-		sx = 640;
+	if (sx >= SCREEN_WIDTH) {
+		sx = SCREEN_WIDTH;
 	}
 	if (sy < 0) {
 		sy = 0;
 	}
-	if (sy >= 480) {
-		sy = 480;
+	if (sy >= SCREEN_HEIGHT) {
+		sy = SCREEN_HEIGHT;
 	}
 
 	tx = sx >> 6;

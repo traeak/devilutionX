@@ -932,12 +932,12 @@ void T_DrawGame(int x, int y)
 {
 	int i, sx, sy, chunks, blocks;
 
-	scr_pix_width = 640;
+	scr_pix_width = SCREEN_WIDTH;
 	scr_pix_height = VIEWPORT_HEIGHT;
 	dword_5C2FF8 = 10;
 	dword_5C2FFC = 11;
 
-	sx = ScrollInfo._sxoff + 64;
+	sx = ScrollInfo._sxoff + SCREEN_X;
 	sy = ScrollInfo._syoff + 175;
 	x -= 10;
 	y--;
@@ -1046,8 +1046,8 @@ void T_DrawZoom(int x, int y)
 	int i, sx, sy, chunks, blocks;
 	int wdt, nSrcOff, nDstOff;
 
-	scr_pix_width = 384;
-	scr_pix_height = 192;
+	scr_pix_width = SCREEN_WIDTH / 2 + 64;
+	scr_pix_height = VIEWPORT_HEIGHT / 2 + 16;
 	dword_5C2FF8 = 6;
 	dword_5C2FFC = 6;
 
@@ -1144,15 +1144,15 @@ void T_DrawZoom(int x, int y)
 	if (chrflag || questlog) {
 		nSrcOff = SCREENXY(112, 159);
 		nDstOff = SCREENXY(320, 350);
-		wdt = 160;
+		wdt = SCREEN_WIDTH / 2 - 320 / 2;
 	} else if (invflag || sbookflag) {
 		nSrcOff = SCREENXY(112, 159);
 		nDstOff = SCREENXY(0, 350);
-		wdt = 160;
+		wdt = SCREEN_WIDTH / 2 - 320 / 2;
 	} else {
 		nSrcOff = SCREENXY(32, 159);
 		nDstOff = SCREENXY(0, 350);
-		wdt = 320;
+		wdt = SCREEN_WIDTH / 2;
 	}
 
 	/// ASSERT: assert(gpBuffer);
@@ -1281,13 +1281,13 @@ void SetTownMicros()
 	}
 
 	if (zoomflag) {
-		scr_pix_width = 640;
+		scr_pix_width = SCREEN_WIDTH;
 		scr_pix_height = VIEWPORT_HEIGHT;
 		dword_5C2FF8 = 10;
 		dword_5C2FFC = 11;
 	} else {
-		scr_pix_width = 384;
-		scr_pix_height = 224;
+		scr_pix_width = SCREEN_WIDTH / 2 + 64;
+		scr_pix_height = VIEWPORT_HEIGHT / 2 + 48;
 		dword_5C2FF8 = 6;
 		dword_5C2FFC = 7;
 	}

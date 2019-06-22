@@ -41,7 +41,7 @@ const unsigned char lfontkern[56] = {
 
 void gmenu_draw_pause()
 {
-	if (currlevel)
+	if (currlevel != 0)
 		RedBack();
 	if (!sgpCurrentMenu) {
 		light_table_index = 0;
@@ -152,8 +152,8 @@ void gmenu_draw()
 	if (sgpCurrentMenu) {
 		if (dword_63447C)
 			dword_63447C(sgpCurrentMenu);
-		CelDecodeOnly(236, 262, sgpLogo, 1, 296);
-		y = 320;
+		CelDecodeOnly((SCREEN_WIDTH - 296) / 2 + SCREEN_X, 102 + SCREEN_Y, sgpLogo, 1, 296);
+		y = 160 + SCREEN_Y;
 		i = sgpCurrentMenu;
 		if (sgpCurrentMenu->fnMenu) {
 			while (i->fnMenu) {
@@ -179,7 +179,7 @@ void gmenu_draw_menu_item(TMenuItem *pItem, int y)
 
 	w = gmenu_get_lfont(pItem);
 	if (pItem->dwFlags & GMENU_SLIDER) {
-		x = 16 + w / 2 + SCREEN_X;
+		x = (SCREEN_WIDTH - w) / 2 + 186 + SCREEN_X;
 		CelDecodeOnly(x, y - 10, optbar_cel, 1, 287);
 		nSteps = (pItem->dwFlags & 0xFFF000) >> 12;
 		if (nSteps < 2)
@@ -189,7 +189,7 @@ void gmenu_draw_menu_item(TMenuItem *pItem, int y)
 		gmenu_clear_buffer(x + 2, y - 12, pos + 13, 28);
 		CelDecodeOnly(x + 2 + pos, y - 12, option_cel, 1, 27);
 	}
-	x = SCREEN_WIDTH / 2 - w / 2 + SCREEN_X;
+	x = (SCREEN_WIDTH - w) / 2 + SCREEN_X;
 	light_table_index = (pItem->dwFlags & GMENU_ENABLED) ? 0 : 15;
 	gmenu_print_text(x, y, pItem->pszStr);
 	if (pItem == sgpCurrItem) {
@@ -340,8 +340,8 @@ BOOL gmenu_left_mouse(BOOL isDown)
 				pItem = &sgpCurrentMenu[i];
 				if ((sgpCurrentMenu[i].dwFlags & GMENU_ENABLED) != 0) {
 					w = gmenu_get_lfont(pItem);
-					if (MouseX >= 320 - (w >> 1)) {
-						if (MouseX <= (w >> 1) + 320) {
+					if (MouseX >= (SCREEN_WIDTH - w) / 2) {
+						if (MouseX <= (SCREEN_WIDTH + w) / 2) {
 							sgpCurrItem = pItem;
 							PlaySFX(IS_TITLEMOV);
 							if (pItem->dwFlags & GMENU_SLIDER) {

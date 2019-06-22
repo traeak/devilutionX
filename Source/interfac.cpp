@@ -38,7 +38,7 @@ void DrawCutscene()
 	DWORD i;
 
 	lock_buf(1);
-	CelDecodeOnly(64, 639, (BYTE *)sgpBackCel, 1, 640);
+	CelDecodeOnly(SCREEN_X, 480 + BORDER_TOP - 1, (BYTE *)sgpBackCel, 1, 640);
 
 	for (i = 0; i < sgdwProgress; i++) {
 		DrawProgress(
