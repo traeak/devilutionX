@@ -2201,8 +2201,8 @@ void DrawSpellBook()
 	char st;
 	unsigned __int64 spl;
 
-	CelDecodeOnly(SCREEN_WIDTH - 320 + SCREEN_X, 351 + SCREEN_Y, pSpellBkCel, 1, 320);
-	CelDecodeOnly(SCREEN_WIDTH - 320 + SCREEN_X + 76 * sbooktab + 7, 348 + SCREEN_Y, pSBkBtnCel, sbooktab + 1, 76);
+	CelDecodeOnly(PANEL_RIGHT, 351 + SCREEN_Y, pSpellBkCel, 1, 320);
+	CelDecodeOnly(PANEL_RIGHT + 76 * sbooktab + 7, 348 + SCREEN_Y, pSBkBtnCel, sbooktab + 1, 76);
 
 	spl = plr[myplr]._pMemSpells | plr[myplr]._pISpells | plr[myplr]._pAblSpells;
 
