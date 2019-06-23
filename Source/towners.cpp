@@ -123,24 +123,6 @@ int GetActiveTowner(int t)
 void SetTownerGPtrs(BYTE *pData, BYTE **pAnim)
 {
 	int i;
-#ifdef USE_ASM
-	BYTE *src;
-
-	for (i = 0; i < 8; i++) {
-		src = pData;
-		__asm {
-			mov		eax, src
-			mov		ebx, eax
-			mov		edx, i
-			shl		edx, 2
-			add		ebx, edx
-			mov		edx, [ebx]
-			add		eax, edx
-			mov		src, eax
-		}
-		pAnim[i] = src;
-	}
-#else
 	DWORD *pFrameTable;
 
 	pFrameTable = (DWORD *)pData;
@@ -148,7 +130,6 @@ void SetTownerGPtrs(BYTE *pData, BYTE **pAnim)
 	for (i = 0; i < 8; i++) {
 		pAnim[i] = &pData[pFrameTable[i]];
 	}
-#endif
 }
 
 void NewTownerAnim(int tnum, unsigned char *pAnim, int numFrames, int Delay)
