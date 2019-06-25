@@ -2,61 +2,7 @@
 
 DEVILUTION_BEGIN_NAMESPACE
 
-void town_clear_upper_buf(BYTE *pBuff)
-{
-	/// ASSERT: assert(gpBuffer);
-
-	int i, j, k;
-	BYTE *dst;
-
-	dst = pBuff;
-
-	for (i = 30, j = 1; i >= 0 && dst >= gpBufEnd; i -= 2, j++, dst -= BUFFER_WIDTH + 64) {
-		dst += i;
-		for (k = 0; k < 4 * j; k++)
-			*dst++ = 0;
-		dst += i;
-	}
-	for (i = 2, j = 15; i != 32 && dst >= gpBufEnd; i += 2, j--, dst -= BUFFER_WIDTH + 64) {
-		dst += i;
-		for (k = 0; k < 4 * j; k++)
-			*dst++ = 0;
-		dst += i;
-	}
-}
-
-void town_clear_low_buf(BYTE *pBuff)
-{
-	/// ASSERT: assert(gpBuffer);
-
-	int i, j, k;
-	BYTE *dst;
-
-	dst = pBuff;
-
-	for (i = 30, j = 1; i >= 0; i -= 2, j++, dst -= BUFFER_WIDTH + 64) {
-		if (dst < gpBufEnd) {
-			dst += i;
-			for (k = 0; k < 4 * j; k++)
-				*dst++ = 0;
-			dst += i;
-		} else {
-			dst += 64;
-		}
-	}
-	for (i = 2, j = 15; i != 32; i += 2, j--, dst -= BUFFER_WIDTH + 64) {
-		if (dst < gpBufEnd) {
-			dst += i;
-			for (k = 0; k < 4 * j; k++)
-				*dst++ = 0;
-			dst += i;
-		} else {
-			dst += 64;
-		}
-	}
-}
-
-void town_special_lower(BYTE *pBuff, int nCel)
+void town_special(BYTE *pBuff, int nCel)
 {
 #if 0
 	int w;
@@ -75,7 +21,6 @@ void town_special_lower(BYTE *pBuff, int nCel)
 			width = *src++;
 			if(!(width & 0x80)) {
 				w -= width;
-				if(dst < gpBufEnd) {
 					if(width & 1) {
 						dst[0] = src[0];
 						src++;
@@ -97,10 +42,6 @@ void town_special_lower(BYTE *pBuff, int nCel)
 						src += 4;
 						dst += 4;
 					}
-				} else {
-					src += width;
-					dst += width;
-				}
 			} else {
 				width = -(char)width;
 				dst += width;
@@ -111,60 +52,7 @@ void town_special_lower(BYTE *pBuff, int nCel)
 #endif
 }
 
-void town_special_upper(BYTE *pBuff, int nCel)
-{
-#if 0
-	int w;
-	BYTE *end;
-	BYTE width;
-	BYTE *src, *dst;
-	DWORD *pFrameTable;
-
-	pFrameTable = (DWORD *)pSpecialCels;
-	src = &pSpecialCels[pFrameTable[nCel]];
-	dst = pBuff;
-	end = &src[pFrameTable[nCel + 1] - pFrameTable[nCel]];
-
-	for(; src != end; dst -= BUFFER_WIDTH + 64) {
-		for(w = 64; w;) {
-			width = *src++;
-			if(!(width & 0x80)) {
-				w -= width;
-				if(dst < gpBufEnd) {
-					return;
-				}
-				if(width & 1) {
-					dst[0] = src[0];
-					src++;
-					dst++;
-				}
-				width >>= 1;
-				if(width & 1) {
-					dst[0] = src[0];
-					dst[1] = src[1];
-					src += 2;
-					dst += 2;
-				}
-				width >>= 1;
-				for(; width; width--) {
-					dst[0] = src[0];
-					dst[1] = src[1];
-					dst[2] = src[2];
-					dst[3] = src[3];
-					src += 4;
-					dst += 4;
-				}
-			} else {
-				width = -(char)width;
-				dst += width;
-				w -= width;
-			}
-		}
-	}
-#endif
-}
-
-void town_draw_clipped_e_flag(BYTE *pBuff, int x, int y, int sx, int sy)
+void town_draw_e_flag(BYTE *pBuff, int x, int y, int sx, int sy)
 {
 	int i;
 	BYTE *dst;
@@ -185,78 +73,79 @@ void town_draw_clipped_e_flag(BYTE *pBuff, int x, int y, int sx, int sy)
 		dst -= BUFFER_WIDTH * 32;
 	}
 
-	town_draw_clipped_town(pBuff, x, y, sx, sy, 0);
+	town_draw_town(pBuff, x, y, sx, sy, 0);
 }
 
-void town_draw_clipped_town(BYTE *pBuff, int x, int y, int sx, int sy, BOOL some_flag)
+void town_draw_town(BYTE *pBuff, int x, int y, int sx, int sy, BOOL some_flag)
 {
 	int mi, px, py;
 	char bv;
-
-	/// ASSERT: assert(gpBuffer);
-
-	pBuff = &gpBuffer[sx + PitchTbl[sy]];
 
 	if (dItem[x][y] != 0) {
 		bv = dItem[x][y] - 1;
 		px = sx - item[bv]._iAnimWidth2;
 		if (bv == pcursitem) {
-			CelDrawHdrClrHL(181, px, sy, item[bv]._iAnimData, item[bv]._iAnimFrame, item[bv]._iAnimWidth, 0, 8);
+			CelDecodeClr(181, px, sy, item[bv]._iAnimData, item[bv]._iAnimFrame, item[bv]._iAnimWidth, 0, 8);
 		}
-		Cel2DrawHdrOnly(px, sy, item[bv]._iAnimData, item[bv]._iAnimFrame, item[bv]._iAnimWidth, 0, 8);
+		/// ASSERT: assert(item[bv]._iAnimData);
+		CelDrawHdrOnly(px, sy, item[bv]._iAnimData, item[bv]._iAnimFrame, item[bv]._iAnimWidth, 0, 8);
 	}
 	if (dFlags[x][y] & BFLAG_MONSTLR) {
 		mi = -(dMonster[x][y - 1] + 1);
 		px = sx - towner[mi]._tAnimWidth2;
 		if (mi == pcursmonst) {
-			CelDrawHdrClrHL(166, px, sy, towner[mi]._tAnimData, towner[mi]._tAnimFrame, towner[mi]._tAnimWidth, 0, 8);
+			CelDecodeClr(166, px, sy, towner[mi]._tAnimData, towner[mi]._tAnimFrame, towner[mi]._tAnimWidth, 0, 8);
 		}
-		Cel2DrawHdrOnly(px, sy, towner[mi]._tAnimData, towner[mi]._tAnimFrame, towner[mi]._tAnimWidth, 0, 8);
+		/// ASSERT: assert(towner[mi]._tAnimData);
+		CelDrawHdrOnly(px, sy, towner[mi]._tAnimData, towner[mi]._tAnimFrame, towner[mi]._tAnimWidth, 0, 8);
 	}
 	if (dMonster[x][y] > 0) {
 		mi = dMonster[x][y] - 1;
 		px = sx - towner[mi]._tAnimWidth2;
 		if (mi == pcursmonst) {
-			CelDrawHdrClrHL(166, px, sy, towner[mi]._tAnimData, towner[mi]._tAnimFrame, towner[mi]._tAnimWidth, 0, 8);
+			CelDecodeClr(166, px, sy, towner[mi]._tAnimData, towner[mi]._tAnimFrame, towner[mi]._tAnimWidth, 0, 8);
 		}
-		Cel2DrawHdrOnly(px, sy, towner[mi]._tAnimData, towner[mi]._tAnimFrame, towner[mi]._tAnimWidth, 0, 8);
+		/// ASSERT: assert(towner[mi]._tAnimData);
+		CelDrawHdrOnly(px, sy, towner[mi]._tAnimData, towner[mi]._tAnimFrame, towner[mi]._tAnimWidth, 0, 8);
 	}
 	if (dFlags[x][y] & BFLAG_PLAYERLR) {
 		bv = -(dPlayer[x][y - 1] + 1);
 		px = sx + plr[bv]._pxoff - plr[bv]._pAnimWidth2;
 		py = sy + plr[bv]._pyoff;
 		if (bv == pcursplr) {
-			Cl2DecodeClrHL(165, px, py, plr[bv]._pAnimData, plr[bv]._pAnimFrame, plr[bv]._pAnimWidth, 0, 8);
+			Cl2DecodeFrm2(165, px, py, plr[bv]._pAnimData, plr[bv]._pAnimFrame, plr[bv]._pAnimWidth, 0, 8);
 		}
-		Cl2DecodeFrm4(px, py, plr[bv]._pAnimData, plr[bv]._pAnimFrame, plr[bv]._pAnimWidth, 0, 8);
+		/// ASSERT: assert(plr[bv]._pAnimData);
+		Cl2DecodeFrm1(px, py, plr[bv]._pAnimData, plr[bv]._pAnimFrame, plr[bv]._pAnimWidth, 0, 8);
 		if (some_flag && plr[bv]._peflag) {
-			town_draw_clipped_e_flag(pBuff - 64, x - 1, y + 1, sx - 64, sy);
+			town_draw_e_flag(pBuff - 64, x - 1, y + 1, sx - 64, sy);
 		}
 	}
 	if (dFlags[x][y] & BFLAG_DEAD_PLAYER) {
-		DrawDeadPlayer(x, y, sx, sy, 0, 8, 1);
+		DrawDeadPlayer(x, y, sx, sy, 0, 8, 0);
 	}
 	if (dPlayer[x][y] > 0) {
 		bv = dPlayer[x][y] - 1;
 		px = sx + plr[bv]._pxoff - plr[bv]._pAnimWidth2;
 		py = sy + plr[bv]._pyoff;
 		if (bv == pcursplr) {
-			Cl2DecodeClrHL(165, px, py, plr[bv]._pAnimData, plr[bv]._pAnimFrame, plr[bv]._pAnimWidth, 0, 8);
+			Cl2DecodeFrm2(165, px, py, plr[bv]._pAnimData, plr[bv]._pAnimFrame, plr[bv]._pAnimWidth, 0, 8);
 		}
-		Cl2DecodeFrm4(px, py, plr[bv]._pAnimData, plr[bv]._pAnimFrame, plr[bv]._pAnimWidth, 0, 8);
+		/// ASSERT: assert(plr[bv]._pAnimData);
+		Cl2DecodeFrm1(px, py, plr[bv]._pAnimData, plr[bv]._pAnimFrame, plr[bv]._pAnimWidth, 0, 8);
 		if (some_flag && plr[bv]._peflag) {
-			town_draw_clipped_e_flag(pBuff - 64, x - 1, y + 1, sx - 64, sy);
+			town_draw_e_flag(pBuff - 64, x - 1, y + 1, sx - 64, sy);
 		}
 	}
 	if (dFlags[x][y] & BFLAG_MISSILE) {
-		DrawClippedMissile(x, y, sx, sy, 0, 8, 0);
+		DrawMissile(x, y, sx, sy, 0, 8, 0);
 	}
 	if (dArch[x][y] != 0) {
-		town_special_lower(pBuff, dArch[x][y]);
+		town_special(pBuff, dArch[x][y]);
 	}
 }
 
-void town_draw_lower(int x, int y, int sx, int sy, int a5, int some_flag)
+void town_draw(int x, int y, int sx, int sy, int chunks, int some_flag)
 {
 	int i, j;
 	BYTE *dst;
@@ -277,19 +166,19 @@ void town_draw_lower(int x, int y, int sx, int sy, int a5, int some_flag)
 					}
 					dst -= BUFFER_WIDTH * 32;
 				}
-				town_draw_clipped_town(&gpBuffer[sx + PitchTbl[sy]], x, y, sx, sy, 0);
+				town_draw_town(&gpBuffer[sx + PitchTbl[sy]], x, y, sx, sy, 0);
 			} else {
-				town_clear_low_buf(&gpBuffer[sx + PitchTbl[sy]]);
+				world_draw_black_tile(&gpBuffer[sx + PitchTbl[sy]]);
 			}
 		} else {
-			town_clear_low_buf(&gpBuffer[sx + PitchTbl[sy]]);
+			world_draw_black_tile(&gpBuffer[sx + PitchTbl[sy]]);
 		}
 		x++;
 		y--;
 		sx += 64;
 	}
 
-	for (j = 0; j < a5 - some_flag; j++) {
+	for (j = 0; j < chunks - some_flag; j++) {
 		if (y >= 0 && y < MAXDUNY && x >= 0 && x < MAXDUNX) {
 			level_cel_block = dPiece[x][y];
 			if (level_cel_block != 0) {
@@ -306,12 +195,12 @@ void town_draw_lower(int x, int y, int sx, int sy, int a5, int some_flag)
 					}
 					dst -= BUFFER_WIDTH * 32;
 				}
-				town_draw_clipped_town(&gpBuffer[sx + PitchTbl[sy]], x, y, sx, sy, 1);
+				town_draw_town(&gpBuffer[sx + PitchTbl[sy]], x, y, sx, sy, 1);
 			} else {
-				town_clear_low_buf(&gpBuffer[sx + PitchTbl[sy]]);
+				world_draw_black_tile(&gpBuffer[sx + PitchTbl[sy]]);
 			}
 		} else {
-			town_clear_low_buf(&gpBuffer[sx + PitchTbl[sy]]);
+			world_draw_black_tile(&gpBuffer[sx + PitchTbl[sy]]);
 		}
 		x++;
 		y--;
@@ -331,399 +220,12 @@ void town_draw_lower(int x, int y, int sx, int sy, int a5, int some_flag)
 					}
 					dst -= BUFFER_WIDTH * 32;
 				}
-				town_draw_clipped_town(&gpBuffer[sx + PitchTbl[sy]], x, y, sx, sy, 0);
+				town_draw_town(&gpBuffer[sx + PitchTbl[sy]], x, y, sx, sy, 0);
 			} else {
-				town_clear_low_buf(&gpBuffer[sx + PitchTbl[sy]]);
+				world_draw_black_tile(&gpBuffer[sx + PitchTbl[sy]]);
 			}
 		} else {
-			town_clear_low_buf(&gpBuffer[sx + PitchTbl[sy]]);
-		}
-	}
-}
-
-void town_draw_clipped_e_flag_2(BYTE *pBuff, int x, int y, int a4, int a5, int sx, int sy)
-{
-	int i;
-	BYTE *dst;
-	MICROS *pMap;
-
-	if (a4 == 0) {
-		dst = pBuff;
-	} else {
-		dst = &pBuff[BUFFER_WIDTH * 32 * a4];
-	}
-
-	pMap = &dpiece_defs_map_1[IsometricCoord(x, y)];
-
-	for (i = 0; i < 6; i++) {
-		if (a4 <= i) {
-			level_cel_block = pMap->mt[2 * i + 2];
-			if (level_cel_block != 0) {
-				drawLowerScreen(dst);
-			}
-			level_cel_block = pMap->mt[2 * i + 3];
-			if (level_cel_block != 0) {
-				drawLowerScreen(dst + 32);
-			}
-		}
-		dst -= BUFFER_WIDTH * 32;
-	}
-
-	if (a5 < 8) {
-		town_draw_clipped_town_2(pBuff, x, y, a4, a5, sx, sy, 0);
-	}
-}
-
-void town_draw_clipped_town_2(BYTE *pBuff, int x, int y, int a4, int a5, int sx, int sy, BOOL some_flag)
-{
-	int mi, px, py;
-	char bv;
-
-	if (dItem[x][y] != 0) {
-		bv = dItem[x][y] - 1;
-		px = sx - item[bv]._iAnimWidth2;
-		if (bv == pcursitem) {
-			CelDrawHdrClrHL(181, px, sy, item[bv]._iAnimData, item[bv]._iAnimFrame, item[bv]._iAnimWidth, a5, 8);
-		}
-		Cel2DrawHdrOnly(px, sy, item[bv]._iAnimData, item[bv]._iAnimFrame, item[bv]._iAnimWidth, a5, 8);
-	}
-	if (dFlags[x][y] & BFLAG_MONSTLR) {
-		mi = -(dMonster[x][y - 1] + 1);
-		px = sx - towner[mi]._tAnimWidth2;
-		if (mi == pcursmonst) {
-			CelDrawHdrClrHL(166, px, sy, towner[mi]._tAnimData, towner[mi]._tAnimFrame, towner[mi]._tAnimWidth, a5, 8);
-		}
-		Cel2DrawHdrOnly(px, sy, towner[mi]._tAnimData, towner[mi]._tAnimFrame, towner[mi]._tAnimWidth, a5, 8);
-	}
-	if (dMonster[x][y] > 0) {
-		mi = dMonster[x][y] - 1;
-		px = sx - towner[mi]._tAnimWidth2;
-		if (mi == pcursmonst) {
-			CelDrawHdrClrHL(166, px, sy, towner[mi]._tAnimData, towner[mi]._tAnimFrame, towner[mi]._tAnimWidth, a5, 8);
-		}
-		Cel2DrawHdrOnly(px, sy, towner[mi]._tAnimData, towner[mi]._tAnimFrame, towner[mi]._tAnimWidth, a5, 8);
-	}
-	if (dFlags[x][y] & BFLAG_PLAYERLR) {
-		bv = -(dPlayer[x][y - 1] + 1);
-		px = sx + plr[bv]._pxoff - plr[bv]._pAnimWidth2;
-		py = sy + plr[bv]._pyoff;
-		if (bv == pcursplr) {
-			Cl2DecodeClrHL(165, px, py, plr[bv]._pAnimData, plr[bv]._pAnimFrame, plr[bv]._pAnimWidth, a5, 8);
-		}
-		Cl2DecodeFrm4(px, py, plr[bv]._pAnimData, plr[bv]._pAnimFrame, plr[bv]._pAnimWidth, a5, 8);
-		if (some_flag && plr[bv]._peflag) {
-			town_draw_clipped_e_flag_2(pBuff - 64, x - 1, y + 1, a4, a5, sx - 64, sy);
-		}
-	}
-	if (dFlags[x][y] & BFLAG_DEAD_PLAYER) {
-		DrawDeadPlayer(x, y, sx, sy, a5, 8, 1);
-	}
-	if (dPlayer[x][y] > 0) {
-		bv = dPlayer[x][y] - 1;
-		px = sx + plr[bv]._pxoff - plr[bv]._pAnimWidth2;
-		py = sy + plr[bv]._pyoff;
-		if (bv == pcursplr) {
-			Cl2DecodeClrHL(165, px, py, plr[bv]._pAnimData, plr[bv]._pAnimFrame, plr[bv]._pAnimWidth, a5, 8);
-		}
-		Cl2DecodeFrm4(px, py, plr[bv]._pAnimData, plr[bv]._pAnimFrame, plr[bv]._pAnimWidth, a5, 8);
-		if (some_flag && plr[bv]._peflag) {
-			town_draw_clipped_e_flag_2(pBuff - 64, x - 1, y + 1, a4, a5, sx - 64, sy);
-		}
-	}
-	if (dFlags[x][y] & BFLAG_MISSILE) {
-		DrawClippedMissile(x, y, sx, sy, a5, 8, 0);
-	}
-	if (dArch[x][y] != 0) {
-		town_special_lower(&pBuff[PitchTbl[16 * a5]], dArch[x][y]);
-	}
-}
-
-void town_draw_lower_2(int x, int y, int sx, int sy, int a5, int a6, int some_flag)
-{
-	int i, j, dir;
-	BYTE *dst;
-	MICROS *pMap;
-
-	/// ASSERT: assert(gpBuffer);
-
-	dir = 2 * a6 + 2;
-
-	if (some_flag) {
-		if (y >= 0 && y < MAXDUNY && x >= 0 && x < MAXDUNX) {
-			level_cel_block = dPiece[x][y];
-			if (level_cel_block != 0) {
-				dst = &gpBuffer[sx - (BUFFER_WIDTH * 32 - 32) + PitchTbl[sy]];
-				pMap = &dpiece_defs_map_1[IsometricCoord(x, y)];
-				for (i = 0; i < 7; i++) {
-					if (a6 <= i) {
-						level_cel_block = pMap->mt[2 * i + 3];
-						if (level_cel_block != 0) {
-							drawLowerScreen(dst);
-						}
-					}
-					dst -= BUFFER_WIDTH * 32;
-				}
-				if (dir < 8) {
-					town_draw_clipped_town_2(&gpBuffer[sx + PitchTbl[sy]], x, y, a6, dir, sx, sy, 0);
-				}
-			} else {
-				town_clear_low_buf(&gpBuffer[sx + PitchTbl[sy]]);
-			}
-		} else {
-			town_clear_low_buf(&gpBuffer[sx + PitchTbl[sy]]);
-		}
-		x++;
-		y--;
-		sx += 64;
-	}
-
-	for (j = 0; j < a5 - some_flag; j++) {
-		if (y >= 0 && y < MAXDUNY && x >= 0 && x < MAXDUNX) {
-			level_cel_block = dPiece[x][y];
-			if (level_cel_block != 0) {
-				dst = &gpBuffer[sx - BUFFER_WIDTH * 32 + PitchTbl[sy]];
-				pMap = &dpiece_defs_map_1[IsometricCoord(x, y)];
-				for (i = 0; i < 7; i++) {
-					if (a6 <= i) {
-						level_cel_block = pMap->mt[2 * i + 2];
-						if (level_cel_block != 0) {
-							drawLowerScreen(dst);
-						}
-						level_cel_block = pMap->mt[2 * i + 3];
-						if (level_cel_block != 0) {
-							drawLowerScreen(dst + 32);
-						}
-					}
-					dst -= BUFFER_WIDTH * 32;
-				}
-				if (dir < 8) {
-					town_draw_clipped_town_2(&gpBuffer[sx + PitchTbl[sy] - BUFFER_WIDTH * 16 * dir], x, y, a6, dir, sx, sy, 1);
-				}
-			} else {
-				town_clear_low_buf(&gpBuffer[sx + PitchTbl[sy]]);
-			}
-		} else {
-			town_clear_low_buf(&gpBuffer[sx + PitchTbl[sy]]);
-		}
-		x++;
-		y--;
-		sx += 64;
-	}
-
-	if (some_flag) {
-		if (y >= 0 && y < MAXDUNY && x >= 0 && x < MAXDUNX) {
-			level_cel_block = dPiece[x][y];
-			if (level_cel_block != 0) {
-				dst = &gpBuffer[sx - BUFFER_WIDTH * 32 + PitchTbl[sy]];
-				pMap = &dpiece_defs_map_1[IsometricCoord(x, y)];
-				for (i = 0; i < 7; i++) {
-					if (a6 <= i) {
-						level_cel_block = pMap->mt[2 * i + 2];
-						if (level_cel_block != 0) {
-							drawLowerScreen(dst);
-						}
-					}
-					dst -= BUFFER_WIDTH * 32;
-				}
-				if (dir < 8) {
-					town_draw_clipped_town_2(&gpBuffer[sx + PitchTbl[sy]], x, y, a6, dir, sx, sy, 0);
-				}
-			} else {
-				town_clear_low_buf(&gpBuffer[sx + PitchTbl[sy]]);
-			}
-		} else {
-			town_clear_low_buf(&gpBuffer[sx + PitchTbl[sy]]);
-		}
-	}
-}
-
-void town_draw_e_flag(BYTE *pBuff, int x, int y, int a4, int dir, int sx, int sy)
-{
-	int i;
-	BYTE *dst;
-	MICROS *pMap;
-
-	dst = pBuff;
-	pMap = &dpiece_defs_map_1[IsometricCoord(x, y)];
-
-	for (i = 0; i < 7; i++) {
-		if (a4 >= i) {
-			level_cel_block = pMap->mt[2 * i];
-			if (level_cel_block != 0) {
-				drawUpperScreen(dst);
-			}
-			level_cel_block = pMap->mt[2 * i + 1];
-			if (level_cel_block != 0) {
-				drawUpperScreen(dst + 32);
-			}
-		}
-		dst -= BUFFER_WIDTH * 32;
-	}
-
-	town_draw_town_all(pBuff, x, y, a4, dir, sx, sy, 0);
-}
-
-void town_draw_town_all(BYTE *pBuff, int x, int y, int a4, int dir, int sx, int sy, BOOL some_flag)
-{
-	int mi, px, py;
-	char bv;
-
-	if (dItem[x][y] != 0) {
-		bv = dItem[x][y] - 1;
-		px = sx - item[bv]._iAnimWidth2;
-		if (bv == pcursitem) {
-			CelDecodeClr(181, px, sy, item[bv]._iAnimData, item[bv]._iAnimFrame, item[bv]._iAnimWidth, 0, dir);
-		}
-		/// ASSERT: assert(item[bv]._iAnimData);
-		CelDrawHdrOnly(px, sy, item[bv]._iAnimData, item[bv]._iAnimFrame, item[bv]._iAnimWidth, 0, dir);
-	}
-	if (dFlags[x][y] & BFLAG_MONSTLR) {
-		mi = -(dMonster[x][y - 1] + 1);
-		px = sx - towner[mi]._tAnimWidth2;
-		if (mi == pcursmonst) {
-			CelDecodeClr(166, px, sy, towner[mi]._tAnimData, towner[mi]._tAnimFrame, towner[mi]._tAnimWidth, 0, dir);
-		}
-		/// ASSERT: assert(towner[mi]._tAnimData);
-		CelDrawHdrOnly(px, sy, towner[mi]._tAnimData, towner[mi]._tAnimFrame, towner[mi]._tAnimWidth, 0, dir);
-	}
-	if (dMonster[x][y] > 0) {
-		mi = dMonster[x][y] - 1;
-		px = sx - towner[mi]._tAnimWidth2;
-		if (mi == pcursmonst) {
-			CelDecodeClr(166, px, sy, towner[mi]._tAnimData, towner[mi]._tAnimFrame, towner[mi]._tAnimWidth, 0, dir);
-		}
-		/// ASSERT: assert(towner[mi]._tAnimData);
-		CelDrawHdrOnly(px, sy, towner[mi]._tAnimData, towner[mi]._tAnimFrame, towner[mi]._tAnimWidth, 0, dir);
-	}
-	if (dFlags[x][y] & BFLAG_PLAYERLR) {
-		bv = -(dPlayer[x][y - 1] + 1);
-		px = sx + plr[bv]._pxoff - plr[bv]._pAnimWidth2;
-		py = sy + plr[bv]._pyoff;
-		if (bv == pcursplr) {
-			Cl2DecodeFrm2(165, px, py, plr[bv]._pAnimData, plr[bv]._pAnimFrame, plr[bv]._pAnimWidth, 0, dir);
-		}
-		/// ASSERT: assert(plr[bv]._pAnimData);
-		Cl2DecodeFrm1(px, py, plr[bv]._pAnimData, plr[bv]._pAnimFrame, plr[bv]._pAnimWidth, 0, dir);
-		if (some_flag && plr[bv]._peflag) {
-			town_draw_e_flag(pBuff - 64, x - 1, y + 1, a4, dir, sx - 64, sy);
-		}
-	}
-	if (dFlags[x][y] & BFLAG_DEAD_PLAYER) {
-		DrawDeadPlayer(x, y, sx, sy, 0, dir, 0);
-	}
-	if (dPlayer[x][y] > 0) {
-		bv = dPlayer[x][y] - 1;
-		px = sx + plr[bv]._pxoff - plr[bv]._pAnimWidth2;
-		py = sy + plr[bv]._pyoff;
-		if (bv == pcursplr) {
-			Cl2DecodeFrm2(165, px, py, plr[bv]._pAnimData, plr[bv]._pAnimFrame, plr[bv]._pAnimWidth, 0, dir);
-		}
-		/// ASSERT: assert(plr[bv]._pAnimData);
-		Cl2DecodeFrm1(px, py, plr[bv]._pAnimData, plr[bv]._pAnimFrame, plr[bv]._pAnimWidth, 0, dir);
-		if (some_flag && plr[bv]._peflag) {
-			town_draw_e_flag(pBuff - 64, x - 1, y + 1, a4, dir, sx - 64, sy);
-		}
-	}
-	if (dFlags[x][y] & BFLAG_MISSILE) {
-		DrawMissile(x, y, sx, sy, 0, dir, 0);
-	}
-	if (dArch[x][y] != 0) {
-		town_special_upper(pBuff, dArch[x][y]);
-	}
-}
-
-void town_draw_upper(int x, int y, int sx, int sy, int a5, int a6, int some_flag)
-{
-	int i, j, dir;
-	BYTE *dst;
-	MICROS *pMap;
-
-	/// ASSERT: assert(gpBuffer);
-
-	dir = 2 * a6 + 2;
-	if (dir > 8) {
-		dir = 8;
-	}
-
-	if (some_flag) {
-		if (y >= 0 && y < MAXDUNY && x >= 0 && x < MAXDUNX) {
-			level_cel_block = dPiece[x][y];
-			if (level_cel_block != 0) {
-				dst = &gpBuffer[sx + 32 + PitchTbl[sy]];
-				pMap = &dpiece_defs_map_1[IsometricCoord(x, y)];
-				for (i = 0; i < 7; i++) {
-					if (a6 >= i) {
-						level_cel_block = pMap->mt[2 * i + 1];
-						if (level_cel_block != 0) {
-							drawUpperScreen(dst);
-						}
-					}
-					dst -= BUFFER_WIDTH * 32;
-				}
-				town_draw_town_all(&gpBuffer[sx + PitchTbl[sy]], x, y, a6, dir, sx, sy, 0);
-			} else {
-				town_clear_upper_buf(&gpBuffer[sx + PitchTbl[sy]]);
-			}
-		} else {
-			town_clear_upper_buf(&gpBuffer[sx + PitchTbl[sy]]);
-		}
-		x++;
-		y--;
-		sx += 64;
-	}
-
-	for (j = 0; j < a5 - some_flag; j++) {
-		if (y >= 0 && y < MAXDUNY && x >= 0 && x < MAXDUNX) {
-			level_cel_block = dPiece[x][y];
-			if (level_cel_block != 0) {
-				dst = &gpBuffer[sx + PitchTbl[sy]];
-				pMap = &dpiece_defs_map_1[IsometricCoord(x, y)];
-				for (i = 0; i < 7; i++) {
-					if (a6 >= i) {
-						level_cel_block = pMap->mt[2 * i];
-						if (level_cel_block != 0) {
-							drawUpperScreen(dst);
-						}
-						level_cel_block = pMap->mt[2 * i + 1];
-						if (level_cel_block != 0) {
-							drawUpperScreen(dst + 32);
-						}
-					}
-					dst -= BUFFER_WIDTH * 32;
-				}
-				town_draw_town_all(&gpBuffer[sx + PitchTbl[sy]], x, y, a6, dir, sx, sy, 1);
-			} else {
-				town_clear_upper_buf(&gpBuffer[sx + PitchTbl[sy]]);
-			}
-		} else {
-			town_clear_upper_buf(&gpBuffer[sx + PitchTbl[sy]]);
-		}
-		x++;
-		y--;
-		sx += 64;
-	}
-
-	if (some_flag) {
-		if (y >= 0 && y < MAXDUNY && x >= 0 && x < MAXDUNX) {
-			level_cel_block = dPiece[x][y];
-			if (level_cel_block != 0) {
-				dst = &gpBuffer[sx + PitchTbl[sy]];
-				pMap = &dpiece_defs_map_1[IsometricCoord(x, y)];
-				for (i = 0; i < 7; i++) {
-					if (a6 >= i) {
-						level_cel_block = pMap->mt[2 * i];
-						if (level_cel_block != 0) {
-							drawUpperScreen(dst);
-						}
-					}
-					dst -= BUFFER_WIDTH * 32;
-				}
-				town_draw_town_all(&gpBuffer[sx + PitchTbl[sy]], x, y, a6, dir, sx, sy, 0);
-			} else {
-				town_clear_upper_buf(&gpBuffer[sx + PitchTbl[sy]]);
-			}
-		} else {
-			town_clear_upper_buf(&gpBuffer[sx + PitchTbl[sy]]);
+			world_draw_black_tile(&gpBuffer[sx + PitchTbl[sy]]);
 		}
 	}
 }
@@ -741,20 +243,20 @@ void T_DrawGame(int x, int y)
 	sy = ScrollInfo._syoff + 175;
 	x -= 10;
 	y--;
-	chunks = 10;
-	blocks = 5;
+	chunks = SCREEN_WIDTH / 64;
+	blocks = VIEWPORT_HEIGHT / 32 + 4;
 
 	if (chrflag || questlog) {
 		x += 2;
 		y -= 2;
 		sx += 288;
-		chunks = 6;
+		chunks -= 4;
 	}
 	if (invflag || sbookflag) {
 		x += 2;
 		y -= 2;
 		sx -= 32;
-		chunks = 6;
+		chunks -= 4;
 	}
 
 	switch (ScrollInfo._sdir) {
@@ -806,35 +308,13 @@ void T_DrawGame(int x, int y)
 	}
 
 	/// ASSERT: assert(gpBuffer);
-	gpBufEnd = &gpBuffer[PitchTbl[SCREEN_Y]];
-	for (i = 0; i < 7; i++) {
-		town_draw_upper(x, y, sx, sy, chunks, i, 0);
-		y++;
-		sx -= 32;
-		sy += 16;
-		town_draw_upper(x, y, sx, sy, chunks, i, 1);
-		x++;
-		sx += 32;
-		sy += 16;
-	}
-	/// ASSERT: assert(gpBuffer);
 	gpBufEnd = &gpBuffer[PitchTbl[512]];
 	for (i = 0; i < blocks; i++) {
-		town_draw_lower(x, y, sx, sy, chunks, 0);
+		town_draw(x, y, sx, sy, chunks, 0);
 		y++;
 		sx -= 32;
 		sy += 16;
-		town_draw_lower(x, y, sx, sy, chunks, 1);
-		x++;
-		sx += 32;
-		sy += 16;
-	}
-	for (i = 0; i < 7; i++) {
-		town_draw_lower_2(x, y, sx, sy, chunks, i, 0);
-		y++;
-		sx -= 32;
-		sy += 16;
-		town_draw_lower_2(x, y, sx, sy, chunks, i, 1);
+		town_draw(x, y, sx, sy, chunks, 1);
 		x++;
 		sx += 32;
 		sy += 16;
@@ -909,11 +389,11 @@ void T_DrawZoom(int x, int y)
 	/// ASSERT: assert(gpBuffer);
 	gpBufEnd = &gpBuffer[PitchTbl[143]];
 	for (i = 0; i < 7; i++) {
-		town_draw_upper(x, y, sx, sy, chunks, i, 0);
+		town_draw(x, y, sx, sy, chunks, 0);
 		y++;
 		sx -= 32;
 		sy += 16;
-		town_draw_upper(x, y, sx, sy, chunks, i, 1);
+		town_draw(x, y, sx, sy, chunks, 1);
 		x++;
 		sx += 32;
 		sy += 16;
@@ -921,21 +401,21 @@ void T_DrawZoom(int x, int y)
 	/// ASSERT: assert(gpBuffer);
 	gpBufEnd = &gpBuffer[PitchTbl[320]];
 	for (i = 0; i < blocks; i++) {
-		town_draw_lower(x, y, sx, sy, chunks, 0);
+		town_draw(x, y, sx, sy, chunks, 0);
 		y++;
 		sx -= 32;
 		sy += 16;
-		town_draw_lower(x, y, sx, sy, chunks, 1);
+		town_draw(x, y, sx, sy, chunks, 1);
 		x++;
 		sx += 32;
 		sy += 16;
 	}
 	for (i = 0; i < 7; i++) {
-		town_draw_lower_2(x, y, sx, sy, chunks, i, 0);
+		town_draw(x, y, sx, sy, chunks, 0);
 		y++;
 		sx -= 32;
 		sy += 16;
-		town_draw_lower_2(x, y, sx, sy, chunks, i, 1);
+		town_draw(x, y, sx, sy, chunks, 1);
 		x++;
 		sx += 32;
 		sy += 16;

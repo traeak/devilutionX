@@ -152,43 +152,6 @@ void CelDrawHdrOnly(int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth, int Ce
 	    nWidth);
 }
 
-/**
- * @param CelSkip Skip lower parts of sprite, must be multiple of 2, max 8
- * @param CelCap Amount of sprite to render from lower to upper, must be multiple of 2, max 8
- */
-void CelDecodeHdrOnly(BYTE *pBuff, BYTE *pCelBuff, int nCel, int nWidth, int CelSkip, int CelCap)
-{
-	int nDataStart, nDataSize, nDataCap;
-	BYTE *pRLEBytes;
-	DWORD *pFrameTable;
-
-	/// ASSERT: assert(pCelBuff != NULL);
-	if (!pCelBuff)
-		return;
-	/// ASSERT: assert(pBuff != NULL);
-	if (!pBuff)
-		return;
-
-	pFrameTable = (DWORD *)pCelBuff;
-
-	pRLEBytes = &pCelBuff[pFrameTable[nCel]];
-	nDataStart = *(WORD *)&pRLEBytes[CelSkip];
-	if (!nDataStart)
-		return;
-
-	nDataSize = pFrameTable[nCel + 1] - pFrameTable[nCel];
-	if (CelCap == 8)
-		nDataCap = 0;
-	else
-		nDataCap = *(WORD *)&pRLEBytes[CelCap];
-	if (nDataCap)
-		nDataSize = nDataCap - nDataStart;
-	else
-		nDataSize -= nDataStart;
-
-	CelDrawDatOnly(pBuff, pRLEBytes + nDataStart, nDataSize, nWidth);
-}
-
 void CelDecDatLightOnly(BYTE *pDecodeTo, BYTE *pRLEBytes, int nDataSize, int nWidth)
 {
 	int w;
