@@ -174,7 +174,7 @@ bool SpawnWindow(LPCSTR lpWindowName, int nWidth, int nHeight)
 	}
 	// flags |= fullscreen ? SDL_FULLSCREEN : SDL_RESIZABLE;
 	SDL_WM_SetCaption(lpWindowName, WINDOW_ICON_NAME);
-	SDL_SetVideoMode(nWidth, nHeight, /*bpp=*/0, flags);
+	SDL_SetVideoMode(nWidth, nHeight, D_BPP, flags);
 	window = SDL_GetVideoSurface();
 	if (grabInput)
 		SDL_WM_GrabInput(SDL_GRAB_ON);
