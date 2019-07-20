@@ -800,6 +800,7 @@ void DrawLogo(int t, int size)
 
 void DrawMouse()
 {
+	return;
 	SDL_GetMouseState(&MouseX, &MouseY);
 
 	float scaleX;

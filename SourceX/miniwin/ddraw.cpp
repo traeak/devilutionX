@@ -55,11 +55,12 @@ HRESULT StubDraw::CreateSurface(LPDDSURFACEDESC lpDDSurfaceDesc, LPDIRECTDRAWSUR
 	DUMMY();
 
 	if (!lpDDSurfaceDesc->dwWidth) {
-		SDL_GetRendererOutputSize(renderer, (int *)&lpDDSurfaceDesc->dwWidth, (int *)&lpDDSurfaceDesc->dwHeight);
-		lpDDSurfaceDesc->ddpfPixelFormat.dwFlags = SDL_PIXELFORMAT_RGBA8888;
-		lpDDSurfaceDesc->ddpfPixelFormat.dwRGBBitCount = 32;
+		//SDL_GetRendererOutputSize(renderer, (int *)&lpDDSurfaceDesc->dwWidth, (int *)&lpDDSurfaceDesc->dwHeight);
+		//lpDDSurfaceDesc->ddpfPixelFormat.dwFlags = SDL_PIXELFORMAT_RGBA8888;
+		lpDDSurfaceDesc->ddpfPixelFormat.dwRGBBitCount = 16;
 
-		surface = SDL_CreateRGBSurfaceWithFormat(0, lpDDSurfaceDesc->dwWidth, lpDDSurfaceDesc->dwHeight, lpDDSurfaceDesc->ddpfPixelFormat.dwRGBBitCount, lpDDSurfaceDesc->ddpfPixelFormat.dwFlags);
+		//surface = SDL_CreateRGBSurfaceWithFormat(0, lpDDSurfaceDesc->dwWidth, lpDDSurfaceDesc->dwHeight, lpDDSurfaceDesc->ddpfPixelFormat.dwRGBBitCount, lpDDSurfaceDesc->ddpfPixelFormat.dwFlags);
+		surface = SDL_GetWindowSurface(window);
 		if (surface == NULL) {
 			SDL_Log("SDL_CreateRGBSurface: %s\n", SDL_GetError());
 			return (HRESULT)0x80000002L; //DDERR_OUTOFMEMORY
@@ -198,6 +199,7 @@ HRESULT StubSurface::Unlock(LPVOID lpSurfaceData)
 {
 	DUMMY_ONCE();
 	assert(!SDL_MUSTLOCK(surface));
+	/*
 	if (SDL_UpdateTexture(texture, NULL, surface->pixels, surface->pitch) != 0) { //pitch is 2560
 		SDL_Log("SDL_UpdateTexture: %s\n", SDL_GetError());
 	}
@@ -210,6 +212,8 @@ HRESULT StubSurface::Unlock(LPVOID lpSurfaceData)
 		SDL_Log("SDL_RenderCopy: %s\n", SDL_GetError());
 	}
 	SDL_RenderPresent(renderer);
+*/
+    SDL_UpdateWindowSurface(window);
 
 	return DVL_S_OK;
 }

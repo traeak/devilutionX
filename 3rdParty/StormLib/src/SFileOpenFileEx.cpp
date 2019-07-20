@@ -68,14 +68,40 @@ static const char * GetPatchFileName(TMPQArchive * ha, const char * szFileName, 
     return szFileName;
 }
 
+const unsigned char nameMap[256] = {
+	// clang-format off
+	'\0', 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
+	0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
+	' ',  '!',  '\"', '#',  '$',  '%',  '&',  '\'', '(',  ')',  '*',  '+',  ',',  '-',  '.',  '/',
+	'0',  '1',  '2',  '3',  '4',  '5',  '6',  '7',  '8',  '9',  ':',  ';',  '<',  '=',  '>',  '?',
+	'@',  'a',  'b',  'c',  'd',  'e',  'f',  'g',  'h',  'i',  'j',  'k',  'l',  'm',  'n',  'o',
+	'p',  'q',  'r',  's',  't',  'u',  'v',  'w',  'x',  'y',  'z',  '[',  '/', ']',  '^',  '_',
+	'`',  'a',  'b',  'c',  'd',  'e',  'f',  'g',  'h',  'i',  'j',  'k',  'l',  'm',  'n',  'o',
+	'p',  'q',  'r',  's',  't',  'u',  'v',  'w',  'x',  'y',  'z',  '{',  '|',  '}',  '~',  0x01,
+	'C',  'u',  'e',  'a',  'a',  'a',  'a',  'c',  'e',  'e',  'e',  'i',  'i',  'i',  'A',  'A',
+	'E',  'a',  'a',  'o',  'o',  'o',  'u',  'u',  'y',  'O',  'U',  'c',  'L',  'Y',  'P',  'f',
+	'a',  'i',  'o',  'u',  'n',  'N',  'a',  'o',  '?',  0x01, 0x01, 0x01, 0x01, '!',  '<',  '>',
+	'o',  '+',  '2',  '3',  '\'', 'u',  'P',  '.',  ',',  '1',  '0',  '>',  0x01, 0x01, 0x01, '?',
+	'A',  'A',  'A',  'A',  'A',  'A',  'A',  'C',  'E',  'E',  'E',  'E',  'I',  'I',  'I',  'I',
+	'D',  'N',  'O',  'O',  'O',  'O',  'O',  'x',  '0',  'U',  'U',  'U',  'U',  'Y',  'b',  'B',
+	'a',  'a',  'a',  'a',  'a',  'a',  'a',  'c',  'e',  'e',  'e',  'e',  'i',  'i',  'i',  'i',
+	'o',  'n',  'o',  'o',  'o',  'o',  'o',  '/',  '0',  'u',  'u',  'u',  'u',  'y',  'b',  'y'
+	// clang-format on
+};
+
 static bool OpenLocalFile(const char * szFileName, HANDLE * PtrFile)
 {
     TFileStream * pStream;
     TMPQFile * hf = NULL;
     TCHAR szFileNameT[MAX_PATH];
+    char asd[MAX_PATH] = "/home/ajenbo/devilutionX/build/diabdat/";
+	strcat(asd, szFileName);
+	for (int i = strlen("/home/ajenbo/devilutionX/build/diabdat/"); i<MAX_PATH && asd[i];i++) {
+		asd[i] = nameMap[(unsigned char)asd[i]];
+	}
 
     // Convert the file name to UNICODE (if needed)
-    StringCopy(szFileNameT, _countof(szFileNameT), szFileName);
+    StringCopy(szFileNameT, _countof(szFileNameT), asd);
 
     // Open the file and create the TMPQFile structure
     pStream = FileStream_OpenFile(szFileNameT, STREAM_FLAG_READ_ONLY);

@@ -29,7 +29,7 @@ char *sgszMusicTracks[NUM_MUSIC] = {
 	"Music\\DLvlD.wav",
 	"Music\\Dintro.wav"
 };
-char unk_volume[4][2] = {
+signed char unk_volume[4][2] = {
 	{ 15, -16 },
 	{ 15, -16 },
 	{ 30, -31 },
@@ -39,7 +39,7 @@ char unk_volume[4][2] = {
 void snd_update(BOOL bStopAll)
 {
 	DWORD dwStatus, i;
-
+return;
 	for (i = 0; i < 8; i++) {
 		if (!DSBs[i])
 			continue;
@@ -63,7 +63,7 @@ void snd_update(BOOL bStopAll)
 }
 
 void snd_stop_snd(TSnd *pSnd)
-{
+{return;
 	if (pSnd && pSnd->DSB)
 #ifdef __cplusplus
 		pSnd->DSB->Stop();
@@ -73,7 +73,7 @@ void snd_stop_snd(TSnd *pSnd)
 }
 
 BOOL snd_playing(TSnd *pSnd)
-{
+{return false;
 	DWORD dwStatus;
 
 	if (!pSnd)
@@ -93,7 +93,7 @@ BOOL snd_playing(TSnd *pSnd)
 }
 
 void snd_play_snd(TSnd *pSnd, int lVolume, int lPan)
-{
+{return;
 	LPDIRECTSOUNDBUFFER DSB;
 	DWORD tc;
 	HRESULT error_code;
@@ -154,7 +154,7 @@ void snd_play_snd(TSnd *pSnd, int lVolume, int lPan)
 }
 
 LPDIRECTSOUNDBUFFER sound_dup_channel(LPDIRECTSOUNDBUFFER DSB)
-{
+{return NULL;
 	DWORD i;
 
 	if (!gbDupSounds) {
@@ -179,7 +179,7 @@ LPDIRECTSOUNDBUFFER sound_dup_channel(LPDIRECTSOUNDBUFFER DSB)
 }
 
 BOOL sound_file_reload(TSnd *sound_file, LPDIRECTSOUNDBUFFER DSB)
-{
+{return true;
 	HANDLE file;
 	LPVOID buf1, buf2;
 	DWORD size1, size2;
@@ -217,7 +217,7 @@ BOOL sound_file_reload(TSnd *sound_file, LPDIRECTSOUNDBUFFER DSB)
 }
 
 TSnd *sound_file_load(char *path)
-{
+{return NULL;
 	HANDLE file;
 	BYTE *wave_file;
 	TSnd *pSnd;
@@ -266,7 +266,7 @@ TSnd *sound_file_load(char *path)
 // 456F07: could not find valid save-restore pair for esi
 
 void sound_CreateSoundBuffer(TSnd *sound_file)
-{
+{return ;
 	DUMMY_ONCE();
 	DSBUFFERDESC DSB;
 	HRESULT error_code;
@@ -290,7 +290,7 @@ void sound_CreateSoundBuffer(TSnd *sound_file)
 }
 
 void sound_file_cleanup(TSnd *sound_file)
-{
+{return ;
 	if (sound_file) {
 		if (sound_file->DSB) {
 #ifdef __cplusplus
@@ -308,7 +308,7 @@ void sound_file_cleanup(TSnd *sound_file)
 }
 
 void snd_init(HWND hWnd)
-{
+{return ;
 	sound_load_volume("Sound Volume", &sglSoundVolume);
 	gbSoundOn = sglSoundVolume > VOLUME_MIN;
 
@@ -332,7 +332,7 @@ void snd_init(HWND hWnd)
 }
 
 void sound_load_volume(char *value_name, int *value)
-{
+{return ;
 	int v = *value;
 	if (!SRegLoadValue("Diablo", value_name, 0, &v)) {
 		v = VOLUME_MAX;
@@ -348,7 +348,7 @@ void sound_load_volume(char *value_name, int *value)
 }
 
 void sound_create_primary_buffer(HANDLE music_track)
-{
+{return ;
 	HRESULT error_code;
 	DSBUFFERDESC dsbuf;
 	WAVEFORMATEX format;
@@ -401,7 +401,7 @@ void sound_create_primary_buffer(HANDLE music_track)
 // 69F100: using guessed type int sglpDSB;
 
 HRESULT sound_DirectSoundCreate(LPGUID lpGuid, LPDIRECTSOUND *ppDS, LPUNKNOWN pUnkOuter)
-{
+{return NULL;
 	DUMMY();
 	HRESULT(*DirectSoundCreate)
 	(LPGUID lpGuid, LPDIRECTSOUND * ppDS, LPUNKNOWN pUnkOuter);
@@ -422,7 +422,7 @@ HRESULT sound_DirectSoundCreate(LPGUID lpGuid, LPDIRECTSOUND *ppDS, LPUNKNOWN pU
 }
 
 void sound_cleanup()
-{
+{return ;
 	snd_update(true);
 	SVidDestroy();
 	SFileDdaDestroy();
@@ -444,12 +444,12 @@ void sound_cleanup()
 }
 
 void sound_store_volume(char *key, int value)
-{
+{return ;
 	SRegSaveValue("Diablo", key, 0, value);
 }
 
 void music_stop()
-{
+{return ;
 	if (sgpMusicTrack) {
 		Mix_HaltMusic();
 		SFileCloseFile(sgpMusicTrack);
@@ -459,8 +459,9 @@ void music_stop()
 }
 
 void music_start(int nTrack)
-{
+{return ;
 	BOOL success;
+	return;
 
 	/// ASSERT: assert((DWORD) nTrack < NUM_MUSIC);
 	music_stop();
@@ -491,7 +492,7 @@ void music_start(int nTrack)
 }
 
 void sound_disable_music(BOOL disable)
-{
+{return ;
 	if (disable) {
 		music_stop();
 	} else if (sgnMusicTrack != 6) {
@@ -500,7 +501,7 @@ void sound_disable_music(BOOL disable)
 }
 
 int sound_get_or_set_music_volume(int volume)
-{
+{return 0;
 	if (volume == 1)
 		return sglMusicVolume;
 
@@ -513,7 +514,7 @@ int sound_get_or_set_music_volume(int volume)
 }
 
 int sound_get_or_set_sound_volume(int volume)
-{
+{return 0;
 	if (volume == 1)
 		return sglSoundVolume;
 

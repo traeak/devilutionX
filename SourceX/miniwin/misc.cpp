@@ -288,7 +288,7 @@ WINBOOL SetForegroundWindow(HWND hWnd)
  */
 HWND SetFocus(HWND hWnd)
 {
-	SDL_SetWindowInputFocus(window);
+//	SDL_SetWindowInputFocus(window);
 	MainWndProc(NULL, DVL_WM_ACTIVATEAPP, true, 0); // SDL_WINDOWEVENT_FOCUS_GAINED
 	return NULL;
 }
@@ -335,7 +335,7 @@ HWND CreateWindowExA(
 
 	window = SDL_CreateWindow(lpWindowName, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, nWidth, nHeight, flags);
 	atexit(FakeWMDestroy);
-
+/*
 	char scaleQuality[2] = "2";
 	DvlStringSetting("scaling quality", scaleQuality, 2);
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, scaleQuality);
@@ -353,7 +353,7 @@ HWND CreateWindowExA(
 	if (SDL_RenderSetLogicalSize(renderer, nWidth, nHeight) != 0) {
 		SDL_Log("SDL_RenderSetLogicalSize: %s\n", SDL_GetError());
 	}
-
+*/
 	return window;
 }
 
@@ -698,6 +698,7 @@ DWORD GetPrivateProfileStringA(LPCSTR lpAppName, LPCSTR lpKeyName, LPCSTR lpDefa
 
 int MessageBoxA(HWND hWnd, const char *Text, const char *Title, UINT Flags)
 {
+	printf(Text);exit;
 	Uint32 SDLFlags = 0;
 	if (Flags & DVL_MB_ICONHAND) {
 		SDLFlags |= SDL_MESSAGEBOX_ERROR;

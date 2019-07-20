@@ -1809,6 +1809,7 @@ void drawUpperScreen(BYTE *pBuff)
 			}
 		}
 	}
+	return;
 	gpCelFrame = (unsigned char *)SpeedFrameTbl;
 	dst = pBuff;
 	if (!(_BYTE)light_table_index) {
@@ -4464,6 +4465,7 @@ void drawLowerScreen(BYTE *pBuff)
 			}
 		}
 	}
+	return;
 	gpCelFrame = (unsigned char *)SpeedFrameTbl;
 	dst = pBuff;
 	if ((_BYTE)light_table_index) {

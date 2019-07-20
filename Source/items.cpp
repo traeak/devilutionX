@@ -3319,6 +3319,7 @@ BOOL SmithItemOk(int i)
 
 int RndSmithItem(int lvl)
 {
+	return 0;
 	int i, ri;
 	int ril[512];
 
@@ -3373,6 +3374,7 @@ void SortSmith()
 
 void SpawnSmith(int lvl)
 {
+	return;
 	int i, iCnt, idata;
 
 	iCnt = random(50, 10) + 10;
@@ -3572,6 +3574,7 @@ void WitchBookLevel(int ii)
 
 void SpawnWitch(int lvl)
 {
+	return;
 	int i, iCnt;
 	int idata, maxlvl;
 
@@ -3634,7 +3637,7 @@ int RndBoyItem(int lvl)
 
 void SpawnBoy(int lvl)
 {
-	int itype;
+	int itype;return;
 
 	if (boylevel<lvl>> 1 || boyitem._itype == ITYPE_NONE) {
 		do {
@@ -3740,7 +3743,7 @@ void SortHealer()
 
 void SpawnHealer(int lvl)
 {
-	int i, nsi, srnd;
+	int i, nsi, srnd;return;
 
 	GetItemAttrs(0, IDI_HEAL, 1);
 	healitem[0] = item[0];

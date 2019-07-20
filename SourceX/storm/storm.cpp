@@ -126,7 +126,10 @@ BOOL SFileOpenFile(const char *filename, HANDLE *phFile)
 
 	BOOL result;
 
-	result = patch_rt_mpq && SFileOpenFileEx((HANDLE)patch_rt_mpq, filename, 0, phFile);
+	result = SFileOpenFileEx((HANDLE)0, filename, 0xFFFFFFFF, phFile);
+	if (!result && patch_rt_mpq) {
+		result = SFileOpenFileEx((HANDLE)patch_rt_mpq, filename, 0, phFile);
+	}
 	if (!result) {
 		result = SFileOpenFileEx((HANDLE)diabdat_mpq, filename, 0, phFile);
 	}

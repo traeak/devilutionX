@@ -280,28 +280,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		sound_init();
 		UiInitialize();
 
-#ifdef _DEBUG
-		if (showintrodebug)
-#endif
-			play_movie("gendata\\logo.smk", TRUE);
-
-		{
-			char szValueName[] = "Intro";
-			if (!SRegLoadValue("Diablo", szValueName, 0, &nData))
-				nData = 1;
-			if (nData)
-				play_movie("gendata\\diablo1.smk", TRUE);
-			SRegSaveValue("Diablo", szValueName, 0, 0);
-		}
-
-#ifdef _DEBUG
-		if (showintrodebug) {
-#endif
-			UiTitleDialog(7);
-			BlackPalette();
-#ifdef _DEBUG
-		}
-#endif
 
 		mainmenu_loop();
 		UiDestroy();
@@ -1675,8 +1653,8 @@ void LoadGameLevel(BOOL firstflag, int lvldir)
 
 	SetRndSeed(glSeedTbl[currlevel]);
 
-	if (leveltype == DTYPE_TOWN)
-		SetupTownStores();
+	//if (leveltype == DTYPE_TOWN)
+		//SetupTownStores();
 
 	IncProgress();
 	InitAutomap();

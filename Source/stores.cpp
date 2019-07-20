@@ -116,6 +116,7 @@ void SetupTownStores()
 	if (l > 16)
 		l = 16;
 	SpawnStoreGold();
+return;
 	SpawnSmith(l);
 	SpawnWitch(l);
 	SpawnHealer(l);
