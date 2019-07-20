@@ -1044,6 +1044,7 @@ void PlaySFX_priv(TSFX *pSFX, BOOL loc, int x, int y)
 void stream_play(TSFX *pSFX, int lVolume, int lPan)
 {
 	BOOL success;
+	return;
 
 	/// ASSERT: assert(pSFX);
 	/// ASSERT: assert(pSFX->bFlags & sfx_STREAM);
@@ -1229,6 +1230,7 @@ void priv_sound_init(UCHAR bLoadMask)
 
 void sound_init()
 {
+	return;
 	priv_sound_init(SFX_UI);
 }
 

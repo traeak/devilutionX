@@ -1,5 +1,9 @@
 #pragma once
 
+#if defined(__X86__)
+#define LITTLE_ENDIAN 1
+#endif
+
 #define TRUE true
 #define FALSE false
 
@@ -23,11 +27,18 @@
 
 #define INFINITE DVL_INFINITE;
 
+#if defined(LITTLE_ENDIAN)
 #define MAKEFOURCC(x, y, z, w)             \
 	(((uint32_t)((uint8_t)x))              \
 	    | (((uint32_t)((uint8_t)y)) << 8)  \
 	    | (((uint32_t)((uint8_t)z)) << 16) \
 	    | (((uint32_t)((uint8_t)w)) << 24))
+#else
+	(((uint32_t)((uint8_t)w))              \
+	    | (((uint32_t)((uint8_t)z)) << 8)  \
+	    | (((uint32_t)((uint8_t)y)) << 16) \
+	    | (((uint32_t)((uint8_t)x)) << 24))
+#endif
 
 #define WINUSERAPI
 

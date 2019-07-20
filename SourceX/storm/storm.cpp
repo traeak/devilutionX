@@ -1,4 +1,5 @@
 #include <SDL.h>
+#include <SDL_endian.h>
 #include <SDL_mixer.h>
 #include <Radon.hpp>
 #include <smacker.h>
@@ -200,8 +201,8 @@ BOOL SBmpLoadImage(const char *pszFileName, PALETTEENTRY *pPalette, BYTE *pBuffe
 		return false;
 	}
 
-	int width = pcxhdr.xmax - pcxhdr.xmin + 1;
-	int height = pcxhdr.ymax - pcxhdr.ymin + 1;
+	int width = SDL_SwapLE16(pcxhdr.xmax) - SDL_SwapLE16(pcxhdr.xmin) + 1;
+	int height = SDL_SwapLE16(pcxhdr.ymax) - SDL_SwapLE16(pcxhdr.ymin) + 1;
 
 	if (pdwWidth)
 		*pdwWidth = width;

@@ -1,3 +1,5 @@
+#include <SDL_endian.h>
+
 #include "diablo.h"
 
 DEVILUTION_BEGIN_NAMESPACE
@@ -173,7 +175,7 @@ int SpellPages[6][7] = {
 void DrawSpellCel(int xp, int yp, BYTE *Trans, int nCel, int w)
 {
 	BYTE *dst, *tbl, *end;
-
+return;
 	/// ASSERT: assert(gpBuffer);
 
 	dst = &gpBuffer[xp + PitchTbl[yp]];
@@ -254,8 +256,8 @@ void DrawSpellCel(int xp, int yp, BYTE *Trans, int nCel, int w)
 	DWORD *pFrameTable;
 
 	pFrameTable = (DWORD *)&Trans[4 * nCel];
-	src = &Trans[pFrameTable[0]];
-	end = &src[pFrameTable[1] - pFrameTable[0]];
+	src = &Trans[SDL_SwapLE32(pFrameTable[0])];
+	end = &src[SDL_SwapLE32(pFrameTable[1]) - SDL_SwapLE32(pFrameTable[0])];
 
 	for (; src != end; dst -= 768 + w) {
 		for (i = w; i;) {
@@ -804,8 +806,8 @@ void CPrintString(int nOffset, int nCel, char col)
 	DWORD *pFrameTable;
 
 	pFrameTable = (DWORD *)&pPanelText[4 * nCel];
-	src = &pPanelText[pFrameTable[0]];
-	end = &src[pFrameTable[1] - pFrameTable[0]];
+	src = &pPanelText[SDL_SwapLE32(pFrameTable[0])];
+	end = &src[SDL_SwapLE32(pFrameTable[1]) - SDL_SwapLE32(pFrameTable[0])];
 	dst = &gpBuffer[nOffset];
 
 	switch (col) {
@@ -1663,6 +1665,7 @@ void DrawInfoBox()
 		infoclr = COL_WHITE;
 		ClearPanel();
 	}
+	return;
 	if (v1 || v0)
 		goto LABEL_32;
 	if (pcurs < CURSOR_FIRSTITEM) {

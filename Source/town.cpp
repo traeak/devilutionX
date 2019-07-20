@@ -1,3 +1,5 @@
+#include <SDL_endian.h>
+
 #include "diablo.h"
 
 DEVILUTION_BEGIN_NAMESPACE
@@ -1072,7 +1074,7 @@ void SetTownMicros()
 				lv--;
 				pPiece = (WORD *)&pLevelPieces[32 * lv];
 				for (i = 0; i < 16; i++) {
-					pMap->mt[i] = pPiece[(i & 1) + 14 - (i & 0xE)];
+					pMap->mt[i] = SDL_SwapLE16(pPiece[(i & 1) + 14 - (i & 0xE)]);
 				}
 			} else {
 				for (i = 0; i < 16; i++) {
@@ -1149,11 +1151,11 @@ void T_FillSector(unsigned char *P3Tiles, unsigned char *pSector, int xi, int yi
 			WORD *Map;
 
 			Map = (WORD *)&pSector[ii];
-			if (*Map) {
-				v1 = *((WORD *)&P3Tiles[(*Map - 1) * 8]) + 1;
-				v2 = *((WORD *)&P3Tiles[(*Map - 1) * 8] + 1) + 1;
-				v3 = *((WORD *)&P3Tiles[(*Map - 1) * 8] + 2) + 1;
-				v4 = *((WORD *)&P3Tiles[(*Map - 1) * 8] + 3) + 1;
+			if (SDL_SwapLE16(*Map)) {
+				v1 = SDL_SwapLE16(*((WORD *)&P3Tiles[(*Map - 1) * 8])) + 1;
+				v2 = SDL_SwapLE16(*((WORD *)&P3Tiles[(*Map - 1) * 8] + 1)) + 1;
+				v3 = SDL_SwapLE16(*((WORD *)&P3Tiles[(*Map - 1) * 8] + 2)) + 1;
+				v4 = SDL_SwapLE16(*((WORD *)&P3Tiles[(*Map - 1) * 8] + 3)) + 1;
 			} else {
 				v1 = 0;
 				v2 = 0;
@@ -1205,10 +1207,10 @@ void T_FillTile(unsigned char *P3Tiles, int xx, int yy, int t)
 		nop
 	}
 #else
-	v1 = *((WORD *)&P3Tiles[(t - 1) * 8]) + 1;
-	v2 = *((WORD *)&P3Tiles[(t - 1) * 8] + 1) + 1;
-	v3 = *((WORD *)&P3Tiles[(t - 1) * 8] + 2) + 1;
-	v4 = *((WORD *)&P3Tiles[(t - 1) * 8] + 3) + 1;
+	v1 = SDL_SwapLE16(*((WORD *)&P3Tiles[(t - 1) * 8])) + 1;
+	v2 = SDL_SwapLE16(*((WORD *)&P3Tiles[(t - 1) * 8] + 1)) + 1;
+	v3 = SDL_SwapLE16(*((WORD *)&P3Tiles[(t - 1) * 8] + 2)) + 1;
+	v4 = SDL_SwapLE16(*((WORD *)&P3Tiles[(t - 1) * 8] + 3)) + 1;
 #endif
 
 	dPiece[xx][yy] = v1;
