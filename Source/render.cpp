@@ -97,7 +97,7 @@ inline static void RenderLine(BYTE **dst, BYTE **src, int n, BYTE *tbl, DWORD ma
 #ifdef NO_OVERDRAW
 	if (zoomflag) {
 		if ((*dst) < &gpBuffer[(0 + 160) * BUFFER_WIDTH]
-		    || (*dst) > &gpBuffer[(352 + 160) * BUFFER_WIDTH]) {
+		    || (*dst) > &gpBuffer[(VIEWPORT_HEIGHT + 160) * BUFFER_WIDTH]) {
 			(*src) += n;
 			(*dst) += n;
 			return;

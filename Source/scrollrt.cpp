@@ -302,8 +302,8 @@ void DrawGame(int x, int y)
 	sy = ScrollInfo._syoff + 175;
 	x -= 10;
 	y--;
-	chunks = SCREEN_WIDTH / 64;
-	blocks = VIEWPORT_HEIGHT / 32 + 4;
+	chunks = ceil(SCREEN_WIDTH / 64);
+	blocks = ceil(VIEWPORT_HEIGHT / 32) + 4;
 
 	if (chrflag || questlog) {
 		x += 2;
