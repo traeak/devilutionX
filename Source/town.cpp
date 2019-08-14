@@ -85,60 +85,60 @@ void town_draw_town(BYTE *pBuff, int x, int y, int sx, int sy, BOOL some_flag)
 		bv = dItem[x][y] - 1;
 		px = sx - item[bv]._iAnimWidth2;
 		if (bv == pcursitem) {
-			CelDecodeClr(181, px, sy, item[bv]._iAnimData, item[bv]._iAnimFrame, item[bv]._iAnimWidth, 0, 8);
+			CelDecodeClr(181, px, sy, item[bv]._iAnimData, item[bv]._iAnimFrame, item[bv]._iAnimWidth);
 		}
 		/// ASSERT: assert(item[bv]._iAnimData);
-		CelDrawHdrOnly(px, sy, item[bv]._iAnimData, item[bv]._iAnimFrame, item[bv]._iAnimWidth, 0, 8);
+		CelDrawHdrOnly(px, sy, item[bv]._iAnimData, item[bv]._iAnimFrame, item[bv]._iAnimWidth);
 	}
 	if (dFlags[x][y] & BFLAG_MONSTLR) {
 		mi = -(dMonster[x][y - 1] + 1);
 		px = sx - towner[mi]._tAnimWidth2;
 		if (mi == pcursmonst) {
-			CelDecodeClr(166, px, sy, towner[mi]._tAnimData, towner[mi]._tAnimFrame, towner[mi]._tAnimWidth, 0, 8);
+			CelDecodeClr(166, px, sy, towner[mi]._tAnimData, towner[mi]._tAnimFrame, towner[mi]._tAnimWidth);
 		}
 		/// ASSERT: assert(towner[mi]._tAnimData);
-		CelDrawHdrOnly(px, sy, towner[mi]._tAnimData, towner[mi]._tAnimFrame, towner[mi]._tAnimWidth, 0, 8);
+		CelDrawHdrOnly(px, sy, towner[mi]._tAnimData, towner[mi]._tAnimFrame, towner[mi]._tAnimWidth);
 	}
 	if (dMonster[x][y] > 0) {
 		mi = dMonster[x][y] - 1;
 		px = sx - towner[mi]._tAnimWidth2;
 		if (mi == pcursmonst) {
-			CelDecodeClr(166, px, sy, towner[mi]._tAnimData, towner[mi]._tAnimFrame, towner[mi]._tAnimWidth, 0, 8);
+			CelDecodeClr(166, px, sy, towner[mi]._tAnimData, towner[mi]._tAnimFrame, towner[mi]._tAnimWidth);
 		}
 		/// ASSERT: assert(towner[mi]._tAnimData);
-		CelDrawHdrOnly(px, sy, towner[mi]._tAnimData, towner[mi]._tAnimFrame, towner[mi]._tAnimWidth, 0, 8);
+		CelDrawHdrOnly(px, sy, towner[mi]._tAnimData, towner[mi]._tAnimFrame, towner[mi]._tAnimWidth);
 	}
 	if (dFlags[x][y] & BFLAG_PLAYERLR) {
 		bv = -(dPlayer[x][y - 1] + 1);
 		px = sx + plr[bv]._pxoff - plr[bv]._pAnimWidth2;
 		py = sy + plr[bv]._pyoff;
 		if (bv == pcursplr) {
-			Cl2DecodeFrm2(165, px, py, plr[bv]._pAnimData, plr[bv]._pAnimFrame, plr[bv]._pAnimWidth, 0, 8);
+			Cl2DecodeFrm2(165, px, py, plr[bv]._pAnimData, plr[bv]._pAnimFrame, plr[bv]._pAnimWidth);
 		}
 		/// ASSERT: assert(plr[bv]._pAnimData);
-		Cl2DecodeFrm1(px, py, plr[bv]._pAnimData, plr[bv]._pAnimFrame, plr[bv]._pAnimWidth, 0, 8);
+		Cl2DecodeFrm1(px, py, plr[bv]._pAnimData, plr[bv]._pAnimFrame, plr[bv]._pAnimWidth);
 		if (some_flag && plr[bv]._peflag) {
 			town_draw_e_flag(pBuff - 64, x - 1, y + 1, sx - 64, sy);
 		}
 	}
 	if (dFlags[x][y] & BFLAG_DEAD_PLAYER) {
-		DrawDeadPlayer(x, y, sx, sy, 0, 8, 0);
+		DrawDeadPlayer(x, y, sx, sy, 0);
 	}
 	if (dPlayer[x][y] > 0) {
 		bv = dPlayer[x][y] - 1;
 		px = sx + plr[bv]._pxoff - plr[bv]._pAnimWidth2;
 		py = sy + plr[bv]._pyoff;
 		if (bv == pcursplr) {
-			Cl2DecodeFrm2(165, px, py, plr[bv]._pAnimData, plr[bv]._pAnimFrame, plr[bv]._pAnimWidth, 0, 8);
+			Cl2DecodeFrm2(165, px, py, plr[bv]._pAnimData, plr[bv]._pAnimFrame, plr[bv]._pAnimWidth);
 		}
 		/// ASSERT: assert(plr[bv]._pAnimData);
-		Cl2DecodeFrm1(px, py, plr[bv]._pAnimData, plr[bv]._pAnimFrame, plr[bv]._pAnimWidth, 0, 8);
+		Cl2DecodeFrm1(px, py, plr[bv]._pAnimData, plr[bv]._pAnimFrame, plr[bv]._pAnimWidth);
 		if (some_flag && plr[bv]._peflag) {
 			town_draw_e_flag(pBuff - 64, x - 1, y + 1, sx - 64, sy);
 		}
 	}
 	if (dFlags[x][y] & BFLAG_MISSILE) {
-		DrawMissile(x, y, sx, sy, 0, 8, 0);
+		DrawMissile(x, y, sx, sy, 0);
 	}
 	if (dArch[x][y] != 0) {
 		town_special(pBuff, dArch[x][y]);
@@ -260,8 +260,6 @@ void T_DrawGame(int x, int y)
 	}
 
 	switch (ScrollInfo._sdir) {
-	case SDIR_NONE:
-		break;
 	case SDIR_N:
 		sy -= 32;
 		x--;
@@ -308,7 +306,7 @@ void T_DrawGame(int x, int y)
 	}
 
 	/// ASSERT: assert(gpBuffer);
-	gpBufEnd = &gpBuffer[PitchTbl[512]];
+	gpBufEnd = &gpBuffer[PitchTbl[VIEWPORT_HEIGHT + SCREEN_Y]];
 	for (i = 0; i < blocks; i++) {
 		town_draw(x, y, sx, sy, chunks, 0);
 		y++;

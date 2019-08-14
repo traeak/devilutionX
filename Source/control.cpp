@@ -830,16 +830,16 @@ void InitControlPan()
 	pSpellCels = LoadFileInMem("CtrlPan\\SpelIcon.CEL", 0);
 	SetSpellTrans(RSPLTYPE_SKILL);
 	pStatusPanel = LoadFileInMem("CtrlPan\\Panel8.CEL", 0);
-	CelDecodeRect(pBtmBuff, 0, (PANEL_HEIGHT + 16) - 1, PANEL_WIDTH, pStatusPanel, 1, PANEL_WIDTH);
+	CelDecodeRect(pBtmBuff, (PANEL_HEIGHT + 16) - 1, PANEL_WIDTH, pStatusPanel, 1, PANEL_WIDTH);
 	MemFreeDbg(pStatusPanel);
 	pStatusPanel = LoadFileInMem("CtrlPan\\P8Bulbs.CEL", 0);
-	CelDecodeRect(pLifeBuff, 0, 87, 88, pStatusPanel, 1, 88);
-	CelDecodeRect(pManaBuff, 0, 87, 88, pStatusPanel, 2, 88);
+	CelDecodeRect(pLifeBuff, 87, 88, pStatusPanel, 1, 88);
+	CelDecodeRect(pManaBuff, 87, 88, pStatusPanel, 2, 88);
 	MemFreeDbg(pStatusPanel);
 	talkflag = 0;
 	if (gbMaxPlayers != 1) {
 		pTalkPanel = LoadFileInMem("CtrlPan\\TalkPanl.CEL", 0);
-		CelDecodeRect(pBtmBuff, 0, (PANEL_HEIGHT + 16) * 2 - 1, PANEL_WIDTH, pTalkPanel, 1, PANEL_WIDTH);
+		CelDecodeRect(pBtmBuff, (PANEL_HEIGHT + 16) * 2 - 1, PANEL_WIDTH, pTalkPanel, 1, PANEL_WIDTH);
 		MemFreeDbg(pTalkPanel);
 		pMultiBtns = LoadFileInMem("CtrlPan\\P8But2.CEL", 0);
 		pTalkBtns = LoadFileInMem("CtrlPan\\TalkButt.CEL", 0);
