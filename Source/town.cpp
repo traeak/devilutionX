@@ -114,17 +114,17 @@ void T_DrawGame(int x, int y)
 {
 	int i, sx, sy, chunks, blocks;
 
-	scr_pix_width = SCREEN_WIDTH;
-	scr_pix_height = VIEWPORT_HEIGHT;
-	dword_5C2FF8 = SCREEN_WIDTH / 64;
-	dword_5C2FFC = VIEWPORT_HEIGHT / 32;
-
 	sx = ScrollInfo._sxoff + SCREEN_X;
 	sy = ScrollInfo._syoff + 175;
-	x -= 10;
+
+	chunks = ceil(SCREEN_WIDTH / 64);
+	blocks = ceil(VIEWPORT_HEIGHT / 32) + 4;
+
+	// center view
+	x -= chunks;
 	y--;
-	chunks = ceil(SCREEN_WIDTH / 64) + 1;
-	blocks = ceil(VIEWPORT_HEIGHT / 32) + 8;
+
+	chunks++; // eflag
 
 	if (chrflag || questlog) {
 		x += 2;
@@ -203,11 +203,6 @@ void T_DrawZoom(int x, int y)
 {
 	int i, sx, sy, chunks, blocks;
 	int wdt, nSrcOff, nDstOff;
-
-	scr_pix_width = ZOOM_WIDTH;
-	scr_pix_height = 192;
-	dword_5C2FF8 = ZOOM_WIDTH / 64;
-	dword_5C2FFC = 192 / 32;
 
 	sx = ScrollInfo._sxoff + 64;
 	sy = ScrollInfo._syoff + 143;
@@ -414,18 +409,6 @@ void SetTownMicros()
 				}
 			}
 		}
-	}
-
-	if (zoomflag) {
-		scr_pix_width = SCREEN_WIDTH;
-		scr_pix_height = VIEWPORT_HEIGHT;
-		dword_5C2FF8 = SCREEN_WIDTH / 64;
-		dword_5C2FFC = VIEWPORT_HEIGHT / 32;
-	} else {
-		scr_pix_width = ZOOM_WIDTH;
-		scr_pix_height = ZOOM_HEIGHT;
-		dword_5C2FF8 = ZOOM_WIDTH / 64;
-		dword_5C2FFC = ZOOM_HEIGHT / 32;
 	}
 }
 

@@ -39,10 +39,6 @@ BYTE *pDungeonCels;
 int SpeedFrameTbl[128][16];
 THEME_LOC themeLoc[MAXTHEMES];
 char dPlayer[MAXDUNX][MAXDUNY];
-int dword_5C2FF8;
-int dword_5C2FFC;
-int scr_pix_width;
-int scr_pix_height;
 char dArch[MAXDUNX][MAXDUNY];
 BOOLEAN nBlockTable[2049];
 BYTE *pSpecialCels;
@@ -390,18 +386,6 @@ void SetDungeonMicros()
 
 	MakeSpeedCels();
 	SetSpeedCels();
-
-	if (zoomflag) {
-		scr_pix_width = SCREEN_WIDTH;
-		scr_pix_height = VIEWPORT_HEIGHT;
-		dword_5C2FF8 = SCREEN_WIDTH / 64;
-		dword_5C2FFC = VIEWPORT_HEIGHT / 32;
-	} else {
-		scr_pix_width = ZOOM_WIDTH;
-		scr_pix_height = ZOOM_HEIGHT;
-		dword_5C2FF8 = ZOOM_WIDTH / 64;
-		dword_5C2FFC = ZOOM_HEIGHT / 32;
-	}
 }
 
 void DRLG_InitTrans()

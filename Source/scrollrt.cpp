@@ -288,17 +288,17 @@ void DrawGame(int x, int y)
 {
 	int i, sx, sy, chunks, blocks;
 
-	scr_pix_width = SCREEN_WIDTH;
-	scr_pix_height = VIEWPORT_HEIGHT;
-	dword_5C2FF8 = SCREEN_WIDTH / 64;
-	dword_5C2FFC = VIEWPORT_HEIGHT / 32;
-
 	sx = ScrollInfo._sxoff + SCREEN_X;
 	sy = ScrollInfo._syoff + 175;
-	x -= 10;
-	y--;
+
 	chunks = ceil(SCREEN_WIDTH / 64);
 	blocks = ceil(VIEWPORT_HEIGHT / 32) + 4;
+
+	// center view
+	x -= chunks;
+	y--;
+
+	chunks++; // eflag
 
 	if (chrflag || questlog) {
 		x += 2;
@@ -362,18 +362,18 @@ void DrawGame(int x, int y)
 	/// ASSERT: assert(gpBuffer);
 	gpBufEnd = &gpBuffer[PitchTbl[VIEWPORT_HEIGHT + SCREEN_Y]];
 	for (i = 0; i < blocks; i++) {
-		scrollrt_draw(x, y, sx, sy, chunks, 0);
+		scrollrt_draw(x, y, sx, sy, chunks);
 		y++;
 		sx -= 32;
 		sy += 16;
-		scrollrt_draw(x, y, sx, sy, chunks, 1);
+		scrollrt_draw(x, y, sx, sy, chunks);
 		x++;
 		sx += 32;
 		sy += 16;
 	}
 }
 
-void scrollrt_draw(int x, int y, int sx, int sy, int chunks, int eflag)
+void scrollrt_draw(int x, int y, int sx, int sy, int chunks)
 {
 	int i, j;
 	BYTE *dst;
@@ -382,56 +382,6 @@ void scrollrt_draw(int x, int y, int sx, int sy, int chunks, int eflag)
 	/// ASSERT: assert(gpBuffer);
 
 	pMap = &dpiece_defs_map_1[IsometricCoord(x, y)];
-
-	if (eflag) {
-		if ((DWORD)y < MAXDUNY && (DWORD)x < MAXDUNX) {
-			level_piece_id = dPiece[x][y];
-			light_table_index = dLight[x][y];
-			if (level_piece_id != 0) {
-				dst = &gpBuffer[sx + 32 + PitchTbl[sy]];
-				cel_transparency_active = (BYTE)(nTransTable[level_piece_id] & TransList[dTransVal[x][y]]);
-				level_cel_block = pMap->mt[1];
-				if (level_cel_block != 0) {
-					arch_draw_type = 2;
-					drawUpperScreen(dst);
-					arch_draw_type = 0;
-				}
-				dst -= BUFFER_WIDTH * 32;
-				level_cel_block = pMap->mt[3];
-				if (level_cel_block != 0) {
-					drawUpperScreen(dst);
-				}
-				dst -= BUFFER_WIDTH * 32;
-				level_cel_block = pMap->mt[5];
-				if (level_cel_block != 0) {
-					drawUpperScreen(dst);
-				}
-				dst -= BUFFER_WIDTH * 32;
-				level_cel_block = pMap->mt[7];
-				if (level_cel_block != 0) {
-					drawUpperScreen(dst);
-				}
-				dst -= BUFFER_WIDTH * 32;
-				level_cel_block = pMap->mt[9];
-				if (level_cel_block != 0) {
-					drawLowerScreen(dst);
-				}
-				dst -= BUFFER_WIDTH * 32;
-				level_cel_block = pMap->mt[11];
-				if (level_cel_block != 0 && leveltype == DTYPE_HELL) {
-					drawLowerScreen(dst);
-				}
-				scrollrt_draw_dungeon(&gpBuffer[sx + PitchTbl[sy]], x, y, sx, sy, 0);
-			} else {
-				world_draw_black_tile(&gpBuffer[sx + PitchTbl[sy]]);
-			}
-		}
-		x++;
-		y--;
-		sx += 64;
-		pMap++;
-		chunks--;
-	}
 
 	for (j = 0; j < chunks; j++) {
 		if (y >= 0 && y < MAXDUNY && x >= 0 && x < MAXDUNX) {
@@ -462,7 +412,7 @@ void scrollrt_draw(int x, int y, int sx, int sy, int chunks, int eflag)
 						drawUpperScreen(dst + 32);
 					}
 				}
-				scrollrt_draw_dungeon(&gpBuffer[sx + PitchTbl[sy]], x, y, sx, sy, 1);
+				scrollrt_draw_dungeon(&gpBuffer[sx + PitchTbl[sy]], x, y, sx, sy);
 			} else {
 				world_draw_black_tile(&gpBuffer[sx + PitchTbl[sy]]);
 			}
@@ -472,54 +422,9 @@ void scrollrt_draw(int x, int y, int sx, int sy, int chunks, int eflag)
 		sx += 64;
 		pMap++;
 	}
-
-	if (eflag) {
-		if (y >= 0 && y < MAXDUNY && x >= 0 && x < MAXDUNX) {
-			level_piece_id = dPiece[x][y];
-			light_table_index = dLight[x][y];
-			if (level_piece_id != 0) {
-				dst = &gpBuffer[sx + PitchTbl[sy]];
-				cel_transparency_active = (BYTE)(nTransTable[level_piece_id] & TransList[dTransVal[x][y]]);
-				arch_draw_type = 1;
-				level_cel_block = pMap->mt[0];
-				if (level_cel_block != 0) {
-					drawUpperScreen(dst);
-				}
-				arch_draw_type = 0;
-				dst -= BUFFER_WIDTH * 32;
-				level_cel_block = pMap->mt[2];
-				if (level_cel_block != 0) {
-					drawUpperScreen(dst);
-				}
-				dst -= BUFFER_WIDTH * 32;
-				level_cel_block = pMap->mt[4];
-				if (level_cel_block != 0) {
-					drawUpperScreen(dst);
-				}
-				dst -= BUFFER_WIDTH * 32;
-				level_cel_block = pMap->mt[6];
-				if (level_cel_block != 0) {
-					drawUpperScreen(dst);
-				}
-				dst -= BUFFER_WIDTH * 32;
-				level_cel_block = pMap->mt[8];
-				if (level_cel_block != 0) {
-					drawLowerScreen(dst);
-				}
-				dst -= BUFFER_WIDTH * 32;
-				level_cel_block = pMap->mt[10];
-				if (level_cel_block != 0 && leveltype == DTYPE_HELL) {
-					drawLowerScreen(dst);
-				}
-				scrollrt_draw_dungeon(&gpBuffer[sx + PitchTbl[sy]], x, y, sx, sy, 0);
-			} else {
-				world_draw_black_tile(&gpBuffer[sx + PitchTbl[sy]]);
-			}
-		}
-	}
 }
 
-void scrollrt_draw_dungeon(BYTE *pBuff, int sx, int sy, int dx, int dy, int eflag)
+void scrollrt_draw_dungeon(BYTE *pBuff, int sx, int sy, int dx, int dy)
 {
 	int px, py, nCel, nMon, negMon, p, tx, ty;
 	char bFlag, bDead, bObj, bItem, bPlr, bArch, bMap, negPlr, dd;
@@ -618,12 +523,6 @@ void scrollrt_draw_dungeon(BYTE *pBuff, int sx, int sy, int dx, int dy, int efla
 			px = dx + pPlayer->_pxoff - pPlayer->_pAnimWidth2;
 			py = dy + pPlayer->_pyoff;
 			DrawPlayer(p, sx, sy - 1, px, py, pPlayer->_pAnimData, pPlayer->_pAnimFrame, pPlayer->_pAnimWidth);
-			if (eflag && pPlayer->_peflag != 0) {
-				if (pPlayer->_peflag == 2) {
-					scrollrt_draw_e_flag(pBuff - (BUFFER_WIDTH * 16 + 96), sx - 2, sy + 1, tx, ty);
-				}
-				scrollrt_draw_e_flag(pBuff - 64, sx - 1, sy + 1, dx - 64, dy);
-			}
 		} else {
 			// app_fatal("draw player clipped: tried to draw illegal player %d", p);
 		}
@@ -640,9 +539,6 @@ void scrollrt_draw_dungeon(BYTE *pBuff, int sx, int sy, int dx, int dy, int efla
 						Cl2DecodeClrHL(233, px, py, pMonster->_mAnimData, pMonster->_mAnimFrame, pMonster->MType->width);
 					}
 					DrawMonster(sx, sy, px, py, draw_monster_num);
-					if (eflag) {
-						scrollrt_draw_e_flag(pBuff - 64, sx - 1, sy + 1, dx - 64, dy);
-					}
 				} else {
 					// app_fatal("Draw Monster \"%s\" Clipped: uninitialized monster", pMonster->mName);
 				}
@@ -661,12 +557,6 @@ void scrollrt_draw_dungeon(BYTE *pBuff, int sx, int sy, int dx, int dy, int efla
 			px = dx + pPlayer->_pxoff - pPlayer->_pAnimWidth2;
 			py = dy + pPlayer->_pyoff;
 			DrawPlayer(p, sx, sy, px, py, pPlayer->_pAnimData, pPlayer->_pAnimFrame, pPlayer->_pAnimWidth);
-			if (eflag && pPlayer->_peflag != 0) {
-				if (pPlayer->_peflag == 2) {
-					scrollrt_draw_e_flag(pBuff - (BUFFER_WIDTH * 16 + 96), sx - 2, sy + 1, dx - 96, dy - 16);
-				}
-				scrollrt_draw_e_flag(pBuff - 64, sx - 1, sy + 1, dx - 64, dy);
-			}
 		} else {
 			// app_fatal("draw player clipped: tried to draw illegal player %d", p);
 		}
@@ -683,9 +573,6 @@ void scrollrt_draw_dungeon(BYTE *pBuff, int sx, int sy, int dx, int dy, int efla
 						Cl2DecodeClrHL(233, px, py, pMonster->_mAnimData, pMonster->_mAnimFrame, pMonster->MType->width);
 					}
 					DrawMonster(sx, sy, px, py, draw_monster_num);
-					if (eflag) {
-						scrollrt_draw_e_flag(pBuff - 64, sx - 1, sy + 1, dx - 64, dy);
-					}
 				} else {
 					// app_fatal("Draw Monster \"%s\" Clipped: uninitialized monster", pMonster->mName);
 				}
@@ -735,54 +622,6 @@ void scrollrt_draw_dungeon(BYTE *pBuff, int sx, int sy, int dx, int dy, int efla
 		cel_transparency_active = (BYTE)TransList[bMap];
 		Cel2DecodeLightTrans(pBuff, pSpecialCels, bArch, 64);
 	}
-}
-
-void scrollrt_draw_e_flag(BYTE *pBuff, int x, int y, int sx, int sy)
-{
-	int i, lti_old, cta_old, lpi_old;
-	BYTE *dst;
-	MICROS *pMap;
-
-	lti_old = light_table_index;
-	cta_old = cel_transparency_active;
-	lpi_old = level_piece_id;
-
-	level_piece_id = dPiece[x][y];
-	light_table_index = dLight[x][y];
-	cel_transparency_active = (BYTE)(nTransTable[level_piece_id] & TransList[dTransVal[x][y]]);
-	pMap = &dpiece_defs_map_1[IsometricCoord(x, y)];
-
-	dst = pBuff;
-	arch_draw_type = 1;
-	level_cel_block = pMap->mt[0];
-	if (level_cel_block != 0) {
-		drawLowerScreen(dst);
-	}
-	arch_draw_type = 2;
-	level_cel_block = pMap->mt[1];
-	if (level_cel_block != 0) {
-		drawLowerScreen(dst + 32);
-	}
-
-	dst = pBuff;
-	arch_draw_type = 0;
-	for (i = 2; i < MicroTileLen; i += 2) {
-		dst -= BUFFER_WIDTH * 32;
-		level_cel_block = pMap->mt[i];
-		if (level_cel_block != 0) {
-			drawLowerScreen(dst);
-		}
-		level_cel_block = pMap->mt[i + 1];
-		if (level_cel_block != 0) {
-			drawLowerScreen(dst + 32);
-		}
-	}
-
-	scrollrt_draw_dungeon(pBuff, x, y, sx, sy, 0);
-
-	light_table_index = lti_old;
-	cel_transparency_active = cta_old;
-	level_piece_id = lpi_old;
 }
 
 void DrawMonster(int x, int y, int mx, int my, int m)
@@ -894,11 +733,6 @@ void DrawZoom(int x, int y)
 	int i, sx, sy, chunks, blocks;
 	int wdt, nSrcOff, nDstOff;
 
-	scr_pix_width = ZOOM_WIDTH;
-	scr_pix_height = 192;
-	dword_5C2FF8 = ZOOM_WIDTH / 64;
-	dword_5C2FFC = 192 / 32;
-
 	sx = ScrollInfo._sxoff + 64;
 	sy = ScrollInfo._syoff + 143;
 	x -= 6;
@@ -945,11 +779,11 @@ void DrawZoom(int x, int y)
 	/// ASSERT: assert(gpBuffer);
 	gpBufEnd = &gpBuffer[PitchTbl[-17 + SCREEN_Y]];
 	for (i = 0; i < 4; i++) {
-		scrollrt_draw(x, y, sx, sy, chunks, 0);
+		scrollrt_draw(x, y, sx, sy, chunks);
 		y++;
 		sx -= 32;
 		sy += 16;
-		scrollrt_draw(x, y, sx, sy, chunks, 1);
+		scrollrt_draw(x, y, sx, sy, chunks);
 		x++;
 		sx += 32;
 		sy += 16;
@@ -957,22 +791,22 @@ void DrawZoom(int x, int y)
 	/// ASSERT: assert(gpBuffer);
 	gpBufEnd = &gpBuffer[PitchTbl[160 + SCREEN_Y]];
 	for (i = 0; i < blocks; i++) {
-		scrollrt_draw(x, y, sx, sy, chunks, 0);
+		scrollrt_draw(x, y, sx, sy, chunks);
 		y++;
 		sx -= 32;
 		sy += 16;
-		scrollrt_draw(x, y, sx, sy, chunks, 1);
+		scrollrt_draw(x, y, sx, sy, chunks);
 		x++;
 		sx += 32;
 		sy += 16;
 	}
 	arch_draw_type = 0;
 	for (i = 0; i < 4; i++) {
-		scrollrt_draw(x, y, sx, sy, chunks, 0);
+		scrollrt_draw(x, y, sx, sy, chunks);
 		y++;
 		sx -= 32;
 		sy += 16;
-		scrollrt_draw(x, y, sx, sy, chunks, 1);
+		scrollrt_draw(x, y, sx, sy, chunks);
 		x++;
 		sx += 32;
 		sy += 16;
