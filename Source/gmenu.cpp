@@ -57,7 +57,7 @@ void gmenu_print_text(int x, int y, char *pszStr)
 		c = gbFontTransTbl[(BYTE)*pszStr++];
 		c = lfontframe[c];
 		if (c)
-			CelDecDatOnly(x, y, BigTGold_cel, c, 46);
+			CelDecodeOnly(x, y, BigTGold_cel, c, 46);
 		x += lfontkern[c] + 2;
 	}
 }

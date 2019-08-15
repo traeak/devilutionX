@@ -3,7 +3,7 @@
 #define __SCROLLRT_H__
 
 extern int light_table_index;
-extern int PitchTbl[1024];
+extern int PitchTbl[BUFFER_HEIGHT];
 extern BYTE *gpBufEnd;
 extern DWORD level_cel_block;
 extern char arch_draw_type;

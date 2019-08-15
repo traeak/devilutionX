@@ -4,7 +4,7 @@
 DEVILUTION_BEGIN_NAMESPACE
 
 int light_table_index;
-int PitchTbl[1024];
+int PitchTbl[BUFFER_HEIGHT];
 DWORD sgdwCursWdtOld;
 DWORD sgdwCursX;
 DWORD sgdwCursY;
@@ -777,31 +777,8 @@ void DrawZoom(int x, int y)
 	}
 
 	/// ASSERT: assert(gpBuffer);
-	gpBufEnd = &gpBuffer[PitchTbl[-17 + SCREEN_Y]];
-	for (i = 0; i < 4; i++) {
-		scrollrt_draw(x, y, sx, sy, chunks);
-		y++;
-		sx -= 32;
-		sy += 16;
-		scrollrt_draw(x, y, sx, sy, chunks);
-		x++;
-		sx += 32;
-		sy += 16;
-	}
-	/// ASSERT: assert(gpBuffer);
 	gpBufEnd = &gpBuffer[PitchTbl[160 + SCREEN_Y]];
 	for (i = 0; i < blocks; i++) {
-		scrollrt_draw(x, y, sx, sy, chunks);
-		y++;
-		sx -= 32;
-		sy += 16;
-		scrollrt_draw(x, y, sx, sy, chunks);
-		x++;
-		sx += 32;
-		sy += 16;
-	}
-	arch_draw_type = 0;
-	for (i = 0; i < 4; i++) {
 		scrollrt_draw(x, y, sx, sy, chunks);
 		y++;
 		sx -= 32;

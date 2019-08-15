@@ -260,30 +260,8 @@ void T_DrawZoom(int x, int y)
 	}
 
 	/// ASSERT: assert(gpBuffer);
-	gpBufEnd = &gpBuffer[PitchTbl[-17 + SCREEN_Y]];
-	for (i = 0; i < 7; i++) {
-		town_draw(x, y, sx, sy, chunks);
-		y++;
-		sx -= 32;
-		sy += 16;
-		town_draw(x, y, sx, sy, chunks);
-		x++;
-		sx += 32;
-		sy += 16;
-	}
-	/// ASSERT: assert(gpBuffer);
 	gpBufEnd = &gpBuffer[PitchTbl[160 + SCREEN_Y]];
 	for (i = 0; i < blocks; i++) {
-		town_draw(x, y, sx, sy, chunks);
-		y++;
-		sx -= 32;
-		sy += 16;
-		town_draw(x, y, sx, sy, chunks);
-		x++;
-		sx += 32;
-		sy += 16;
-	}
-	for (i = 0; i < 7; i++) {
 		town_draw(x, y, sx, sy, chunks);
 		y++;
 		sx -= 32;
