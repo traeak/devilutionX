@@ -61,7 +61,9 @@ DEVILUTION_BEGIN_NAMESPACE
 #include "structs.h"
 
 // If defined, use copy protection [Default -> Defined]
+#ifndef _DEBUG
 //#define COPYPROT
+#endif
 
 // If defined, don't reload for debuggers [Default -> Undefined]
 // Note that with patch 1.03 the command line was hosed, this is required to pass arguments to the game

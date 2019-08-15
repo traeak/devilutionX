@@ -3,16 +3,16 @@
 
 DEVILUTION_BEGIN_NAMESPACE
 
-char gbPixelCol; // automap pixel color 8-bit (palette entry)
-int gbRotateMap; // BOOLEAN flip - if y < x
-int orgseed;     // weak
+char gbPixelCol;  // automap pixel color 8-bit (palette entry)
+BOOL gbRotateMap; // flip - if y < x
+int orgseed;
 int sgnWidth;
-int sglGameSeed; // weak
+int sglGameSeed;
 #ifdef __cplusplus
 static CCritSect sgMemCrit;
 #endif
-int SeedCount;   // weak
-int gbNotInView; // BOOLEAN valid - if x/y are in bounds
+int SeedCount;
+BOOL gbNotInView; // valid - if x/y are in bounds
 
 const int rand_increment = 1;
 const int rand_multiplier = 0x015A4E35;
@@ -170,7 +170,6 @@ void CelDecDatLightOnly(BYTE *pBuff, BYTE *pRLEBytes, int nDataSize, int nWidth)
 		}
 	}
 }
-// 69BEF8: using guessed type int light_table_index;
 
 void CelDecDatLightTrans(BYTE *pBuff, BYTE *pRLEBytes, int nDataSize, int nWidth)
 {
@@ -193,25 +192,25 @@ void CelDecDatLightTrans(BYTE *pBuff, BYTE *pRLEBytes, int nDataSize, int nWidth
 	tbl = &pLightTbl[light_table_index * 256];
 	w = nWidth;
 
-	for(; src != &pRLEBytes[nDataSize]; dst -= BUFFER_WIDTH + w) {
-		for(i = w; i;) {
+	for (; src != &pRLEBytes[nDataSize]; dst -= BUFFER_WIDTH + w) {
+		for (i = w; i;) {
 			width = *src++;
 			if (!(width & 0x80)) {
 				i -= width;
-				if(width & 1) {
+				if (width & 1) {
 					dst[0] = pTransTbl[tbl[src[0]]][dst[0]];
 					src++;
 					dst++;
 				}
 				width >>= 1;
-				if(width & 1) {
+				if (width & 1) {
 					dst[0] = pTransTbl[tbl[src[0]]][dst[0]];
 					dst[1] = pTransTbl[tbl[src[1]]][dst[1]];
 					src += 2;
 					dst += 2;
 				}
 				width >>= 1;
-				for(; width; width--) {
+				for (; width; width--) {
 					dst[0] = pTransTbl[tbl[src[0]]][dst[0]];
 					dst[1] = pTransTbl[tbl[src[1]]][dst[1]];
 					dst[2] = pTransTbl[tbl[src[2]]][dst[2]];
@@ -227,19 +226,11 @@ void CelDecDatLightTrans(BYTE *pBuff, BYTE *pRLEBytes, int nDataSize, int nWidth
 		}
 	}
 }
-// 69BEF8: using guessed type int light_table_index;
-
-void CelDecodeLightOnly(int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth)
-{
-	CelDecDatOnly(&gpBuffer[sx + PitchTbl[sy]], pCelBuff, nCel, nWidth, true);
-}
-// 69BEF8: using guessed type int light_table_index;
 
 void CelDecodeHdrLightOnly(int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth)
 {
 	CelDecDatOnly(&gpBuffer[sx + PitchTbl[sy]], pCelBuff, nCel, nWidth, true, true);
 }
-// 69BEF8: using guessed type int light_table_index;
 
 void CelDrawHdrLightRed(int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth, char light)
 {
@@ -296,7 +287,6 @@ void CelDrawHdrLightRed(int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth, ch
 		}
 	}
 }
-// 525728: using guessed type int light4flag;
 
 void Cel2DecDatOnly(BYTE *pBuff, BYTE *pRLEBytes, int nDataSize, int nWidth)
 {
@@ -359,7 +349,6 @@ void Cel2DecDatOnly(BYTE *pBuff, BYTE *pRLEBytes, int nDataSize, int nWidth)
 		}
 	}
 }
-// 69CF0C: using guessed type int gpBufEnd;
 
 void Cel2DrawHdrOnly(int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth)
 {
@@ -453,8 +442,6 @@ void Cel2DecDatLightOnly(BYTE *pBuff, BYTE *pRLEBytes, int nDataSize, int nWidth
 		}
 	}
 }
-// 69BEF8: using guessed type int light_table_index;
-// 69CF0C: using guessed type int gpBufEnd;
 
 void Cel2DecDatLightTrans(BYTE *pBuff, BYTE *pRLEBytes, int nDataSize, int nWidth)
 {
@@ -480,26 +467,26 @@ void Cel2DecDatLightTrans(BYTE *pBuff, BYTE *pRLEBytes, int nDataSize, int nWidt
 	tbl = &pLightTbl[light_table_index * 256];
 	w = nWidth;
 
-	for(; src != &pRLEBytes[nDataSize]; dst -= BUFFER_WIDTH + w) {
-		for(i = w; i;) {
+	for (; src != &pRLEBytes[nDataSize]; dst -= BUFFER_WIDTH + w) {
+		for (i = w; i;) {
 			width = *src++;
 			if (!(width & 0x80)) {
 				i -= width;
-				if(dst < gpBufEnd) {
-					if(width & 1) {
+				if (dst < gpBufEnd) {
+					if (width & 1) {
 						dst[0] = pTransTbl[tbl[src[0]]][dst[0]];
 						src++;
 						dst++;
 					}
 					width >>= 1;
-					if(width & 1) {
+					if (width & 1) {
 						dst[0] = pTransTbl[tbl[src[0]]][dst[0]];
 						dst[1] = pTransTbl[tbl[src[1]]][dst[1]];
 						src += 2;
 						dst += 2;
 					}
 					width >>= 1;
-					for(; width; width--) {
+					for (; width; width--) {
 						dst[0] = pTransTbl[tbl[src[0]]][dst[0]];
 						dst[1] = pTransTbl[tbl[src[1]]][dst[1]];
 						dst[2] = pTransTbl[tbl[src[2]]][dst[2]];
@@ -519,8 +506,6 @@ void Cel2DecDatLightTrans(BYTE *pBuff, BYTE *pRLEBytes, int nDataSize, int nWidt
 		}
 	}
 }
-// 69BEF8: using guessed type int light_table_index;
-// 69CF0C: using guessed type int gpBufEnd;
 
 void Cel2DecodeHdrLight(int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth)
 {
@@ -551,7 +536,6 @@ void Cel2DecodeHdrLight(int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth)
 	else
 		Cel2DecDatOnly(pBuff, pRLEBytes, nDataSize, nWidth);
 }
-// 69BEF8: using guessed type int light_table_index;
 
 void Cel2DecodeLightTrans(BYTE *pBuff, BYTE *pCelBuff, int nCel, int nWidth)
 {
@@ -580,8 +564,6 @@ void Cel2DecodeLightTrans(BYTE *pBuff, BYTE *pCelBuff, int nCel, int nWidth)
 	else
 		Cel2DecDatOnly(pBuff, pRLEBytes, nDataSize, nWidth);
 }
-// 69BEF8: using guessed type int light_table_index;
-// 69CF94: using guessed type int cel_transparency_active;
 
 void Cel2DrawHdrLightRed(int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth, char light)
 {
@@ -645,8 +627,6 @@ void Cel2DrawHdrLightRed(int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth, c
 		}
 	}
 }
-// 525728: using guessed type int light4flag;
-// 69CF0C: using guessed type int gpBufEnd;
 
 void CelDecodeRect(BYTE *pBuff, int hgt, int wdt, BYTE *pCelBuff, int nCel, int nWidth)
 {
@@ -819,7 +799,6 @@ void CelDrawHdrClrHL(char col, int sx, int sy, BYTE *pCelBuff, int nCel, int nWi
 		}
 	}
 }
-// 69CF0C: using guessed type int gpBufEnd;
 
 void ENG_set_pixel(int sx, int sy, BYTE col)
 {
@@ -835,7 +814,6 @@ void ENG_set_pixel(int sx, int sy, BYTE col)
 	if (dst < gpBufEnd)
 		*dst = col;
 }
-// 69CF0C: using guessed type int gpBufEnd;
 
 void engine_draw_pixel(int sx, int sy)
 {
@@ -856,10 +834,6 @@ void engine_draw_pixel(int sx, int sy)
 	if (dst < gpBufEnd)
 		*dst = gbPixelCol;
 }
-// 52B96C: using guessed type char gbPixelCol;
-// 52B970: using guessed type int gbRotateMap;
-// 52B99C: using guessed type int gbNotInView;
-// 69CF0C: using guessed type int gpBufEnd;
 
 // Exact copy from https://github.com/erich666/GraphicsGems/blob/dad26f941e12c8bf1f96ea21c1c04cd2206ae7c9/gems/DoubleLine.c
 // Except:
@@ -894,13 +868,10 @@ void DrawLine(int x0, int y0, int x1, int y1, BYTE col)
 	sx = x0;
 	sy = y0;
 
-	for(i = 0; i <= steps; i++, sx += ix, sy += iy) {
+	for (i = 0; i <= steps; i++, sx += ix, sy += iy) {
 		ENG_set_pixel(sx, sy, col);
 	}
 }
-// 52B96C: using guessed type char gbPixelCol;
-// 52B970: using guessed type int gbRotateMap;
-// 52B99C: using guessed type int gbNotInView;
 
 int GetDirection(int x1, int y1, int x2, int y2)
 {
@@ -948,9 +919,6 @@ void SetRndSeed(int s)
 	sglGameSeed = s;
 	orgseed = s;
 }
-// 52B974: using guessed type int orgseed;
-// 52B97C: using guessed type int sglGameSeed;
-// 52B998: using guessed type int SeedCount;
 
 int GetRndSeed()
 {
@@ -958,8 +926,6 @@ int GetRndSeed()
 	sglGameSeed = rand_multiplier * sglGameSeed + rand_increment;
 	return abs(sglGameSeed);
 }
-// 52B97C: using guessed type int sglGameSeed;
-// 52B998: using guessed type int SeedCount;
 
 int random(BYTE idx, int v)
 {
@@ -978,27 +944,27 @@ void engine_debug_trap(BOOL show_cursor)
 	sgMemCrit.Enter();
 	while(sgpMemBlock != NULL) {
 		pCurr = sgpMemBlock->pNext;
-		SMemFree(sgpMemBlock, "C:\\Diablo\\Direct\\ENGINE.CPP", 1970);
+		SMemFree(sgpMemBlock, __FILE__, __LINE__);
 		sgpMemBlock = pCurr;
 	}
 	sgMemCrit.Leave();
 */
 }
 
-unsigned char *DiabloAllocPtr(int dwBytes)
+BYTE *DiabloAllocPtr(DWORD dwBytes)
 {
 	BYTE *buf;
 
 #ifdef __cplusplus
 	sgMemCrit.Enter();
 #endif
-	buf = (BYTE *)SMemAlloc(dwBytes, "C:\\Src\\Diablo\\Source\\ENGINE.CPP", 2236, 0);
+	buf = (BYTE *)SMemAlloc(dwBytes, __FILE__, __LINE__, 0);
 #ifdef __cplusplus
 	sgMemCrit.Leave();
 #endif
 
 	if (buf == NULL) {
-		ErrDlg(IDD_DIALOG2, GetLastError(), "C:\\Src\\Diablo\\Source\\ENGINE.CPP", 2269);
+		ERR_DLG(IDD_DIALOG2, GetLastError());
 	}
 
 	return buf;
@@ -1010,14 +976,14 @@ void mem_free_dbg(void *p)
 #ifdef __cplusplus
 		sgMemCrit.Enter();
 #endif
-		SMemFree(p, "C:\\Src\\Diablo\\Source\\ENGINE.CPP", 2317, 0);
+		SMemFree(p, __FILE__, __LINE__, 0);
 #ifdef __cplusplus
 		sgMemCrit.Leave();
 #endif
 	}
 }
 
-BYTE *LoadFileInMem(char *pszName, int *pdwFileLen)
+BYTE *LoadFileInMem(char *pszName, DWORD *pdwFileLen)
 {
 	HANDLE file;
 	BYTE *buf;
@@ -1337,7 +1303,6 @@ void Cl2DecodeFrm3(int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth, char li
 	    nWidth,
 	    &pLightTbl[idx]);
 }
-// 525728: using guessed type int light4flag;
 
 void Cl2DecDatLightTbl1(BYTE *pBuff, BYTE *pRLEBytes, int nDataSize, int nWidth, BYTE *pTable)
 {
@@ -1404,7 +1369,6 @@ void Cl2DecDatLightTbl1(BYTE *pBuff, BYTE *pRLEBytes, int nDataSize, int nWidth,
 		}
 	}
 }
-// 52B978: using guessed type int sgnWidth;
 
 void Cl2DecodeLightTbl(int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth)
 {
@@ -1437,7 +1401,6 @@ void Cl2DecodeLightTbl(int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth)
 	else
 		Cl2DecDatFrm1(pBuff, pRLEBytes, nSize, nWidth);
 }
-// 69BEF8: using guessed type int light_table_index;
 
 void Cl2DecodeFrm4(int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth)
 {
@@ -1537,7 +1500,6 @@ void Cl2DecDatFrm4(BYTE *pBuff, BYTE *pRLEBytes, int nDataSize, int nWidth)
 		}
 	}
 }
-// 69CF0C: using guessed type int gpBufEnd;
 
 void Cl2DecodeClrHL(char col, int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth)
 {
@@ -1570,7 +1532,6 @@ void Cl2DecodeClrHL(char col, int sx, int sy, BYTE *pCelBuff, int nCel, int nWid
 	    col);
 	gpBufEnd += BUFFER_WIDTH;
 }
-// 69CF0C: using guessed type int gpBufEnd;
 
 void Cl2DecDatClrHL(BYTE *pBuff, BYTE *pRLEBytes, int nDataSize, int nWidth, char col)
 {
@@ -1647,7 +1608,6 @@ void Cl2DecDatClrHL(BYTE *pBuff, BYTE *pRLEBytes, int nDataSize, int nWidth, cha
 		}
 	}
 }
-// 69CF0C: using guessed type int gpBufEnd;
 
 void Cl2DecodeFrm5(int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth, char light)
 {
@@ -1688,7 +1648,6 @@ void Cl2DecodeFrm5(int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth, char li
 	    nWidth,
 	    &pLightTbl[idx]);
 }
-// 525728: using guessed type int light4flag;
 
 void Cl2DecDatLightTbl2(BYTE *pBuff, BYTE *pRLEBytes, int nDataSize, int nWidth, BYTE *pTable)
 {
@@ -1761,8 +1720,6 @@ void Cl2DecDatLightTbl2(BYTE *pBuff, BYTE *pRLEBytes, int nDataSize, int nWidth,
 		}
 	}
 }
-// 52B978: using guessed type int sgnWidth;
-// 69CF0C: using guessed type int gpBufEnd;
 
 void Cl2DecodeFrm6(int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth)
 {
@@ -1795,7 +1752,6 @@ void Cl2DecodeFrm6(int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth)
 	else
 		Cl2DecDatFrm4(pBuff, pRLEBytes, nSize, nWidth);
 }
-// 69BEF8: using guessed type int light_table_index;
 
 void PlayInGameMovie(char *pszMovie)
 {
@@ -1807,6 +1763,5 @@ void PlayInGameMovie(char *pszMovie)
 	PaletteFadeIn(8);
 	drawpanflag = 255;
 }
-// 52571C: using guessed type int drawpanflag;
 
 DEVILUTION_END_NAMESPACE

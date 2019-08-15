@@ -6,10 +6,10 @@
 //pCelBuff->pFrameTable[0]
 
 extern char gbPixelCol;  // automap pixel color 8-bit (palette entry)
-extern int gbRotateMap; // bool flip - if y < x
-extern int orgseed;      // weak
-extern int SeedCount;    // weak
-extern int gbNotInView; // bool valid - if x/y are in bounds
+extern BOOL gbRotateMap; // flip - if y < x
+extern int orgseed;
+extern int SeedCount;
+extern BOOL gbNotInView; // valid - if x/y are in bounds
 
 void CelDrawDatOnly(BYTE *pDecodeTo, BYTE *pRLEBytes, int nDataSize, int nWidth);
 void CelDecodeOnly(int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth);
@@ -17,7 +17,6 @@ void CelDecDatOnly(BYTE *pBuff, BYTE *pCelBuff, int nCel, int nWidth, bool hdr =
 void CelDrawHdrOnly(int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth);
 void CelDecDatLightOnly(BYTE *pDecodeTo, BYTE *pRLEBytes, int nDataSize, int nWidth);
 void CelDecDatLightTrans(BYTE *pDecodeTo, BYTE *pRLEBytes, int nDataSize, int nWidth);
-void CelDecodeLightOnly(int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth);
 void CelDecodeHdrLightOnly(int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth);
 #define CelDecodeHdrLightTrans(pBuff, pCelBuff, nCel, nWidth) CelDecDatOnly(pBuff, pCelBuff, nCel, nWidth, true, true, true)
 void CelDrawHdrLightRed(int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth, char light);
@@ -40,9 +39,9 @@ void SetRndSeed(int s);
 int GetRndSeed();
 int random(BYTE idx, int v);
 void engine_debug_trap(BOOL show_cursor);
-unsigned char *DiabloAllocPtr(int dwBytes);
+BYTE *DiabloAllocPtr(DWORD dwBytes);
 void mem_free_dbg(void *p);
-BYTE *LoadFileInMem(char *pszName, int *pdwFileLen);
+BYTE *LoadFileInMem(char *pszName, DWORD *pdwFileLen);
 DWORD LoadFileWithMem(const char *pszName, void *p);
 void Cl2ApplyTrans(BYTE *p, BYTE *ttbl, int nCel);
 void Cl2DecodeFrm1(int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth);
@@ -63,7 +62,6 @@ void PlayInGameMovie(char *pszMovie);
 
 /* rdata */
 
-extern const int engine_inf;      // weak
 extern const int rand_increment;  // unused
 extern const int rand_multiplier; // unused
 

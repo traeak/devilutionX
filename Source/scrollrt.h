@@ -8,14 +8,14 @@ extern BYTE *gpBufEnd;
 extern DWORD level_cel_block;
 extern char arch_draw_type;
 extern DDSURFACEDESC DDS_desc;
-extern int cel_transparency_active; // weak
+extern int cel_transparency_active;
 extern int level_piece_id;
 extern void (*DrawPlrProc)(int, int, int, int, int, BYTE *, int, int, int, int);
 extern int draw_monster_num;
 
 void ClearCursor();
 void DrawMissile(int x, int y, int sx, int sy, BOOL pre);
-void DrawDeadPlayer(int x, int y, int sx, int sy, BOOL clipped);
+void DrawDeadPlayer(int x, int y, int sx, int sy);
 void DrawPlayer(int pnum, int x, int y, int px, int py, BYTE *pCelBuff, int nCel, int nWidth);
 void DrawView(int StartX, int StartY);
 void DrawGame(int x, int y);

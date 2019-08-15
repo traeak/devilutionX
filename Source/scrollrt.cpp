@@ -15,9 +15,10 @@ DWORD sgdwCursXOld;
 DWORD sgdwCursYOld;
 char arch_draw_type;
 DDSURFACEDESC DDS_desc;
-int cel_transparency_active; // weak
+int cel_transparency_active;
 int level_piece_id;
 DWORD sgdwCursWdt;
+void (*DrawPlrProc)(int, int, int, int, int, BYTE *, int, int, int, int);
 BYTE sgSaveBack[8192];
 int draw_monster_num;
 DWORD sgdwCursHgtOld;
@@ -128,7 +129,7 @@ void DrawMissile(int x, int y, int sx, int sy, BOOL pre)
 	}
 }
 
-void DrawDeadPlayer(int x, int y, int sx, int sy, BOOL clipped)
+void DrawDeadPlayer(int x, int y, int sx, int sy)
 {
 	int i, px, py, nCel;
 	PlayerStruct *p;
@@ -139,7 +140,7 @@ void DrawDeadPlayer(int x, int y, int sx, int sy, BOOL clipped)
 
 	for (i = 0; i < MAX_PLRS; i++) {
 		p = &plr[i];
-		if (p->plractive && !p->_pHitPoints && p->plrlevel == (unsigned char)currlevel && p->WorldX == x && p->WorldY == y) {
+		if (p->plractive && !p->_pHitPoints && p->plrlevel == (BYTE)currlevel && p->WorldX == x && p->WorldY == y) {
 			pCelBuff = p->_pAnimData;
 			if (!pCelBuff) {
 				// app_fatal("Drawing dead player %d \"%s\": NULL Cel Buffer", i, p->_pName);
@@ -228,50 +229,50 @@ void DrawPlayer(int pnum, int x, int y, int px, int py, BYTE *pCelBuff, int nCel
 
 void DrawView(int StartX, int StartY)
 {
-	if(zoomflag) {
+	if (zoomflag) {
 		DrawGame(StartX, StartY);
 	} else {
 		DrawZoom(StartX, StartY);
 	}
-	if(automapflag) {
+	if (automapflag) {
 		DrawAutomap();
 	}
-	if(invflag) {
+	if (invflag) {
 		DrawInv();
-	} else if(sbookflag) {
+	} else if (sbookflag) {
 		DrawSpellBook();
 	}
 
 	DrawDurIcon();
 
-	if(chrflag) {
+	if (chrflag) {
 		DrawChr();
-	} else if(questlog) {
+	} else if (questlog) {
 		DrawQuestLog();
-	} else if(plr[myplr]._pStatPts != 0 && !spselflag) {
+	} else if (plr[myplr]._pStatPts != 0 && !spselflag) {
 		DrawLevelUpIcon();
 	}
-	if(uitemflag) {
+	if (uitemflag) {
 		DrawUniqueInfo();
 	}
-	if(qtextflag) {
+	if (qtextflag) {
 		DrawQText();
 	}
-	if(spselflag) {
+	if (spselflag) {
 		DrawSpellList();
 	}
-	if(dropGoldFlag) {
+	if (dropGoldFlag) {
 		DrawGoldSplit(dropGoldValue);
 	}
-	if(helpflag) {
+	if (helpflag) {
 		DrawHelp();
 	}
-	if(msgflag) {
+	if (msgflag) {
 		DrawDiabloMsg();
 	}
-	if(deathflag) {
+	if (deathflag) {
 		RedBack();
-	} else if(PauseMode != 0) {
+	} else if (PauseMode != 0) {
 		gmenu_draw_pause();
 	}
 
@@ -289,8 +290,8 @@ void DrawGame(int x, int y)
 
 	scr_pix_width = SCREEN_WIDTH;
 	scr_pix_height = VIEWPORT_HEIGHT;
-	dword_5C2FF8 = 10;
-	dword_5C2FFC = 11;
+	dword_5C2FF8 = SCREEN_WIDTH / 64;
+	dword_5C2FFC = VIEWPORT_HEIGHT / 32;
 
 	sx = ScrollInfo._sxoff + SCREEN_X;
 	sy = ScrollInfo._syoff + 175;
@@ -388,28 +389,28 @@ void scrollrt_draw(int x, int y, int sx, int sy, int chunks, int eflag)
 			light_table_index = dLight[x][y];
 			if (level_piece_id != 0) {
 				dst = &gpBuffer[sx + 32 + PitchTbl[sy]];
-				cel_transparency_active = (unsigned char)(nTransTable[level_piece_id] & TransList[dTransVal[x][y]]);
-					level_cel_block = pMap->mt[1];
-					if (level_cel_block != 0) {
-						arch_draw_type = 2;
-						drawUpperScreen(dst);
-						arch_draw_type = 0;
-					}
+				cel_transparency_active = (BYTE)(nTransTable[level_piece_id] & TransList[dTransVal[x][y]]);
+				level_cel_block = pMap->mt[1];
+				if (level_cel_block != 0) {
+					arch_draw_type = 2;
+					drawUpperScreen(dst);
+					arch_draw_type = 0;
+				}
 				dst -= BUFFER_WIDTH * 32;
-					level_cel_block = pMap->mt[3];
-					if (level_cel_block != 0) {
-						drawUpperScreen(dst);
-					}
+				level_cel_block = pMap->mt[3];
+				if (level_cel_block != 0) {
+					drawUpperScreen(dst);
+				}
 				dst -= BUFFER_WIDTH * 32;
-					level_cel_block = pMap->mt[5];
-					if (level_cel_block != 0) {
-						drawUpperScreen(dst);
-					}
+				level_cel_block = pMap->mt[5];
+				if (level_cel_block != 0) {
+					drawUpperScreen(dst);
+				}
 				dst -= BUFFER_WIDTH * 32;
-					level_cel_block = pMap->mt[7];
-					if (level_cel_block != 0) {
-						drawUpperScreen(dst);
-					}
+				level_cel_block = pMap->mt[7];
+				if (level_cel_block != 0) {
+					drawUpperScreen(dst);
+				}
 				dst -= BUFFER_WIDTH * 32;
 				level_cel_block = pMap->mt[9];
 				if (level_cel_block != 0) {
@@ -438,7 +439,7 @@ void scrollrt_draw(int x, int y, int sx, int sy, int chunks, int eflag)
 			light_table_index = dLight[x][y];
 			if (level_piece_id != 0) {
 				dst = &gpBuffer[sx + PitchTbl[sy]];
-				cel_transparency_active = (unsigned char)(nTransTable[level_piece_id] & TransList[dTransVal[x][y]]);
+				cel_transparency_active = (BYTE)(nTransTable[level_piece_id] & TransList[dTransVal[x][y]]);
 				arch_draw_type = 1;
 				level_cel_block = pMap->mt[0];
 				if (level_cel_block != 0) {
@@ -453,12 +454,12 @@ void scrollrt_draw(int x, int y, int sx, int sy, int chunks, int eflag)
 				for (i = 2; i < MicroTileLen; i += 2) {
 					dst -= BUFFER_WIDTH * 32;
 					level_cel_block = pMap->mt[i];
-						if (level_cel_block != 0) {
-							drawUpperScreen(dst);
-						}
+					if (level_cel_block != 0) {
+						drawUpperScreen(dst);
+					}
 					level_cel_block = pMap->mt[i + 1];
-						if (level_cel_block != 0) {
-							drawUpperScreen(dst + 32);
+					if (level_cel_block != 0) {
+						drawUpperScreen(dst + 32);
 					}
 				}
 				scrollrt_draw_dungeon(&gpBuffer[sx + PitchTbl[sy]], x, y, sx, sy, 1);
@@ -472,53 +473,55 @@ void scrollrt_draw(int x, int y, int sx, int sy, int chunks, int eflag)
 		pMap++;
 	}
 
-	if (eflag && (DWORD)y < MAXDUNY && (DWORD)x < MAXDUNX) {
-		level_piece_id = dPiece[x][y];
-		light_table_index = dLight[x][y];
-		if (level_piece_id != 0) {
-			dst = &gpBuffer[sx + PitchTbl[sy]];
-			cel_transparency_active = (unsigned char)(nTransTable[level_piece_id] & TransList[dTransVal[x][y]]);
-			arch_draw_type = 1;
+	if (eflag) {
+		if (y >= 0 && y < MAXDUNY && x >= 0 && x < MAXDUNX) {
+			level_piece_id = dPiece[x][y];
+			light_table_index = dLight[x][y];
+			if (level_piece_id != 0) {
+				dst = &gpBuffer[sx + PitchTbl[sy]];
+				cel_transparency_active = (BYTE)(nTransTable[level_piece_id] & TransList[dTransVal[x][y]]);
+				arch_draw_type = 1;
 				level_cel_block = pMap->mt[0];
 				if (level_cel_block != 0) {
 					drawUpperScreen(dst);
-			}
-			arch_draw_type = 0;
-			dst -= BUFFER_WIDTH * 32;
+				}
+				arch_draw_type = 0;
+				dst -= BUFFER_WIDTH * 32;
 				level_cel_block = pMap->mt[2];
 				if (level_cel_block != 0) {
 					drawUpperScreen(dst);
-			}
-			dst -= BUFFER_WIDTH * 32;
+				}
+				dst -= BUFFER_WIDTH * 32;
 				level_cel_block = pMap->mt[4];
 				if (level_cel_block != 0) {
 					drawUpperScreen(dst);
-			}
-			dst -= BUFFER_WIDTH * 32;
+				}
+				dst -= BUFFER_WIDTH * 32;
 				level_cel_block = pMap->mt[6];
 				if (level_cel_block != 0) {
 					drawUpperScreen(dst);
 				}
-			dst -= BUFFER_WIDTH * 32;
-			level_cel_block = pMap->mt[8];
-			if (level_cel_block != 0) {
-				drawLowerScreen(dst);
+				dst -= BUFFER_WIDTH * 32;
+				level_cel_block = pMap->mt[8];
+				if (level_cel_block != 0) {
+					drawLowerScreen(dst);
+				}
+				dst -= BUFFER_WIDTH * 32;
+				level_cel_block = pMap->mt[10];
+				if (level_cel_block != 0 && leveltype == DTYPE_HELL) {
+					drawLowerScreen(dst);
+				}
+				scrollrt_draw_dungeon(&gpBuffer[sx + PitchTbl[sy]], x, y, sx, sy, 0);
+			} else {
+				world_draw_black_tile(&gpBuffer[sx + PitchTbl[sy]]);
 			}
-			dst -= BUFFER_WIDTH * 32;
-			level_cel_block = pMap->mt[10];
-			if (level_cel_block != 0 && leveltype == DTYPE_HELL) {
-				drawLowerScreen(dst);
-			}
-			scrollrt_draw_dungeon(&gpBuffer[sx + PitchTbl[sy]], x, y, sx, sy, 0);
-		} else {
-			world_draw_black_tile(&gpBuffer[sx + PitchTbl[sy]]);
 		}
 	}
 }
 
 void scrollrt_draw_dungeon(BYTE *pBuff, int sx, int sy, int dx, int dy, int eflag)
 {
-	int px, py, nCel, nMon, negMon, p;
+	int px, py, nCel, nMon, negMon, p, tx, ty;
 	char bFlag, bDead, bObj, bItem, bPlr, bArch, bMap, negPlr, dd;
 	DeadStruct *pDeadGuy;
 	ItemStruct *pItem;
@@ -543,11 +546,15 @@ void scrollrt_draw_dungeon(BYTE *pBuff, int sx, int sy, int dx, int dy, int efla
 	negMon = dMonster[sx][sy - 1];
 
 	if (visiondebug && bFlag & BFLAG_LIT) {
-		Cel2DecodeHdrOnly(pBuff, (BYTE *)pSquareCel, 1, 64);
+		Cel2DecodeHdrOnly(pBuff, pSquareCel, 1, 64);
 	}
+	tx = dx - 96;
+	ty = dy - 16;
+
 	if (MissilePreFlag && bFlag & BFLAG_MISSILE) {
 		DrawMissile(sx, sy, dx, dy, 1);
 	}
+
 	if (light_table_index < lightmax) {
 		if (bDead != 0) {
 			pDeadGuy = &dead[(bDead & 0x1F) - 1];
@@ -577,7 +584,7 @@ void scrollrt_draw_dungeon(BYTE *pBuff, int sx, int sy, int dx, int dy, int efla
 		pItem = &item[bItem - 1];
 		if (!pItem->_iPostDraw) {
 			/// ASSERT: assert((unsigned char)bItem <= MAXITEMS);
-			if ((unsigned char)bItem <= MAXITEMS) {
+			if ((BYTE)bItem <= MAXITEMS) {
 				pCelBuff = pItem->_iAnimData;
 				if (pCelBuff != NULL) {
 					pFrameTable = (DWORD *)pCelBuff;
@@ -613,7 +620,7 @@ void scrollrt_draw_dungeon(BYTE *pBuff, int sx, int sy, int dx, int dy, int efla
 			DrawPlayer(p, sx, sy - 1, px, py, pPlayer->_pAnimData, pPlayer->_pAnimFrame, pPlayer->_pAnimWidth);
 			if (eflag && pPlayer->_peflag != 0) {
 				if (pPlayer->_peflag == 2) {
-					scrollrt_draw_e_flag(pBuff - (BUFFER_WIDTH * 16 + 96), sx - 2, sy + 1, dx - 96, dy - 16);
+					scrollrt_draw_e_flag(pBuff - (BUFFER_WIDTH * 16 + 96), sx - 2, sy + 1, tx, ty);
 				}
 				scrollrt_draw_e_flag(pBuff - 64, sx - 1, sy + 1, dx - 64, dy);
 			}
@@ -645,7 +652,7 @@ void scrollrt_draw_dungeon(BYTE *pBuff, int sx, int sy, int dx, int dy, int efla
 		}
 	}
 	if (bFlag & BFLAG_DEAD_PLAYER) {
-		DrawDeadPlayer(sx, sy, dx, dy, 1);
+		DrawDeadPlayer(sx, sy, dx, dy);
 	}
 	if (bPlr > 0) {
 		p = bPlr - 1;
@@ -697,7 +704,7 @@ void scrollrt_draw_dungeon(BYTE *pBuff, int sx, int sy, int dx, int dy, int efla
 		pItem = &item[bItem - 1];
 		if (pItem->_iPostDraw) {
 			/// ASSERT: assert((unsigned char)bItem <= MAXITEMS);
-			if ((unsigned char)bItem <= MAXITEMS) {
+			if ((BYTE)bItem <= MAXITEMS) {
 				pCelBuff = pItem->_iAnimData;
 				if (pCelBuff != NULL) {
 					pFrameTable = (DWORD *)pCelBuff;
@@ -725,12 +732,12 @@ void scrollrt_draw_dungeon(BYTE *pBuff, int sx, int sy, int dx, int dy, int efla
 		}
 	}
 	if (bArch != 0) {
-		cel_transparency_active = (unsigned char)TransList[bMap];
+		cel_transparency_active = (BYTE)TransList[bMap];
 		Cel2DecodeLightTrans(pBuff, pSpecialCels, bArch, 64);
 	}
 }
 
-void scrollrt_draw_e_flag(BYTE *pBuff, int x, int y, int a4, int a5)
+void scrollrt_draw_e_flag(BYTE *pBuff, int x, int y, int sx, int sy)
 {
 	int i, lti_old, cta_old, lpi_old;
 	BYTE *dst;
@@ -742,7 +749,7 @@ void scrollrt_draw_e_flag(BYTE *pBuff, int x, int y, int a4, int a5)
 
 	level_piece_id = dPiece[x][y];
 	light_table_index = dLight[x][y];
-	cel_transparency_active = (unsigned char)(nTransTable[level_piece_id] & TransList[dTransVal[x][y]]);
+	cel_transparency_active = (BYTE)(nTransTable[level_piece_id] & TransList[dTransVal[x][y]]);
 	pMap = &dpiece_defs_map_1[IsometricCoord(x, y)];
 
 	dst = pBuff;
@@ -771,7 +778,7 @@ void scrollrt_draw_e_flag(BYTE *pBuff, int x, int y, int a4, int a5)
 		}
 	}
 
-	scrollrt_draw_dungeon(pBuff, x, y, a4, a5, 0);
+	scrollrt_draw_dungeon(pBuff, x, y, sx, sy, 0);
 
 	light_table_index = lti_old;
 	cel_transparency_active = cta_old;
@@ -855,7 +862,7 @@ void DrawObject(int x, int y, int ox, int oy, BOOL pre)
 	}
 
 	/// ASSERT: assert((unsigned char)bv < MAXOBJECTS);
-	if ((unsigned char)bv >= MAXOBJECTS)
+	if ((BYTE)bv >= MAXOBJECTS)
 		return;
 
 	pCelBuff = object[bv]._oAnimData;
@@ -887,10 +894,10 @@ void DrawZoom(int x, int y)
 	int i, sx, sy, chunks, blocks;
 	int wdt, nSrcOff, nDstOff;
 
-	scr_pix_width = SCREEN_WIDTH / 2 + 64;
-	scr_pix_height = VIEWPORT_HEIGHT / 2 + 16;
-	dword_5C2FF8 = 6;
-	dword_5C2FFC = 6;
+	scr_pix_width = ZOOM_WIDTH;
+	scr_pix_height = 192;
+	dword_5C2FF8 = ZOOM_WIDTH / 64;
+	dword_5C2FFC = 192 / 32;
 
 	sx = ScrollInfo._sxoff + 64;
 	sy = ScrollInfo._syoff + 143;
@@ -974,11 +981,11 @@ void DrawZoom(int x, int y)
 	if (chrflag || questlog) {
 		nSrcOff = SCREENXY(112, 159);
 		nDstOff = SCREENXY(320, 350);
-		wdt = SCREEN_WIDTH / 2 - 320 / 2;
+		wdt = (SCREEN_WIDTH - 320) / 2;
 	} else if (invflag || sbookflag) {
 		nSrcOff = SCREENXY(112, 159);
 		nDstOff = SCREENXY(0, 350);
-		wdt = SCREEN_WIDTH / 2 - 320 / 2;
+		wdt = (SCREEN_WIDTH - 320) / 2;
 	} else {
 		nSrcOff = SCREENXY(32, 159);
 		nDstOff = SCREENXY(0, 350);
@@ -1115,7 +1122,7 @@ void scrollrt_draw_game_screen(BOOL draw_cursor)
 
 	if (1 || drawpanflag == 255) { /* Simplify render for GPU */
 		drawpanflag = 0;
-		hgt = 480;
+		hgt = SCREEN_HEIGHT;
 	} else {
 		hgt = 0;
 	}
@@ -1222,14 +1229,14 @@ void scrollrt_draw_cursor_item()
 		if (!plr[myplr].HoldItem._iStatFlag) {
 			col = PAL16_RED + 5;
 		}
-		CelDrawHdrClrHL(col, mx + SCREEN_X, my + cursH + SCREEN_Y - 1, (BYTE *)pCursCels, pcurs, cursW);
+		CelDrawHdrClrHL(col, mx + SCREEN_X, my + cursH + SCREEN_Y - 1, pCursCels, pcurs, cursW);
 		if (col != PAL16_RED + 5) {
-			Cel2DrawHdrOnly(mx + SCREEN_X, my + cursH + SCREEN_Y - 1, (BYTE *)pCursCels, pcurs, cursW);
+			Cel2DrawHdrOnly(mx + SCREEN_X, my + cursH + SCREEN_Y - 1, pCursCels, pcurs, cursW);
 		} else {
-			Cel2DrawHdrLightRed(mx + SCREEN_X, my + cursH + SCREEN_Y - 1, (BYTE *)pCursCels, pcurs, cursW, 1);
+			Cel2DrawHdrLightRed(mx + SCREEN_X, my + cursH + SCREEN_Y - 1, pCursCels, pcurs, cursW, 1);
 		}
 	} else {
-		Cel2DrawHdrOnly(mx + SCREEN_X, my + cursH + SCREEN_Y - 1, (BYTE *)pCursCels, pcurs, cursW);
+		Cel2DrawHdrOnly(mx + SCREEN_X, my + cursH + SCREEN_Y - 1, pCursCels, pcurs, cursW);
 	}
 }
 
@@ -1297,11 +1304,11 @@ void DrawMain(int dwHgt, BOOL draw_desc, BOOL draw_hp, BOOL draw_mana, BOOL draw
 			return;
 		}
 		if (hDDVal != DD_OK) {
-			DDErrMsg(hDDVal, 3707, "C:\\Src\\Diablo\\Source\\SCROLLRT.CPP");
+			DD_ERR_MSG(hDDVal);
 		}
 	}
 
-	/// ASSERT: assert(ysize >= 0 && ysize <= SCREEN_HEIGHT);
+	/// ASSERT: assert(ysize >= 0 && ysize <= 480); // SCREEN_HEIGHT
 
 	if (ysize > 0) {
 		DoBlitScreen(0, 0, SCREEN_WIDTH, ysize);
@@ -1343,7 +1350,7 @@ void DrawMain(int dwHgt, BOOL draw_desc, BOOL draw_hp, BOOL draw_mana, BOOL draw
 		hDDVal = lpDDSPrimary->lpVtbl->Unlock(lpDDSPrimary, NULL);
 #endif
 		if (hDDVal != DDERR_SURFACELOST && hDDVal != DD_OK) {
-			DDErrMsg(hDDVal, 3779, "C:\\Src\\Diablo\\Source\\SCROLLRT.CPP");
+			DD_ERR_MSG(hDDVal);
 		}
 	}
 
@@ -1427,7 +1434,7 @@ void DoBlitScreen(DWORD dwX, DWORD dwY, DWORD dwWdt, DWORD dwHgt)
 		    && hDDVal != DDERR_WASSTILLDRAWING
 		    && hDDVal != DDERR_SURFACEBUSY
 		    && hDDVal != DD_OK) {
-			DDErrMsg(hDDVal, 3596, "C:\\Src\\Diablo\\Source\\SCROLLRT.CPP");
+			DD_ERR_MSG(hDDVal);
 		}
 	} else {
 		nSrcOff = SCREENXY(dwX, dwY);
@@ -1461,11 +1468,11 @@ void DrawAndBlit()
 	int hgt;
 	BOOL ddsdesc, ctrlPan;
 
-	if(!gbRunGame) {
+	if (!gbRunGame) {
 		return;
 	}
 
-	if(1 || drawpanflag == 255) { /* Simplify render for GPU */
+	if (1 || drawpanflag == 255) { /* Simplify render for GPU */
 		drawhpflag = TRUE;
 		drawmanaflag = TRUE;
 		drawbtnflag = TRUE;
@@ -1473,7 +1480,7 @@ void DrawAndBlit()
 		ddsdesc = FALSE;
 		ctrlPan = TRUE;
 		hgt = SCREEN_HEIGHT;
-	} else if(drawpanflag == 1) {
+	} else if (drawpanflag == 1) {
 		ddsdesc = TRUE;
 		ctrlPan = FALSE;
 		hgt = VIEWPORT_HEIGHT;
@@ -1484,29 +1491,29 @@ void DrawAndBlit()
 	drawpanflag = 0;
 
 	lock_buf(0);
-	if(leveltype != DTYPE_TOWN) {
+	if (leveltype != DTYPE_TOWN) {
 		DrawView(ViewX, ViewY);
 	} else {
 		T_DrawView(ViewX, ViewY);
 	}
-	if(ctrlPan) {
+	if (ctrlPan) {
 		ClearCtrlPan();
 	}
-	if(drawhpflag) {
+	if (drawhpflag) {
 		UpdateLifeFlask();
 	}
-	if(drawmanaflag) {
+	if (drawmanaflag) {
 		UpdateManaFlask();
 	}
-	if(drawbtnflag) {
+	if (drawbtnflag) {
 		DrawCtrlPan();
 	}
-	if(drawsbarflag) {
+	if (drawsbarflag) {
 		DrawInvBelt();
 	}
-	if(talkflag) {
+	if (talkflag) {
 		DrawTalkPan();
-		hgt = 480;
+		hgt = SCREEN_HEIGHT;
 	}
 	scrollrt_draw_cursor_item();
 	unlock_buf(0);

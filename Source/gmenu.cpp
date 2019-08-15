@@ -15,7 +15,7 @@ BYTE *option_cel;
 BYTE *sgpLogo;
 int sgCurrentMenuIdx;
 
-const unsigned char lfontframe[127] = {
+const BYTE lfontframe[127] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -30,7 +30,7 @@ const unsigned char lfontframe[127] = {
 	14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
 	24, 25, 26, 20, 0, 21, 0
 };
-const unsigned char lfontkern[56] = {
+const BYTE lfontkern[56] = {
 	18, 33, 21, 26, 28, 19, 19, 26, 25, 11,
 	12, 25, 19, 34, 28, 32, 20, 32, 28, 20,
 	28, 36, 35, 46, 33, 33, 24, 11, 23, 22,
@@ -57,7 +57,7 @@ void gmenu_print_text(int x, int y, char *pszStr)
 		c = gbFontTransTbl[(BYTE)*pszStr++];
 		c = lfontframe[c];
 		if (c)
-			CelDecodeLightOnly(x, y, BigTGold_cel, c, 46);
+			CelDecDatOnly(x, y, BigTGold_cel, c, 46);
 		x += lfontkern[c] + 2;
 	}
 }
@@ -79,11 +79,11 @@ void gmenu_init_menu()
 	dword_63447C = 0;
 	sgCurrentMenuIdx = 0;
 	mouseNavigation = FALSE;
-	sgpLogo = LoadFileInMem("Data\\Diabsmal.CEL", 0);
-	BigTGold_cel = LoadFileInMem("Data\\BigTGold.CEL", 0);
-	PentSpin_cel = LoadFileInMem("Data\\PentSpin.CEL", 0);
-	option_cel = LoadFileInMem("Data\\option.CEL", 0);
-	optbar_cel = LoadFileInMem("Data\\optbar.CEL", 0);
+	sgpLogo = LoadFileInMem("Data\\Diabsmal.CEL", NULL);
+	BigTGold_cel = LoadFileInMem("Data\\BigTGold.CEL", NULL);
+	PentSpin_cel = LoadFileInMem("Data\\PentSpin.CEL", NULL);
+	option_cel = LoadFileInMem("Data\\option.CEL", NULL);
+	optbar_cel = LoadFileInMem("Data\\optbar.CEL", NULL);
 }
 
 BOOL gmenu_exception()
@@ -175,18 +175,18 @@ void gmenu_draw()
 
 void gmenu_draw_menu_item(TMenuItem *pItem, int y)
 {
-	DWORD x, w, nSteps, step, pos;
-
+	DWORD x, w, nSteps, step, pos, t;
+	t = y - 2;
 	w = gmenu_get_lfont(pItem);
 	if (pItem->dwFlags & GMENU_SLIDER) {
 		x = (SCREEN_WIDTH - w) / 2 + 186 + SCREEN_X;
-		CelDecodeOnly(x, y - 10, optbar_cel, 1, 287);
+		CelDecodeOnly(x, t - 8, optbar_cel, 1, 287);
+		step = pItem->dwFlags & 0xFFF;
 		nSteps = (pItem->dwFlags & 0xFFF000) >> 12;
 		if (nSteps < 2)
 			nSteps = 2;
-		step = pItem->dwFlags & 0xFFF;
 		pos = step * 256 / nSteps;
-		gmenu_clear_buffer(x + 2, y - 12, pos + 13, 28);
+		gmenu_clear_buffer(x + 2, t - 10, pos + 13, 28);
 		CelDecodeOnly(x + 2 + pos, y - 12, option_cel, 1, 27);
 	}
 	x = (SCREEN_WIDTH - w) / 2 + SCREEN_X;
@@ -225,11 +225,11 @@ int gmenu_get_lfont(TMenuItem *pItem)
 	return i - 2;
 }
 
-BOOL gmenu_presskeys(int a1)
+BOOL gmenu_presskeys(int vkey)
 {
 	if (!sgpCurrentMenu)
 		return 0;
-	switch (a1) {
+	switch (vkey) {
 	case VK_RETURN:
 		if ((sgpCurrItem->dwFlags & GMENU_ENABLED) != 0) {
 			PlaySFX(IS_TITLEMOV);
@@ -331,7 +331,7 @@ BOOL gmenu_left_mouse(BOOL isDown)
 		if (!sgpCurrentMenu) {
 			return FALSE;
 		}
-		if (MouseY >= VIEWPORT_HEIGHT) {
+		if (MouseY >= PANEL_TOP) {
 			return FALSE;
 		}
 		if (MouseY - 117 >= 0) {
@@ -340,8 +340,8 @@ BOOL gmenu_left_mouse(BOOL isDown)
 				pItem = &sgpCurrentMenu[i];
 				if ((sgpCurrentMenu[i].dwFlags & GMENU_ENABLED) != 0) {
 					w = gmenu_get_lfont(pItem);
-					if (MouseX >= (SCREEN_WIDTH - w) / 2) {
-						if (MouseX <= (SCREEN_WIDTH + w) / 2) {
+					if (MouseX >= SCREEN_WIDTH / 2 - w / 2) {
+						if (MouseX <= SCREEN_WIDTH / 2 + w / 2) {
 							sgpCurrItem = pItem;
 							PlaySFX(IS_TITLEMOV);
 							if (pItem->dwFlags & GMENU_SLIDER) {
@@ -394,7 +394,7 @@ void gmenu_slider_set(TMenuItem *pItem, int min, int max, int value)
 }
 
 /**
- * @brief Get the current value for the slider 
+ * @brief Get the current value for the slider
  */
 int gmenu_slider_get(TMenuItem *pItem, int min, int max)
 {
