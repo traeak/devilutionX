@@ -17,14 +17,12 @@ void ClearCursor();
 void DrawMissile(int x, int y, int sx, int sy, BOOL pre);
 void DrawDeadPlayer(int x, int y, int sx, int sy);
 void DrawPlayer(int pnum, int x, int y, int px, int py, BYTE *pCelBuff, int nCel, int nWidth);
-void DrawView(int StartX, int StartY);
 void DrawUi(int StartX, int StartY);
 void DrawGame(int x, int y);
 void scrollrt_draw(int x, int y, int sx, int sy, int chunks);
 void scrollrt_draw_dungeon(BYTE *pBuff, int sx, int sy, int dx, int dy);
 void DrawMonster(int x, int y, int mx, int my, int m);
 void DrawObject(int x, int y, int ox, int oy, BOOL pre);
-void DrawZoom(int x, int y);
 void ClearScreenBuffer();
 #ifdef _DEBUG
 void ScrollView();
@@ -33,7 +31,7 @@ void EnableFrameCount();
 void scrollrt_draw_game_screen(BOOL draw_cursor);
 void scrollrt_draw_cursor_back_buffer();
 void scrollrt_draw_cursor_item();
-void DrawMain(int dwHgt, BOOL draw_desc, BOOL draw_hp, BOOL draw_mana, BOOL draw_sbar, BOOL draw_btn);
+void DrawMain(int dwHgt);
 #ifdef _DEBUG
 void DrawFPS();
 #endif

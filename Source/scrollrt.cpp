@@ -227,17 +227,6 @@ void DrawPlayer(int pnum, int x, int y, int px, int py, BYTE *pCelBuff, int nCel
 	}
 }
 
-void DrawView(int StartX, int StartY)
-{
-	if (zoomflag) {
-		DrawGame(StartX, StartY);
-	} else {
-		DrawZoom(StartX, StartY);
-	}
-
-	DrawUi(StartX, StartY);
-}
-
 void DrawUi(int StartX, int StartY)
 {
 	if (automapflag) {
@@ -295,6 +284,12 @@ void DrawUi(int StartX, int StartY)
 void DrawGame(int x, int y)
 {
 	int i, sx, sy, chunks, blocks;
+	int wdt, nSrcOff, nDstOff;
+
+	if (leveltype == DTYPE_TOWN) {
+		light_table_index = 0;
+		cel_transparency_active = 0;
+	}
 
 	sx = ScrollInfo._sxoff + SCREEN_X;
 	sy = ScrollInfo._syoff + 175;
@@ -307,6 +302,15 @@ void DrawGame(int x, int y)
 	y--;
 
 	chunks++; // eflag
+	if (leveltype == DTYPE_TOWN) {
+		chunks++;    // eflag
+		blocks += 3; // Tall buildings
+	}
+
+	if (!zoomflag) {
+		chunks = ceil(chunks / 2);
+		blocks = ceil(blocks / 2);
+	}
 
 	switch (ScrollInfo._sdir) {
 	case SDIR_N:
@@ -356,15 +360,63 @@ void DrawGame(int x, int y)
 
 	/// ASSERT: assert(gpBuffer);
 	gpBufEnd = &gpBuffer[PitchTbl[VIEWPORT_HEIGHT + SCREEN_Y]];
-	for (i = 0; i < blocks; i++) {
-		scrollrt_draw(x, y, sx, sy, chunks);
-		y++;
-		sx -= 32;
-		sy += 16;
-		scrollrt_draw(x, y, sx, sy, chunks);
-		x++;
-		sx += 32;
-		sy += 16;
+	if (leveltype != DTYPE_TOWN) {
+		for (i = 0; i < blocks; i++) {
+			scrollrt_draw(x, y, sx, sy, chunks);
+			y++;
+			sx -= 32;
+			sy += 16;
+			scrollrt_draw(x, y, sx, sy, chunks);
+			x++;
+			sx += 32;
+			sy += 16;
+		}
+	} else {
+		for (i = 0; i < blocks; i++) {
+			town_draw(x, y, sx, sy, chunks);
+			y++;
+			sx -= 32;
+			sy += 16;
+			town_draw(x, y, sx, sy, chunks);
+			x++;
+			sx += 32;
+			sy += 16;
+		}
+	}
+
+	if (!zoomflag) {
+		if (chrflag || questlog) {
+			nSrcOff = SCREENXY(112, 159);
+			nDstOff = SCREENXY(320, 350);
+			wdt = (SCREEN_WIDTH - 320) / 2;
+		} else if (invflag || sbookflag) {
+			nSrcOff = SCREENXY(112, 159);
+			nDstOff = SCREENXY(0, 350);
+			wdt = (SCREEN_WIDTH - 320) / 2;
+		} else {
+			nSrcOff = SCREENXY(32, 159);
+			nDstOff = SCREENXY(0, 350);
+			wdt = SCREEN_WIDTH / 2;
+		}
+
+		/// ASSERT: assert(gpBuffer);
+
+		int hgt;
+		BYTE *src, *dst1, *dst2;
+
+		src = &gpBuffer[nSrcOff];
+		dst1 = &gpBuffer[nDstOff];
+		dst2 = &gpBuffer[nDstOff + BUFFER_WIDTH];
+
+		for (hgt = 176; hgt != 0; hgt--, src -= BUFFER_WIDTH + wdt, dst1 -= 2 * (BUFFER_WIDTH + wdt), dst2 -= 2 * (BUFFER_WIDTH + wdt)) {
+			for (i = wdt; i != 0; i--) {
+				*dst1++ = *src;
+				*dst1++ = *src;
+				*dst2++ = *src;
+				*dst2++ = *src;
+				src++;
+			}
+		}
 	}
 }
 
@@ -723,101 +775,6 @@ void DrawObject(int x, int y, int ox, int oy, BOOL pre)
 	}
 }
 
-void DrawZoom(int x, int y)
-{
-	int i, sx, sy, chunks, blocks;
-	int wdt, nSrcOff, nDstOff;
-
-	sx = ScrollInfo._sxoff + 64;
-	sy = ScrollInfo._syoff + 143;
-	x -= 6;
-	y--;
-	chunks = 6;
-	blocks = 3;
-
-	switch (ScrollInfo._sdir) {
-	case SDIR_NONE:
-		break;
-	case SDIR_NE:
-		chunks++;
-	case SDIR_N:
-		sy -= 32;
-		x--;
-		y--;
-		blocks++;
-		break;
-	case SDIR_SE:
-		blocks++;
-	case SDIR_E:
-		chunks++;
-		break;
-	case SDIR_S:
-		blocks++;
-		break;
-	case SDIR_SW:
-		blocks++;
-	case SDIR_W:
-		sx -= 64;
-		x--;
-		y++;
-		chunks++;
-		break;
-	case SDIR_NW:
-		sx -= 64;
-		sy -= 32;
-		x -= 2;
-		chunks++;
-		blocks++;
-		break;
-	}
-
-	/// ASSERT: assert(gpBuffer);
-	gpBufEnd = &gpBuffer[PitchTbl[160 + SCREEN_Y]];
-	for (i = 0; i < blocks; i++) {
-		scrollrt_draw(x, y, sx, sy, chunks);
-		y++;
-		sx -= 32;
-		sy += 16;
-		scrollrt_draw(x, y, sx, sy, chunks);
-		x++;
-		sx += 32;
-		sy += 16;
-	}
-
-	if (chrflag || questlog) {
-		nSrcOff = SCREENXY(112, 159);
-		nDstOff = SCREENXY(320, 350);
-		wdt = (SCREEN_WIDTH - 320) / 2;
-	} else if (invflag || sbookflag) {
-		nSrcOff = SCREENXY(112, 159);
-		nDstOff = SCREENXY(0, 350);
-		wdt = (SCREEN_WIDTH - 320) / 2;
-	} else {
-		nSrcOff = SCREENXY(32, 159);
-		nDstOff = SCREENXY(0, 350);
-		wdt = SCREEN_WIDTH / 2;
-	}
-
-	/// ASSERT: assert(gpBuffer);
-
-	int hgt;
-	BYTE *src, *dst1, *dst2;
-
-	src = &gpBuffer[nSrcOff];
-	dst1 = &gpBuffer[nDstOff];
-	dst2 = &gpBuffer[nDstOff + BUFFER_WIDTH];
-
-	for (hgt = 176; hgt != 0; hgt--, src -= BUFFER_WIDTH + wdt, dst1 -= 2 * (BUFFER_WIDTH + wdt), dst2 -= 2 * (BUFFER_WIDTH + wdt)) {
-		for (i = wdt; i != 0; i--) {
-			*dst1++ = *src;
-			*dst1++ = *src;
-			*dst2++ = *src;
-			*dst2++ = *src;
-			src++;
-		}
-	}
-}
-
 void ClearScreenBuffer()
 {
 	lock_buf(3);
@@ -924,52 +881,13 @@ void EnableFrameCount()
 
 void scrollrt_draw_game_screen(BOOL draw_cursor)
 {
-	int hgt;
-
-	if (1 || drawpanflag == 255) { /* Simplify render for GPU */
-		drawpanflag = 0;
-		hgt = SCREEN_HEIGHT;
-	} else {
-		hgt = 0;
-	}
-
 	if (draw_cursor) {
 		lock_buf(0);
 		scrollrt_draw_cursor_item();
 		unlock_buf(0);
 	}
 
-	DrawMain(hgt, 0, 0, 0, 0, 0);
-
-	if (draw_cursor) {
-		lock_buf(0);
-		scrollrt_draw_cursor_back_buffer();
-		unlock_buf(0);
-	}
-}
-
-void scrollrt_draw_cursor_back_buffer()
-{
-	int i;
-	BYTE *src, *dst;
-
-	if (sgdwCursWdt == 0) {
-		return;
-	}
-
-	/// ASSERT: assert(gpBuffer);
-	src = sgSaveBack;
-	dst = &gpBuffer[SCREENXY(sgdwCursX, sgdwCursY)];
-
-	for (i = sgdwCursHgt; i != 0; i--, src += sgdwCursWdt, dst += BUFFER_WIDTH) {
-		memcpy(dst, src, sgdwCursWdt);
-	}
-
-	sgdwCursXOld = sgdwCursX;
-	sgdwCursYOld = sgdwCursY;
-	sgdwCursWdtOld = sgdwCursWdt;
-	sgdwCursHgtOld = sgdwCursHgt;
-	sgdwCursWdt = 0;
+	DrawMain(SCREEN_HEIGHT);
 }
 
 void scrollrt_draw_cursor_item()
@@ -996,33 +914,6 @@ void scrollrt_draw_cursor_item()
 		return;
 	}
 
-	sgdwCursX = mx;
-	sgdwCursWdt = sgdwCursX + cursW + 1;
-	if (sgdwCursWdt > SCREEN_WIDTH - 1) {
-		sgdwCursWdt = SCREEN_WIDTH - 1;
-	}
-	sgdwCursX &= ~3;
-	sgdwCursWdt |= 3;
-	sgdwCursWdt -= sgdwCursX;
-	sgdwCursWdt++;
-
-	sgdwCursY = my;
-	sgdwCursHgt = sgdwCursY + cursH + 1;
-	if (sgdwCursHgt > SCREEN_HEIGHT - 1) {
-		sgdwCursHgt = SCREEN_HEIGHT - 1;
-	}
-	sgdwCursHgt -= sgdwCursY;
-	sgdwCursHgt++;
-
-	/// ASSERT: assert(sgdwCursWdt * sgdwCursHgt < sizeof sgSaveBack);
-	/// ASSERT: assert(gpBuffer);
-	dst = sgSaveBack;
-	src = &gpBuffer[SCREENXY(sgdwCursX, sgdwCursY)];
-
-	for (i = sgdwCursHgt; i != 0; i--, dst += sgdwCursWdt, src += BUFFER_WIDTH) {
-		memcpy(dst, src, sgdwCursWdt);
-	}
-
 	mx++;
 	my++;
 	gpBufEnd = &gpBuffer[PitchTbl[SCREEN_HEIGHT + SCREEN_Y] - cursW - 2];
@@ -1046,7 +937,7 @@ void scrollrt_draw_cursor_item()
 	}
 }
 
-void DrawMain(int dwHgt, BOOL draw_desc, BOOL draw_hp, BOOL draw_mana, BOOL draw_sbar, BOOL draw_btn)
+void DrawMain(int dwHgt)
 {
 	int ysize;
 	DWORD dwTicks;
@@ -1059,40 +950,10 @@ void DrawMain(int dwHgt, BOOL draw_desc, BOOL draw_hp, BOOL draw_mana, BOOL draw
 		return;
 	}
 
-
 	/// ASSERT: assert(ysize >= 0 && ysize <= 480); // SCREEN_HEIGHT
 
 	if (ysize > 0) {
 		DoBlitScreen(0, 0, SCREEN_WIDTH, ysize);
-	}
-	if (ysize < SCREEN_HEIGHT) {
-		if (draw_sbar) {
-			DoBlitScreen(204, 357, 232, 28);
-		}
-		if (draw_desc) {
-			DoBlitScreen(176, 398, 288, 60);
-		}
-		if (draw_mana) {
-			DoBlitScreen(460, 352, 88, 72);
-			DoBlitScreen(564, 416, 56, 56);
-		}
-		if (draw_hp) {
-			DoBlitScreen(96, 352, 88, 72);
-		}
-		if (draw_btn) {
-			DoBlitScreen(8, 357, 72, 119);
-			DoBlitScreen(556, 357, 72, 48);
-			if (gbMaxPlayers > 1) {
-				DoBlitScreen(84, 443, 36, 32);
-				DoBlitScreen(524, 443, 36, 32);
-			}
-		}
-		if (sgdwCursWdtOld != 0) {
-			DoBlitScreen(sgdwCursXOld, sgdwCursYOld, sgdwCursWdtOld, sgdwCursHgtOld);
-		}
-		if (sgdwCursWdt != 0) {
-			DoBlitScreen(sgdwCursX, sgdwCursY, sgdwCursWdt, sgdwCursHgt);
-		}
 	}
 
 #ifdef _DEBUG
@@ -1171,69 +1032,25 @@ void DoBlitScreen(DWORD dwX, DWORD dwY, DWORD dwWdt, DWORD dwHgt)
 
 void DrawAndBlit()
 {
-	int hgt;
-	BOOL ddsdesc, ctrlPan;
-
 	if (!gbRunGame) {
 		return;
 	}
 
-	if (1 || drawpanflag == 255) { /* Simplify render for GPU */
-		drawhpflag = TRUE;
-		drawmanaflag = TRUE;
-		drawbtnflag = TRUE;
-		drawsbarflag = TRUE;
-		ddsdesc = FALSE;
-		ctrlPan = TRUE;
-		hgt = SCREEN_HEIGHT;
-	} else if (drawpanflag == 1) {
-		ddsdesc = TRUE;
-		ctrlPan = FALSE;
-		hgt = VIEWPORT_HEIGHT;
-	} else {
-		return;
-	}
-
-	drawpanflag = 0;
-
 	lock_buf(0);
-	if (leveltype != DTYPE_TOWN) {
-		DrawView(ViewX, ViewY);
-	} else {
-		T_DrawView(ViewX, ViewY);
-	}
-	if (ctrlPan) {
-		ClearCtrlPan();
-	}
-	if (drawhpflag) {
-		UpdateLifeFlask();
-	}
-	if (drawmanaflag) {
-		UpdateManaFlask();
-	}
-	if (drawbtnflag) {
-		DrawCtrlPan();
-	}
-	if (drawsbarflag) {
-		DrawInvBelt();
-	}
-	if (talkflag) {
-		DrawTalkPan();
-		hgt = SCREEN_HEIGHT;
-	}
+	ClearScreenBuffer();
+	DrawGame(ViewX, ViewY);
+	DrawUi(ViewX, ViewY);
+
+	ClearCtrlPan();
+	UpdateLifeFlask();
+	UpdateManaFlask();
+	DrawCtrlPan();
+	DrawInvBelt();
+	DrawTalkPan();
 	scrollrt_draw_cursor_item();
 	unlock_buf(0);
 
-	DrawMain(hgt, ddsdesc, drawhpflag, drawmanaflag, drawsbarflag, drawbtnflag);
-
-	lock_buf(0);
-	scrollrt_draw_cursor_back_buffer();
-	unlock_buf(0);
-
-	drawhpflag = FALSE;
-	drawmanaflag = FALSE;
-	drawbtnflag = FALSE;
-	drawsbarflag = FALSE;
+	DrawMain(SCREEN_HEIGHT);
 }
 
 DEVILUTION_END_NAMESPACE

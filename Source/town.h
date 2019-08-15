@@ -2,7 +2,7 @@
 #ifndef __TOWN_H__
 #define __TOWN_H__
 
-void town_draw(int x, int y, int sx, int sy);
+void town_draw(int x, int y, int sx, int sy, int chunks);
 void town_draw_town(BYTE *pBuff, int x, int y, int sx, int sy);
 void T_DrawGame(int x, int y);
 void T_DrawZoom(int x, int y);
