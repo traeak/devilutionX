@@ -5,7 +5,23 @@ DEVILUTION_BEGIN_NAMESPACE
 void town_clear_buf(BYTE *pBuff)
 {
 	return;
-	world_draw_black_tile(pBuff);
+	int i, j, k;
+	BYTE *dst;
+
+	dst = pBuff;
+
+	for (i = 30, j = 1; i >= 0 && dst >= gpBufEnd; i -= 2, j++, dst -= BUFFER_WIDTH + 64) {
+		dst += i;
+		for (k = 0; k < 4 * j; k++)
+			*dst++ = 0;
+		dst += i;
+	}
+	for (i = 2, j = 15; i != 32 && dst >= gpBufEnd; i += 2, j--, dst -= BUFFER_WIDTH + 64) {
+		dst += i;
+		for (k = 0; k < 4 * j; k++)
+			*dst++ = 0;
+		dst += i;
+	}
 }
 
 void town_draw_town(BYTE *pBuff, int sx, int sy, int dx, int dy)
@@ -125,19 +141,6 @@ void T_DrawGame(int x, int y)
 	y--;
 
 	chunks++; // eflag
-
-	if (chrflag || questlog) {
-		x += 2;
-		y -= 2;
-		sx += 288;
-		chunks -= 4;
-	}
-	if (invflag || sbookflag) {
-		x += 2;
-		y -= 2;
-		sx -= 32;
-		chunks -= 4;
-	}
 
 	switch (ScrollInfo._sdir) {
 	case SDIR_N:
@@ -315,54 +318,8 @@ void T_DrawView(int StartX, int StartY)
 	} else {
 		T_DrawZoom(StartX, StartY);
 	}
-	if (automapflag) {
-		DrawAutomap();
-	}
-	if (stextflag && !qtextflag)
-		DrawSText();
-	if (invflag) {
-		DrawInv();
-	} else if (sbookflag) {
-		DrawSpellBook();
-	}
 
-	DrawDurIcon();
-
-	if (chrflag) {
-		DrawChr();
-	} else if (questlog) {
-		DrawQuestLog();
-	} else if (plr[myplr]._pStatPts != 0 && !spselflag) {
-		DrawLevelUpIcon();
-	}
-	if (uitemflag) {
-		DrawUniqueInfo();
-	}
-	if (qtextflag) {
-		DrawQText();
-	}
-	if (spselflag) {
-		DrawSpellList();
-	}
-	if (dropGoldFlag) {
-		DrawGoldSplit(dropGoldValue);
-	}
-	if (helpflag) {
-		DrawHelp();
-	}
-	if (msgflag) {
-		DrawDiabloMsg();
-	}
-	if (PauseMode != 0 && !deathflag) {
-		gmenu_draw_pause();
-	}
-
-	DrawPlrMsg();
-	gmenu_draw();
-	doom_draw();
-	DrawInfoBox();
-	DrawLifeFlask();
-	DrawManaFlask();
+	DrawUi(StartX, StartY);
 }
 
 void SetTownMicros()

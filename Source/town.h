@@ -2,8 +2,6 @@
 #ifndef __TOWN_H__
 #define __TOWN_H__
 
-void town_draw_e_flag(BYTE *pBuff, int x, int y, int sx, int sy);
-void town_special(BYTE *pBuff, int nCel);
 void town_draw(int x, int y, int sx, int sy);
 void town_draw_town(BYTE *pBuff, int x, int y, int sx, int sy);
 void T_DrawGame(int x, int y);

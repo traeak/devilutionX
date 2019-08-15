@@ -234,9 +234,17 @@ void DrawView(int StartX, int StartY)
 	} else {
 		DrawZoom(StartX, StartY);
 	}
+
+	DrawUi(StartX, StartY);
+}
+
+void DrawUi(int StartX, int StartY)
+{
 	if (automapflag) {
 		DrawAutomap();
 	}
+	if (stextflag && !qtextflag)
+		DrawSText();
 	if (invflag) {
 		DrawInv();
 	} else if (sbookflag) {
@@ -299,19 +307,6 @@ void DrawGame(int x, int y)
 	y--;
 
 	chunks++; // eflag
-
-	if (chrflag || questlog) {
-		x += 2;
-		y -= 2;
-		sx += 288;
-		chunks -= 4;
-	}
-	if (invflag || sbookflag) {
-		x += 2;
-		y -= 2;
-		sx -= 32;
-		chunks -= 4;
-	}
 
 	switch (ScrollInfo._sdir) {
 	case SDIR_N:
