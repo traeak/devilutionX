@@ -4,7 +4,6 @@
 void RenderTile(BYTE *pBuff);
 #define drawUpperScreen(p) RenderTile(p)
 #define drawLowerScreen(p) RenderTile(p)
-void world_draw_black_tile(BYTE *pBuff);
 void trans_rect(int x, int y, int w, int h);
 
 #endif /* __RENDER_H__ */

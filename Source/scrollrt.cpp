@@ -286,11 +286,6 @@ void DrawGame(int x, int y)
 	int i, sx, sy, chunks, blocks;
 	int wdt, nSrcOff, nDstOff;
 
-	if (leveltype == DTYPE_TOWN) {
-		light_table_index = 0;
-		cel_transparency_active = 0;
-	}
-
 	sx = ScrollInfo._sxoff + SCREEN_X;
 	sy = ScrollInfo._syoff + 175;
 
@@ -360,7 +355,6 @@ void DrawGame(int x, int y)
 
 	/// ASSERT: assert(gpBuffer);
 	gpBufEnd = &gpBuffer[PitchTbl[VIEWPORT_HEIGHT + SCREEN_Y]];
-	if (leveltype != DTYPE_TOWN) {
 		for (i = 0; i < blocks; i++) {
 			scrollrt_draw(x, y, sx, sy, chunks);
 			y++;
@@ -371,18 +365,6 @@ void DrawGame(int x, int y)
 			sx += 32;
 			sy += 16;
 		}
-	} else {
-		for (i = 0; i < blocks; i++) {
-			town_draw(x, y, sx, sy, chunks);
-			y++;
-			sx -= 32;
-			sy += 16;
-			town_draw(x, y, sx, sy, chunks);
-			x++;
-			sx += 32;
-			sy += 16;
-		}
-	}
 
 	if (!zoomflag) {
 		if (chrflag || questlog) {
@@ -440,28 +422,30 @@ void scrollrt_draw(int x, int y, int sx, int sy, int chunks)
 				arch_draw_type = 1;
 				level_cel_block = pMap->mt[0];
 				if (level_cel_block != 0) {
-					drawUpperScreen(dst);
+					RenderTile(dst);
 				}
 				arch_draw_type = 2;
 				level_cel_block = pMap->mt[1];
 				if (level_cel_block != 0) {
-					drawUpperScreen(dst + 32);
+					RenderTile(dst + 32);
 				}
 				arch_draw_type = 0;
 				for (i = 2; i < MicroTileLen; i += 2) {
 					dst -= BUFFER_WIDTH * 32;
 					level_cel_block = pMap->mt[i];
 					if (level_cel_block != 0) {
-						drawUpperScreen(dst);
+						RenderTile(dst);
 					}
 					level_cel_block = pMap->mt[i + 1];
 					if (level_cel_block != 0) {
-						drawUpperScreen(dst + 32);
+						RenderTile(dst + 32);
 					}
 				}
-				scrollrt_draw_dungeon(&gpBuffer[sx + PitchTbl[sy]], x, y, sx, sy);
-			} else {
-				world_draw_black_tile(&gpBuffer[sx + PitchTbl[sy]]);
+				if (leveltype != DTYPE_TOWN) {
+					scrollrt_draw_dungeon(&gpBuffer[sx + PitchTbl[sy]], x, y, sx, sy);
+				} else {
+					town_draw_town(&gpBuffer[sx + PitchTbl[sy]], x, y, sx, sy);
+				}
 			}
 		}
 		x++;

@@ -290,29 +290,6 @@ void RenderTile(BYTE *pBuff)
 	}
 }
 
-void world_draw_black_tile(BYTE *pBuff)
-{
-	int i, j, k;
-	BYTE *dst;
-
-	dst = pBuff;
-
-	for (i = 30, j = 1; i >= 0; i -= 2, j++, dst -= BUFFER_WIDTH + 64) {
-		dst += i;
-		for (k = 0; k < 4 * j; k++) {
-			*dst++ = 0;
-		}
-		dst += i;
-	}
-	for (i = 2, j = 15; i != 32; i += 2, j--, dst -= BUFFER_WIDTH + 64) {
-		dst += i;
-		for (k = 0; k < 4 * j; k++) {
-			*dst++ = 0;
-		}
-		dst += i;
-	}
-}
-
 void trans_rect(int x, int y, int w, int h)
 {
 	int row, col;

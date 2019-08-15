@@ -2,32 +2,26 @@
 
 DEVILUTION_BEGIN_NAMESPACE
 
-void town_clear_buf(BYTE *pBuff)
+void town_special(BYTE *pBuff, int nCel)
 {
-	return;
-	int i, j, k;
-	BYTE *dst;
+#if 0
+	int nDataSize;
+	BYTE *pRLEBytes;
+	DWORD *pFrameTable;
 
-	dst = pBuff;
-
-	for (i = 30, j = 1; i >= 0 && dst >= gpBufEnd; i -= 2, j++, dst -= BUFFER_WIDTH + 64) {
-		dst += i;
-		for (k = 0; k < 4 * j; k++)
-			*dst++ = 0;
-		dst += i;
-	}
-	for (i = 2, j = 15; i != 32 && dst >= gpBufEnd; i += 2, j--, dst -= BUFFER_WIDTH + 64) {
-		dst += i;
-		for (k = 0; k < 4 * j; k++)
-			*dst++ = 0;
-		dst += i;
-	}
+	pFrameTable = (DWORD *)pSpecialCels;
+	pRLEBytes = &pSpecialCels[pFrameTable[nCel]];
+	nDataSize = pFrameTable[nCel + 1] - pFrameTable[nCel];
+	Cel2DecDatOnly(pBuff, pRLEBytes, nDataSize, 64);
+#endif
 }
 
 void town_draw_town(BYTE *pBuff, int sx, int sy, int dx, int dy)
 {
 	int mi, px, py;
-	char bv;
+	char bv, bArch;
+
+	bArch = dArch[sx][sy];
 
 	if (dItem[sx][sy] != 0) {
 		bv = dItem[sx][sy] - 1;
@@ -82,47 +76,8 @@ void town_draw_town(BYTE *pBuff, int sx, int sy, int dx, int dy)
 	if (dFlags[sx][sy] & BFLAG_MISSILE) {
 		DrawMissile(sx, sy, dx, dy, 0);
 	}
-	if (dArch[sx][sy] != 0) {
-		//cel_transparency_active = (BYTE)TransList[bMap];
-		//Cel2DecodeLightTrans(pBuff, pSpecialCels, dArch[sx][sy], 64);
-	}
-}
-
-void town_draw(int x, int y, int sx, int sy, int chunks)
-{
-	int i, j;
-	BYTE *dst;
-	MICROS *pMap;
-
-	/// ASSERT: assert(gpBuffer);
-
-	for (j = 0; j < chunks; j++) {
-		if (y >= 0 && y < MAXDUNY && x >= 0 && x < MAXDUNX) {
-			level_cel_block = dPiece[x][y];
-			if (level_cel_block != 0) {
-				dst = &gpBuffer[sx + PitchTbl[sy]];
-				pMap = &dpiece_defs_map_1[IsometricCoord(x, y)];
-				for (i = 0; i < 16; i += 2) {
-					level_cel_block = pMap->mt[i];
-					if (level_cel_block != 0) {
-						drawLowerScreen(dst);
-					}
-					level_cel_block = pMap->mt[i + 1];
-					if (level_cel_block != 0) {
-						drawLowerScreen(dst + 32);
-					}
-					dst -= BUFFER_WIDTH * 32;
-				}
-				town_draw_town(&gpBuffer[sx + PitchTbl[sy]], x, y, sx, sy);
-			} else {
-				town_clear_buf(&gpBuffer[sx + PitchTbl[sy]]);
-			}
-		} else {
-			town_clear_buf(&gpBuffer[sx + PitchTbl[sy]]);
-		}
-		x++;
-		y--;
-		sx += 64;
+	if (bArch != 0) {
+		town_special(pBuff, bArch);
 	}
 }
 
@@ -131,6 +86,8 @@ void SetTownMicros()
 	int i, x, y, lv;
 	WORD *pPiece;
 	MICROS *pMap;
+
+	MicroTileLen = 16;
 
 	for (y = 0; y < MAXDUNY; y++) {
 		for (x = 0; x < MAXDUNX; x++) {
