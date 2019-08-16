@@ -290,22 +290,20 @@ void DrawGame(int x, int y)
 	sy = ScrollInfo._syoff + 175;
 
 	chunks = ceil(SCREEN_WIDTH / 64);
-	blocks = ceil(VIEWPORT_HEIGHT / 32) + 4;
+	blocks = ceil(VIEWPORT_HEIGHT / 32) + (MicroTileLen - 6);
+
+	if (!zoomflag) {
+		chunks = ceil(chunks / 2);
+		blocks = ceil(blocks / 2);
+	}
 
 	// center view
 	x -= chunks;
 	y--;
 
 	chunks++; // eflag
-	if (leveltype == DTYPE_TOWN) {
-		chunks++;    // eflag
-		blocks += 3; // Tall buildings
-	}
-
-	if (!zoomflag) {
-		chunks = ceil(chunks / 2);
-		blocks = ceil(blocks / 2);
-	}
+	if (zoomflag)
+		chunks++; // eflag
 
 	switch (ScrollInfo._sdir) {
 	case SDIR_N:
@@ -355,16 +353,16 @@ void DrawGame(int x, int y)
 
 	/// ASSERT: assert(gpBuffer);
 	gpBufEnd = &gpBuffer[PitchTbl[VIEWPORT_HEIGHT + SCREEN_Y]];
-		for (i = 0; i < blocks; i++) {
-			scrollrt_draw(x, y, sx, sy, chunks);
-			y++;
-			sx -= 32;
-			sy += 16;
-			scrollrt_draw(x, y, sx, sy, chunks);
-			x++;
-			sx += 32;
-			sy += 16;
-		}
+	for (i = 0; i < blocks; i++) {
+		scrollrt_draw(x, y, sx, sy, chunks);
+		y++;
+		sx -= 32;
+		sy += 16;
+		scrollrt_draw(x, y, sx, sy, chunks);
+		x++;
+		sx += 32;
+		sy += 16;
+	}
 
 	if (!zoomflag) {
 		if (chrflag || questlog) {
@@ -390,7 +388,7 @@ void DrawGame(int x, int y)
 		dst1 = &gpBuffer[nDstOff];
 		dst2 = &gpBuffer[nDstOff + BUFFER_WIDTH];
 
-		for (hgt = 176; hgt != 0; hgt--, src -= BUFFER_WIDTH + wdt, dst1 -= 2 * (BUFFER_WIDTH + wdt), dst2 -= 2 * (BUFFER_WIDTH + wdt)) {
+		for (hgt = ceil(VIEWPORT_HEIGHT / 4); hgt != 0; hgt--, src -= BUFFER_WIDTH + wdt, dst1 -= 2 * (BUFFER_WIDTH + wdt), dst2 -= 2 * (BUFFER_WIDTH + wdt)) {
 			for (i = wdt; i != 0; i--) {
 				*dst1++ = *src;
 				*dst1++ = *src;
