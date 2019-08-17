@@ -170,58 +170,17 @@ int SpellPages[6][7] = {
 	{ -1, -1, -1, -1, -1, -1, -1 }
 };
 
-void DrawSpellCel(int xp, int yp, BYTE *Trans, int nCel, int w)
+void DrawSpellCel(int xp, int yp, BYTE *pCelBuff, int nCel, int nWidth)
 {
-	BYTE *dst, *tbl, *end;
-
-	/// ASSERT: assert(gpBuffer);
-
-	dst = &gpBuffer[xp + PitchTbl[yp]];
-	tbl = SplTransTbl;
-
-	int i;
-	BYTE width;
-	BYTE *src;
+	int nDataSize;
+	BYTE *pRLEBytes;
 	DWORD *pFrameTable;
 
-	pFrameTable = (DWORD *)&Trans[4 * nCel];
-	src = &Trans[pFrameTable[0]];
-	end = &src[pFrameTable[1] - pFrameTable[0]];
+	pFrameTable = (DWORD *)pCelBuff;
+	pRLEBytes = &pCelBuff[pFrameTable[nCel]];
+	nDataSize = pFrameTable[nCel + 1] - pFrameTable[nCel];
 
-	for (; src != end; dst -= BUFFER_WIDTH + w) {
-		for (i = w; i;) {
-			width = *src++;
-			if (!(width & 0x80)) {
-				i -= width;
-				// asm_cel_light_edge(width, tbl, dst, src);
-				if (width & 1) {
-					dst[0] = tbl[src[0]];
-					src++;
-					dst++;
-				}
-				width >>= 1;
-				if (width & 1) {
-					dst[0] = tbl[src[0]];
-					dst[1] = tbl[src[1]];
-					src += 2;
-					dst += 2;
-				}
-				width >>= 1;
-				for (; width; width--) {
-					dst[0] = tbl[src[0]];
-					dst[1] = tbl[src[1]];
-					dst[2] = tbl[src[2]];
-					dst[3] = tbl[src[3]];
-					src += 4;
-					dst += 4;
-				}
-			} else {
-				width = -(char)width;
-				dst += width;
-				i -= width;
-			}
-		}
-	}
+	CelDecDatLightOnly(&gpBuffer[xp + PitchTbl[yp]], pRLEBytes, nDataSize, nWidth, SplTransTbl);
 }
 
 void SetSpellTrans(char t)
@@ -488,125 +447,53 @@ void ToggleSpell(int slot)
 
 void CPrintString(int nOffset, int nCel, char col)
 {
-	/// ASSERT: assert(gpBuffer);
-
-	int i;
-	BYTE width, pix;
-	BYTE *src, *dst, *end;
+	int i, nDataSize;
+	BYTE pix;
+	BYTE *pRLEBytes, *pBuff;
 	DWORD *pFrameTable;
+	BYTE tbl[256];
 
-	pFrameTable = (DWORD *)&pPanelText[4 * nCel];
-	src = &pPanelText[pFrameTable[0]];
-	end = &src[pFrameTable[1] - pFrameTable[0]];
-	dst = &gpBuffer[nOffset];
+	pFrameTable = (DWORD *)pPanelText;
+	pRLEBytes = &pPanelText[pFrameTable[nCel]];
+	nDataSize = pFrameTable[nCel + 1] - pFrameTable[nCel];
+	pBuff = &gpBuffer[nOffset];
 
 	switch (col) {
 	case COL_WHITE:
-		for (; src != end; dst -= BUFFER_WIDTH + 13) {
-			for (i = 13; i;) {
-				width = *src++;
-				if (!(width & 0x80)) {
-					i -= width;
-					if (width & 1) {
-						dst[0] = src[0];
-						src++;
-						dst++;
-					}
-					width >>= 1;
-					if (width & 1) {
-						dst[0] = src[0];
-						dst[1] = src[1];
-						src += 2;
-						dst += 2;
-					}
-					width >>= 1;
-					while (width) {
-						dst[0] = src[0];
-						dst[1] = src[1];
-						dst[2] = src[2];
-						dst[3] = src[3];
-						src += 4;
-						dst += 4;
-						width--;
-					}
-				} else {
-					width = -(char)width;
-					dst += width;
-					i -= width;
-				}
-			}
-		}
-		break;
+		Cel2DecDatOnly(pBuff, pRLEBytes, nDataSize, 13, false);
+		return;
 	case COL_BLUE:
-		for (; src != end; dst -= BUFFER_WIDTH + 13) {
-			for (i = 13; i;) {
-				width = *src++;
-				if (!(width & 0x80)) {
-					i -= width;
-					while (width) {
-						pix = *src++;
-						if (pix > PAL16_GRAY + 13)
-							pix = PAL16_BLUE + 15;
-						else if (pix >= PAL16_GRAY)
-							pix -= PAL16_GRAY - (PAL16_BLUE + 2);
-						*dst++ = pix;
-						width--;
-					}
-				} else {
-					width = -(char)width;
-					dst += width;
-					i -= width;
-				}
-			}
+		for (i = 0; i < 256; i++) {
+			pix = i;
+			if (pix > PAL16_GRAY + 13)
+				pix = PAL16_BLUE + 15;
+			else if (pix >= PAL16_GRAY)
+				pix -= PAL16_GRAY - (PAL16_BLUE + 2);
+			tbl[i] = pix;
 		}
 		break;
 	case COL_RED:
-		for (; src != end; dst -= BUFFER_WIDTH + 13) {
-			for (i = 13; i;) {
-				width = *src++;
-				if (!(width & 0x80)) {
-					i -= width;
-					while (width) {
-						pix = *src++;
-						if (pix >= PAL16_GRAY)
-							pix -= PAL16_GRAY - PAL16_RED;
-						*dst++ = pix;
-						width--;
-					}
-				} else {
-					width = -(char)width;
-					dst += width;
-					i -= width;
-				}
-			}
+		for (i = 0; i < 256; i++) {
+			pix = i;
+			if (pix >= PAL16_GRAY)
+				pix -= PAL16_GRAY - PAL16_RED;
+			tbl[i] = pix;
 		}
 		break;
 	default:
-		for (; src != end; dst -= BUFFER_WIDTH + 13) {
-			for (i = 13; i;) {
-				width = *src++;
-				if (!(width & 0x80)) {
-					i -= width;
-					while (width) {
-						pix = *src++;
-						if (pix >= PAL16_GRAY) {
-							if (pix >= PAL16_GRAY + 14)
-								pix = PAL16_YELLOW + 15;
-							else
-								pix -= PAL16_GRAY - (PAL16_YELLOW + 2);
-						}
-						*dst++ = pix;
-						width--;
-					}
-				} else {
-					width = -(char)width;
-					dst += width;
-					i -= width;
-				}
+		for (i = 0; i < 256; i++) {
+			pix = i;
+			if (pix >= PAL16_GRAY) {
+				if (pix >= PAL16_GRAY + 14)
+					pix = PAL16_YELLOW + 15;
+				else
+					pix -= PAL16_GRAY - (PAL16_YELLOW + 2);
 			}
+			tbl[i] = pix;
 		}
 		break;
 	}
+	CelDecDatLightOnly(pBuff, pRLEBytes, nDataSize, 13, tbl);
 }
 
 void AddPanelString(char *str, BOOL just)
@@ -1544,39 +1431,6 @@ void DrawChr()
 		col = COL_RED;
 	sprintf(chrstr, "%i", plr[myplr]._pMana >> 6);
 	ADD_PlrStringXY(143, 332, 174, chrstr, col);
-}
-
-/**
- * @brief Identical to MY_PlrStringXY(x, y, width, pszStr, col, 1)
- */
-void ADD_PlrStringXY(int x, int y, int width, char *pszStr, char col)
-{
-	BYTE c;
-	char *tmp;
-	int nOffset, screen_x, line, widthOffset;
-
-	nOffset = x + PitchTbl[y + SCREEN_Y] + SCREEN_X;
-	widthOffset = width - x + 1;
-	line = 0;
-	screen_x = 0;
-	tmp = pszStr;
-	while (*tmp) {
-		c = gbFontTransTbl[(BYTE)*tmp++];
-		screen_x += fontkern[fontframe[c]] + 1;
-	}
-	if (screen_x < widthOffset)
-		line = (widthOffset - screen_x) >> 1;
-	nOffset += line;
-	while (*pszStr) {
-		c = gbFontTransTbl[(BYTE)*pszStr++];
-		c = fontframe[c];
-		line += fontkern[c] + 1;
-		if (c) {
-			if (line < widthOffset)
-				CPrintString(nOffset, c, col);
-		}
-		nOffset += fontkern[c] + 1;
-	}
 }
 
 void MY_PlrStringXY(int x, int y, int width, char *pszStr, char col, int base)

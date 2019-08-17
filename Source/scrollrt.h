@@ -4,6 +4,7 @@
 
 extern int light_table_index;
 extern int PitchTbl[BUFFER_HEIGHT];
+extern BYTE *gpBufStart;
 extern BYTE *gpBufEnd;
 extern DWORD level_cel_block;
 extern char arch_draw_type;

@@ -8,6 +8,7 @@ int PitchTbl[BUFFER_HEIGHT];
 DWORD sgdwCursWdtOld;
 DWORD sgdwCursX;
 DWORD sgdwCursY;
+BYTE *gpBufStart;
 BYTE *gpBufEnd;
 DWORD sgdwCursHgt;
 DWORD level_cel_block;
@@ -352,7 +353,8 @@ void DrawGame(int x, int y)
 	}
 
 	/// ASSERT: assert(gpBuffer);
-	gpBufEnd = &gpBuffer[PitchTbl[VIEWPORT_HEIGHT + SCREEN_Y]];
+	gpBufStart = &gpBuffer[PitchTbl[SCREEN_Y]];
+	gpBufEnd = &gpBuffer[PitchTbl[SCREEN_Y + VIEWPORT_HEIGHT]];
 	for (i = 0; i < blocks; i++) {
 		scrollrt_draw(x, y, sx, sy, chunks);
 		y++;
@@ -863,6 +865,7 @@ void EnableFrameCount()
 
 void scrollrt_draw_game_screen(BOOL draw_cursor)
 {
+	gpBufEnd = &gpBuffer[PitchTbl[SCREEN_Y + VIEWPORT_HEIGHT]];
 	if (draw_cursor) {
 		lock_buf(0);
 		scrollrt_draw_cursor_item();
