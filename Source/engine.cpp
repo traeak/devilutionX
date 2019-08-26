@@ -59,21 +59,21 @@ void CelDrawHdrOnly(int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth)
 	CelDecDatOnly(&gpBuffer[sx + PitchTbl[sy]], pCelBuff, nCel, nWidth, true);
 }
 
-void CelDecDatLightOnly(BYTE *pBuff, BYTE *pRLEBytes, int nDataSize, int nWidth, BYTE *tbl)
+void CelDecDatLightOnly(BYTE *pDecodeTo, BYTE *pRLEBytes, int nDataSize, int nWidth, BYTE *tbl)
 {
 	int w, i;
 	BYTE width;
 	BYTE *src, *dst;
 
-	/// ASSERT: assert(pBuff != NULL);
-	if (!pBuff)
+	/// ASSERT: assert(pDecodeTo != NULL);
+	if (!pDecodeTo)
 		return;
 	/// ASSERT: assert(pRLEBytes != NULL);
 	if (!pRLEBytes)
 		return;
 
 	src = pRLEBytes;
-	dst = pBuff;
+	dst = pDecodeTo;
 	if (!tbl)
 		tbl = &pLightTbl[light_table_index * 256];
 	w = nWidth;
