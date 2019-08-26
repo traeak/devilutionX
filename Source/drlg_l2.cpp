@@ -1,3 +1,4 @@
+#ifndef SPAWN
 #include "diablo.h"
 
 DEVILUTION_BEGIN_NAMESPACE
@@ -2111,3 +2112,4 @@ void DRLG_InitL2Vals()
 }
 
 DEVILUTION_END_NAMESPACE
+#endif

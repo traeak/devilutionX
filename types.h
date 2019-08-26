@@ -61,7 +61,7 @@ DEVILUTION_BEGIN_NAMESPACE
 #include "structs.h"
 
 // If defined, use copy protection [Default -> Defined]
-#ifndef _DEBUG
+#if !defined(_DEBUG) && !defined(SPAWN)
 //#define COPYPROT
 #endif
 
