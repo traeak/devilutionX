@@ -21,6 +21,7 @@ void ScrollView();
 #endif
 void EnableFrameCount();
 void scrollrt_draw_game_screen(BOOL draw_cursor);
+void HighlightItemsNameOnMap();
 void DrawAndBlit();
 
 /* rdata */

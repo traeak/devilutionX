@@ -1211,4 +1211,23 @@ void PlayInGameMovie(char *pszMovie)
 	drawpanflag = 255;
 }
 
+void DrawSolidRectangle(int x0, int dx, int y0, int dy, int color) {
+  char* WorkingSurface = (char*)gpBuffer;
+  for (int x = x0; x < x0 + dx; x++) {
+     for (int y = y0; y < y0 + dy; y++) {
+        WorkingSurface[y*768+x] = color;
+     }
+  }
+}
+
+int CalculateTextWidth(char* s)
+{
+  int l = 0;
+  while (*s) {
+     l += fontkern[fontframe[gbFontTransTbl[*s++]]] + 1;
+  }
+  return l;
+}
+
+
 DEVILUTION_END_NAMESPACE

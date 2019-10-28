@@ -16,6 +16,7 @@ BOOL gbRunGame;
 int glMid3Seed[NUMLEVELS];
 BOOL gbRunGameResult;
 BOOL zoomflag;
+bool drawitems;
 BOOL gbProcessPlayers;
 int glEndSeed[NUMLEVELS];
 BOOL gbLoadGame;
@@ -674,8 +675,10 @@ BOOL LeftMouseCmd(BOOL bShift)
 			NetSendCmdLocParam1(TRUE, invflag ? CMD_GOTOGETITEM : CMD_GOTOAGETITEM, cursmx, cursmy, pcursitem);
 		if (pcursmonst != -1)
 			NetSendCmdLocParam1(TRUE, CMD_TALKXY, cursmx, cursmy, pcursmonst);
-		if (pcursitem == -1 && pcursmonst == -1 && pcursplr == -1)
+		if (pcursitem == -1 && pcursmonst == -1 && pcursplr == -1) {
+			track_lmb_loc(CMD_WALKXY, cursmx, cursmy);
 			return TRUE;
+		}
 	} else {
 		bNear = abs(plr[myplr].WorldX - cursmx) < 2 && abs(plr[myplr].WorldY - cursmy) < 2;
 		if (pcursitem != -1 && pcurs == CURSOR_HAND && !bShift) {
@@ -684,12 +687,15 @@ BOOL LeftMouseCmd(BOOL bShift)
 			NetSendCmdLocParam1(TRUE, pcurs == CURSOR_DISARM ? CMD_DISARMXY : CMD_OPOBJXY, cursmx, cursmy, pcursobj);
 		} else if (plr[myplr]._pwtype == WT_RANGED) {
 			if (bShift) {
-				NetSendCmdLoc(TRUE, CMD_RATTACKXY, cursmx, cursmy);
+				track_lmb_loc(CMD_RATTACKXY, cursmx, cursmy);
+				return TRUE;
 			} else if (pcursmonst != -1) {
 				if (CanTalkToMonst(pcursmonst)) {
-					NetSendCmdParam1(TRUE, CMD_ATTACKID, pcursmonst);
+					track_lmb_param1(CMD_ATTACKID, pcursmonst);
+					return TRUE;
 				} else {
-					NetSendCmdParam1(TRUE, CMD_RATTACKID, pcursmonst);
+					track_lmb_param1(CMD_RATTACKID, pcursmonst);
+					return TRUE;
 				}
 			} else if (pcursplr != -1 && !FriendlyMode) {
 				NetSendCmdParam1(TRUE, CMD_RATTACKPID, pcursplr);
@@ -698,21 +704,27 @@ BOOL LeftMouseCmd(BOOL bShift)
 			if (bShift) {
 				if (pcursmonst != -1) {
 					if (CanTalkToMonst(pcursmonst)) {
-						NetSendCmdParam1(TRUE, CMD_ATTACKID, pcursmonst);
+						track_lmb_param1(CMD_ATTACKID, pcursmonst);
+						return TRUE;
 					} else {
-						NetSendCmdLoc(TRUE, CMD_SATTACKXY, cursmx, cursmy);
+						track_lmb_loc(CMD_SATTACKXY, cursmx, cursmy);
+						return TRUE;
 					}
 				} else {
-					NetSendCmdLoc(TRUE, CMD_SATTACKXY, cursmx, cursmy);
+					track_lmb_loc(CMD_SATTACKXY, cursmx, cursmy);
+					return TRUE;
 				}
 			} else if (pcursmonst != -1) {
-				NetSendCmdParam1(TRUE, CMD_ATTACKID, pcursmonst);
+				track_lmb_param1(CMD_ATTACKID, pcursmonst);
+				return TRUE;
 			} else if (pcursplr != -1 && !FriendlyMode) {
 				NetSendCmdParam1(TRUE, CMD_ATTACKPID, pcursplr);
 			}
 		}
-		if (!bShift && pcursitem == -1 && pcursobj == -1 && pcursmonst == -1 && pcursplr == -1)
+		if (!bShift && pcursitem == -1 && pcursobj == -1 && pcursmonst == -1 && pcursplr == -1) {
+			track_lmb_loc(CMD_WALKXY, cursmx, cursmy);
 			return TRUE;
+		}
 	}
 
 	return FALSE;
@@ -834,6 +846,9 @@ void ReleaseKey(int vkey)
 {
 	if (vkey == VK_SNAPSHOT)
 		CaptureScreen();
+
+	if (vkey == VK_MENU || vkey == VK_LMENU || vkey == VK_RMENU)
+		drawitems = false;
 }
 
 void PressKey(int vkey)
@@ -1001,6 +1016,8 @@ void PressKey(int vkey)
 		if (stextflag) {
 			STextNext();
 		}
+	} else if(vkey == VK_MENU || vkey == VK_LMENU || vkey == VK_RMENU) {
+		drawitems = true;
 	} else if (vkey == VK_LEFT) {
 		if (automapflag && !talkflag) {
 			AutomapLeft();
